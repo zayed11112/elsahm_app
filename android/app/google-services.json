@@ -1,0 +1,54 @@
+{
+  "project_info": {
+    "project_number": "992039187831",
+    "project_id": "elsahm-d8ebd",
+    "storage_bucket": "elsahm-d8ebd.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:992039187831:android:cdc60a9dd021fd99a71d72",
+        "android_client_info": {
+          "package_name": "com.example.elsahm_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "992039187831-20dh1lf7rautjaunne5rmmnkbb0clahg.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.elsahm_app",
+            "certificate_hash": "d1810ce85e4f5c575c6f3ad9ef8240cd462c768f"
+          }
+        },
+        {
+          "client_id": "992039187831-uij89qkjunu5ahglo0ejm3mlvk8craan.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCHeJEN-Lv_Lt4YOLguWi81PlYpYBbk8JA"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "992039187831-uij89qkjunu5ahglo0ejm3mlvk8craan.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "992039187831-7bcnpkamf89547vv3q29qa7bg2juansn.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.elsahmApp"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
