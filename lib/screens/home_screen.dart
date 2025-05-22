@@ -9,6 +9,8 @@ import 'package:logging/logging.dart'; // Import logging package
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import FontAwesome for social icons
 import 'package:url_launcher/url_launcher.dart'; // Import for URL launching
+import 'package:auto_size_text/auto_size_text.dart'; // Import for auto-resizing text
+import 'package:marquee_widget/marquee_widget.dart'; // Import for marquee text effect
 import '../providers/navigation_provider.dart';
 import '../providers/favorites_provider.dart'; // Import FavoritesProvider
 import '../models/apartment.dart'; // Import the Apartment model
@@ -255,78 +257,103 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         ),
                         
-                        // Content
+                        // Content with improved responsive layout
                         Padding(
                           padding: const EdgeInsets.all(24.0),
-                          child: Row(
-                            children: [
-                              // Left section - Icon
-                              Container(
-                                width: 60,
-                                height: 60,
-                                decoration: BoxDecoration(
-                                  color: Colors.white.withOpacity(0.15),
-                                  shape: BoxShape.circle,
-                                ),
-                                child: const Icon(
-                                  Icons.person,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
-                              ),
+                          child: LayoutBuilder(
+                            builder: (context, constraints) {
+                              // Determine if we need a compact layout
+                              final bool isCompact = constraints.maxWidth < 350;
                               
-                              const SizedBox(width: 20),
-                              
-                              // Middle section - Text
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'سجل دخولك الآن',
-                                      style: textTheme.headlineSmall?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                      ),
+                              return Row(
+                                crossAxisAlignment: CrossAxisAlignment.center,
+                                children: [
+                                  // Left section - Icon
+                                  Container(
+                                    width: isCompact ? 48 : 60,
+                                    height: isCompact ? 48 : 60,
+                                    decoration: BoxDecoration(
+                                      color: Colors.white.withOpacity(0.15),
+                                      shape: BoxShape.circle,
                                     ),
-                                    const SizedBox(height: 8),
-                                    Text(
-                                      'للوصول إلى مميزات حصرية وعروض خاصة',
-                                      style: textTheme.bodyMedium?.copyWith(
-                                        color: Colors.white.withOpacity(0.9),
-                                        height: 1.4,
-                                      ),
+                                    child: Icon(
+                                      Icons.person,
+                                      color: Colors.white,
+                                      size: isCompact ? 24 : 32,
                                     ),
-                                  ],
-                                ),
-                              ),
-                              
-                              const SizedBox(width: 16),
-                              
-                              // Right section - Button
-                              ElevatedButton.icon(
-                                onPressed: () {
-                                  Navigator.push(
-                                    context,
-                                    MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.white,
-                                  foregroundColor: colorScheme.primary,
-                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
-                                  shape: RoundedRectangleBorder(
-                                    borderRadius: BorderRadius.circular(12),
                                   ),
-                                  elevation: 2,
-                                ),
-                                icon: const Icon(Icons.login, size: 18),
-                                label: const Text(
-                                  'تسجيل الدخول',
-                                  style: TextStyle(fontWeight: FontWeight.bold),
-                                ),
-                              ),
-                            ],
+                                  
+                                  SizedBox(width: isCompact ? 12 : 20),
+                                  
+                                  // Middle section - Text with Expanded to ensure proper wrapping
+                                  Expanded(
+                                    child: Column(
+                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        AutoSizeText(
+                                          'سجل دخولك الآن',
+                                          style: textTheme.titleMedium?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                          maxLines: 1,
+                                          minFontSize: 14,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                        const SizedBox(height: 8),
+                                        AutoSizeText(
+                                          'للوصول إلى مميزات حصرية وعروض خاصة',
+                                          style: textTheme.bodyMedium?.copyWith(
+                                            color: Colors.white.withOpacity(0.9),
+                                          ),
+                                          maxLines: 2,
+                                          minFontSize: 12,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  
+                                  SizedBox(width: isCompact ? 10 : 16),
+                                  
+                                  // Right section - Login Button
+                                  ElevatedButton(
+                                    onPressed: () {
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                      );
+                                    },
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: Colors.white,
+                                      foregroundColor: colorScheme.primary,
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: isCompact ? 8 : 12,
+                                        vertical: isCompact ? 10 : 12
+                                      ),
+                                      shape: RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.circular(12),
+                                      ),
+                                      elevation: 2,
+                                    ),
+                                    child: isCompact 
+                                      ? const Icon(Icons.login, size: 18)
+                                      : const Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(Icons.login, size: 18),
+                                            SizedBox(width: 6),
+                                            Text(
+                                              'تسجيل الدخول',
+                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                            ),
+                                          ],
+                                        ),
+                                  ),
+                                ],
+                              );
+                            }
                           ),
                         ),
                       ],
@@ -928,11 +955,21 @@ class _HomeScreenState extends State<HomeScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 10.0,
         mainAxisSpacing: 10.0,
-        childAspectRatio: 2.5,
+        childAspectRatio: 3.0, // زيادة النسبة لإتاحة مساحة أكبر للنص
       ),
       itemCount: _categories.length > 6 ? 6 : _categories.length,
       itemBuilder: (context, index) {
-        final category = _categories[index];
+        // حساب الفهرس المعكوس ليكون الترتيب من اليمين إلى اليسار
+        final crossAxisCount = 2; // عدد الأعمدة ثابت هنا (2)
+        final rowIndex = index ~/ crossAxisCount; // صف العنصر الحالي
+        final rowStartIndex = rowIndex * crossAxisCount; // بداية الصف الحالي
+        final reverseIndex = rowStartIndex + crossAxisCount - 1 - (index % crossAxisCount);
+        
+        // التأكد من أن الفهرس المعكوس في نطاق مقبول
+        final maxIndex = _categories.length > 6 ? 6 : _categories.length;
+        final safeIndex = reverseIndex < maxIndex ? reverseIndex : index;
+        
+        final category = _categories[safeIndex];
         return _buildCategoryCard(
           context,
           category['iconUrl'] ?? category['icon'],
@@ -1066,6 +1103,9 @@ class _HomeScreenState extends State<HomeScreen> {
   // --- Helper Widgets --- (Keep existing helpers)
   Widget _buildCategoryCard(BuildContext context, dynamic icon, String label) {
     final theme = Theme.of(context);
+    
+    // التحقق من طول النص لتحديد ما إذا كان يحتاج إلى تأثير التمرير
+    final bool isLongText = label.length > 7;
 
     return Card(
       margin: const EdgeInsets.all(4.0),
@@ -1077,11 +1117,12 @@ class _HomeScreenState extends State<HomeScreen> {
         onTap: () {
           _selectCategory(label);
         },
-        child: Padding(
-          padding: const EdgeInsets.all(12.0),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // Icon or ImageWidget based on the icon type
+              // الأيقونة بحجم ثابت وموحد
               Container(
                 width: 36.0,
                 height: 36.0,
@@ -1090,37 +1131,61 @@ class _HomeScreenState extends State<HomeScreen> {
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Center(
-                  child:
-                      icon is String && icon.startsWith('http')
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
-                            child: Image.network(
-                              icon,
-                              width: 24.0,
-                              height: 24.0,
-                              errorBuilder:
-                                  (context, error, stackTrace) => const Icon(
-                                    Icons.category,
-                                    size: 24.0,
-                                    color: Colors.blue,
-                                  ),
-                            ),
-                          )
-                          : Icon(
+                  child: icon is String && icon.startsWith('http')
+                    ? ClipRRect(
+                        borderRadius: BorderRadius.circular(8.0),
+                        child: Image.network(
+                          icon,
+                          width: 24.0,
+                          height: 24.0,
+                          errorBuilder: (context, error, stackTrace) => const Icon(
                             Icons.category,
                             size: 24.0,
-                            color: theme.colorScheme.primary,
+                            color: Colors.blue,
                           ),
+                        ),
+                      )
+                    : Icon(
+                        Icons.category,
+                        size: 24.0,
+                        color: theme.colorScheme.primary,
+                      ),
                 ),
               ),
-              const SizedBox(width: 8.0),
+              
+              const SizedBox(width: 12.0), // مسافة موحدة بين الأيقونة والنص
+              
+              // النص بتنسيق وحجم ثابت
               Expanded(
-                child: Text(
-                  label,
-                  style: theme.textTheme.bodyLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                  overflow: TextOverflow.ellipsis,
+                child: Container(
+                  height: 22.0, // ارتفاع ثابت للنص
+                  alignment: Alignment.centerRight, // دائمًا محاذاة لليمين
+                  child: isLongText
+                    ? Marquee(
+                        animationDuration: const Duration(seconds: 2),
+                        backDuration: const Duration(milliseconds: 1000),
+                        pauseDuration: const Duration(milliseconds: 1000),
+                        direction: Axis.horizontal,
+                        textDirection: TextDirection.rtl,
+                        autoRepeat: true,
+                        child: Text(
+                          label,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15.0, // حجم خط ثابت
+                          ),
+                        ),
+                      )
+                    : Text(
+                        label,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.0, // حجم خط ثابت
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                      ),
                 ),
               ),
             ],
@@ -2430,14 +2495,14 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // A new premium designer card with modern style
+  // A new premium designer card with modern style - smaller version
   Widget _buildPremiumDesignerCard() {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textTheme = theme.textTheme;
     
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 16, 0, 8),
+      margin: const EdgeInsets.fromLTRB(0, 12, 0, 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
@@ -2452,26 +2517,27 @@ class _HomeScreenState extends State<HomeScreen> {
                   const Color(0xFFF0F7FF),
                 ],
         ),
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
           ),
         ],
         border: Border.all(
           color: isDark
               ? Colors.blue.shade800.withOpacity(0.2)
               : Colors.blue.shade300.withOpacity(0.2),
-          width: 2,
+          width: 1.5,
         ),
       ),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          // Top section with blue gradient
+          // Top section with blue gradient - reduced height
           Container(
-            height: 110,
+            height: 80, // Reduced from 110
             decoration: BoxDecoration(
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
@@ -2482,19 +2548,19 @@ class _HomeScreenState extends State<HomeScreen> {
                 ],
               ),
               borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(22),
-                topRight: Radius.circular(22),
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
               ),
             ),
             child: Stack(
               children: [
-                // Decorative elements
+                // Decorative elements - made smaller
                 Positioned(
-                  top: -20,
-                  right: -20,
+                  top: -15,
+                  right: -15,
                   child: Container(
-                    width: 100,
-                    height: 100,
+                    width: 70, // Reduced from 100
+                    height: 70, // Reduced from 100
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.1),
                       shape: BoxShape.circle,
@@ -2502,11 +2568,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 Positioned(
-                  bottom: -15,
-                  left: -15,
+                  bottom: -10,
+                  left: -10,
                   child: Container(
-                    width: 60,
-                    height: 60,
+                    width: 40, // Reduced from 60
+                    height: 40, // Reduced from 60
                     decoration: BoxDecoration(
                       color: Colors.white.withOpacity(0.1),
                       shape: BoxShape.circle,
@@ -2514,85 +2580,123 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 
-                // Title content
+                // Title content - simplified and centered
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(20, 24, 20, 0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Edit button (optional)
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: Colors.white.withOpacity(0.2),
-                          borderRadius: BorderRadius.circular(12),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 25, 0), // تقليل تباعد الأعلى من 18 إلى 12
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(
+                          Icons.code,
+                          color: Colors.white.withOpacity(0.9),
+                          size: 16,
                         ),
-                        child: IconButton(
-                          icon: const Icon(
-                            Icons.verified,
-                            size: 18, 
+                        const SizedBox(width: 8),
+                        Text(
+                          'تصميم وتطوير',
+                          style: textTheme.titleMedium?.copyWith(
                             color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
                           ),
-                          padding: EdgeInsets.zero,
-                          onPressed: () {
-                            // Verified action
-                          },
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // Profile information with reduced spacing
+          SizedBox(
+            height: 110, // Reduced overall height
+            child: Stack(
+              clipBehavior: Clip.none,
+              alignment: Alignment.center,
+              children: [
+                // Profile image - made smaller and positioned higher
+                Positioned(
+                  top: -30, // Moved higher up (تم تعديلها من -35 إلى -30)
+                  child: Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      color: isDark ? const Color(0xFF1A1F38) : Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: const Color(0xFF0277BD).withOpacity(0.3),
+                          blurRadius: 10,
+                          spreadRadius: 1,
+                          offset: const Offset(0, 3),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(35),
+                      child: Image.asset(
+                        'assets/images/Eslam_Zayed.jpg',
+                        width: 70, // Reduced from 90
+                        height: 70, // Reduced from 90
+                        fit: BoxFit.cover,
+                        errorBuilder: (context, error, stackTrace) => Container(
+                          color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
+                          child: Icon(
+                            Icons.person,
+                            color: theme.colorScheme.primary,
+                            size: 30,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                
+                // Text elements - repositioned
+                Positioned(
+                  top: 45,
+                  child: Column(
+                    children: [
+                      // Name
+                      Text(
+                        'م. اسلام زايد',
+                        style: textTheme.titleMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? Colors.white : const Color(0xFF0D47A1),
                         ),
                       ),
                       
-                      // Title
-                      Column(
-                        children: [
-                          Row(
-                            children: [
-                              Icon(
-                                Icons.code,
-                                color: Colors.white.withOpacity(0.9),
-                                size: 18,
-                              ),
-                              const SizedBox(width: 8),
-                              Text(
-                                'تصميم وتطوير',
-                                style: textTheme.titleMedium?.copyWith(
-                                  color: Colors.white,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
+                      const SizedBox(height: 5),
+                      
+                      // Badge with profession
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            colors: [
+                              const Color(0xFF0288D1),
+                              const Color(0xFF0277BD),
                             ],
                           ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.2),
-                              borderRadius: BorderRadius.circular(30),
+                          borderRadius: BorderRadius.circular(20),
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFF0277BD).withOpacity(0.25),
+                              blurRadius: 6,
+                              offset: const Offset(0, 2),
                             ),
-                            child: Row(
-                              children: [
-                                const Icon(
-                                  Icons.star,
-                                  size: 14,
-                                  color: Colors.amber,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'مطور محترف',
-                                  style: TextStyle(
-                                    color: Colors.white.withOpacity(0.9),
-                                    fontSize: 12,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ],
-                            ),
+                          ],
+                        ),
+                        child: const Text(
+                          'مطور ومصمم تطبيقات',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.w500,
+                            fontSize: 11, // Reduced from 13
                           ),
-                        ],
+                        ),
                       ),
-                      
-                      // Spacer to maintain the layout after removing the button
-                      SizedBox(width: 36),
                     ],
                   ),
                 ),
@@ -2600,200 +2704,34 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
           
-          // Space for profile image
-          Container(
-            height: 40,
-            transform: Matrix4.translationValues(0, -40, 0),
-            margin: EdgeInsets.zero,
-            padding: EdgeInsets.zero,
-          ),
-          
-          // Profile information (moved up to overlap with the blue section)
-          Transform.translate(
-            offset: const Offset(0, -80),
-            child: Column(
+          // Social media buttons - smaller size and closer together
+          Padding(
+            padding: const EdgeInsets.only(bottom: 12, top: 0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                // Profile image
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: isDark ? const Color(0xFF1A1F38) : Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0277BD).withOpacity(0.3),
-                        blurRadius: 12,
-                        spreadRadius: 2,
-                        offset: const Offset(0, 4),
-                      ),
-                    ],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(45),
-                    child: Image.asset(
-                      'assets/images/Eslam_Zayed.jpg',
-                      width: 90,
-                      height: 90,
-                      fit: BoxFit.cover,
-                      errorBuilder: (context, error, stackTrace) => Container(
-                        color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                        child: Icon(
-                          Icons.person,
-                          color: theme.colorScheme.primary,
-                          size: 40,
-                        ),
-                      ),
-                    ),
-                  ),
+                _buildCompactSocialButton(
+                  icon: FontAwesomeIcons.phone,
+                  gradient: const [Color(0xFF4CAF50), Color(0xFF388E3C)],
+                  onTap: () => _launchURL('tel:01003193622'),
                 ),
-                
-                const SizedBox(height: 16),
-                
-                // Name
-                Text(
-                  'م. اسلام زايد',
-                  style: textTheme.headlineSmall?.copyWith(
-                    fontWeight: FontWeight.bold,
-                    color: isDark ? Colors.white : const Color(0xFF0D47A1),
-                  ),
+                const SizedBox(width: 12), // Reduced spacing
+                _buildCompactSocialButton(
+                  icon: FontAwesomeIcons.whatsapp,
+                  gradient: const [Color(0xFF25D366), Color(0xFF128C7E)],
+                  onTap: () => _launchURL('https://wa.me/201003193622'),
                 ),
-                
-                const SizedBox(height: 6),
-                
-                // Badge with profession
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        const Color(0xFF0288D1),
-                        const Color(0xFF0277BD),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(30),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF0277BD).withOpacity(0.3),
-                        blurRadius: 8,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: const Text(
-                    'مطور ومصمم تطبيقات',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.w500,
-                      fontSize: 13,
-                    ),
-                  ),
+                const SizedBox(width: 12), // Reduced spacing
+                _buildCompactSocialButton(
+                  icon: FontAwesomeIcons.facebook,
+                  gradient: const [Color(0xFF1877F2), Color(0xFF1554AF)],
+                  onTap: () => _launchURL('https://www.facebook.com/eslammosalah'),
                 ),
-                
-                const SizedBox(height: 20),
-                
-                // Divider with pattern
-                SizedBox(
-                  width: 200,
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerRight,
-                              end: Alignment.centerLeft,
-                              colors: [
-                                Colors.transparent,
-                                isDark 
-                                    ? Colors.blue.shade700.withOpacity(0.5)
-                                    : Colors.blue.shade300.withOpacity(0.5),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDark 
-                              ? Colors.blue.shade700
-                              : Colors.blue.shade300,
-                        ),
-                      ),
-                      Container(
-                        width: 30,
-                        height: 1,
-                        color: isDark 
-                            ? Colors.blue.shade700.withOpacity(0.5)
-                            : Colors.blue.shade300.withOpacity(0.5),
-                      ),
-                      Container(
-                        width: 6,
-                        height: 6,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isDark 
-                              ? Colors.blue.shade700
-                              : Colors.blue.shade300,
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          height: 1,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.centerRight,
-                              end: Alignment.centerLeft,
-                              colors: [
-                                isDark 
-                                    ? Colors.blue.shade700.withOpacity(0.5)
-                                    : Colors.blue.shade300.withOpacity(0.5),
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                
-                const SizedBox(height: 20),
-                
-                // Social media buttons with modern design
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      _buildModernSocialButton(
-                        icon: FontAwesomeIcons.phone,
-                        gradient: const [Color(0xFF4CAF50), Color(0xFF388E3C)],
-                        onTap: () => _launchURL('tel:01003193622'),
-                      ),
-                      const SizedBox(width: 20),
-                      _buildModernSocialButton(
-                        icon: FontAwesomeIcons.whatsapp,
-                        gradient: const [Color(0xFF25D366), Color(0xFF128C7E)],
-                        onTap: () => _launchURL('https://wa.me/201003193622'),
-                      ),
-                      const SizedBox(width: 20),
-                      _buildModernSocialButton(
-                        icon: FontAwesomeIcons.facebook,
-                        gradient: const [Color(0xFF1877F2), Color(0xFF1554AF)],
-                        onTap: () => _launchURL('https://www.facebook.com/eslammosalah'),
-                      ),
-                      const SizedBox(width: 20),
-                      _buildModernSocialButton(
-                        icon: FontAwesomeIcons.instagram,
-                        gradient: const [Color(0xFFE1306C), Color(0xFF833AB4)],
-                        onTap: () => _launchURL('https://www.instagram.com/eslamz11/'),
-                      ),
-                    ],
-                  ),
+                const SizedBox(width: 12), // Reduced spacing
+                _buildCompactSocialButton(
+                  icon: FontAwesomeIcons.instagram,
+                  gradient: const [Color(0xFFE1306C), Color(0xFF833AB4)],
+                  onTap: () => _launchURL('https://www.instagram.com/eslamz11/'),
                 ),
               ],
             ),
@@ -2803,30 +2741,30 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // A button with gradient and bouncing effect for social media
-  Widget _buildModernSocialButton({
+  // Smaller social media button for the compact designer card
+  Widget _buildCompactSocialButton({
     required IconData icon,
     required List<Color> gradient,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(18),
+      borderRadius: BorderRadius.circular(14),
       child: Container(
-        width: 50,
-        height: 50,
+        width: 38, // Reduced from 50
+        height: 38, // Reduced from 50
         decoration: BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
             colors: gradient,
           ),
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: gradient.last.withOpacity(0.4),
-              blurRadius: 8,
-              offset: const Offset(0, 4),
+              color: gradient.last.withOpacity(0.3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
@@ -2834,7 +2772,7 @@ class _HomeScreenState extends State<HomeScreen> {
           child: FaIcon(
             icon,
             color: Colors.white,
-            size: 22,
+            size: 18, // Reduced from 22
           ),
         ),
       ),

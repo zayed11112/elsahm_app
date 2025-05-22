@@ -17,6 +17,7 @@ import 'property_details_screen.dart';
 import 'place_details_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/favorites_provider.dart';
+import 'package:marquee_widget/marquee_widget.dart';
 
 class CategoriesScreen extends StatefulWidget {
   final String? initialCategory;
@@ -361,12 +362,24 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
+                padding: const EdgeInsets.fromLTRB(8.0, 16.0, 8.0, 16.0),
                 child: Center(
-                  child: Text(
-                    'تصفح حسب الأقسام',
-                    style: theme.textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    child: Text(
+                      'تصفح حسب الأقسام',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
                     ),
                   ),
                 ),
@@ -383,7 +396,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final category = _categories[index];
+                    // حساب الفهرس المعكوس ليكون الترتيب من اليمين إلى اليسار
+                    final crossAxisCount = MediaQuery.of(context).size.width > 600 ? 4 : 3;
+                    final rowIndex = index ~/ crossAxisCount;
+                    final rowStartIndex = rowIndex * crossAxisCount;
+                    final reverseIndex = rowStartIndex + crossAxisCount - 1 - (index % crossAxisCount);
+                    
+                    // التأكد من أن الفهرس المعكوس في نطاق مقبول
+                    final safeIndex = reverseIndex < _categories.length ? reverseIndex : index;
+                    
+                    final category = _categories[safeIndex];
                     return _buildCategoryCard(
                       context,
                       category['iconUrl'],
@@ -426,11 +448,25 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
-                child: Text(
-                  'الأماكن المتاحة للإقامة',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                padding: const EdgeInsets.fromLTRB(8.0, 16.0, 8.0, 16.0),
+                child: Center(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withOpacity(0.2),
+                        width: 1,
+                      ),
+                    ),
+                    padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 20.0),
+                    child: Text(
+                      'الأماكن المتاحة للإقامة',
+                      style: theme.textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: theme.colorScheme.primary,
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -446,7 +482,16 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    final place = _availablePlaces[index];
+                    // حساب الفهرس المعكوس ليكون الترتيب من اليمين إلى اليسار
+                    final crossAxisCount = MediaQuery.of(context).size.width > 600 ? 4 : 3;
+                    final rowIndex = index ~/ crossAxisCount;
+                    final rowStartIndex = rowIndex * crossAxisCount;
+                    final reverseIndex = rowStartIndex + crossAxisCount - 1 - (index % crossAxisCount);
+                    
+                    // التأكد من أن الفهرس المعكوس في نطاق مقبول
+                    final safeIndex = reverseIndex < _availablePlaces.length ? reverseIndex : index;
+                    
+                    final place = _availablePlaces[safeIndex];
                     return _buildPlaceCard(
                       context,
                       place,
@@ -1031,16 +1076,37 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
                       ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                label,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              const SizedBox(height: 12), // توحيد المسافة
+              Container(
+                height: 20, // تحديد ارتفاع ثابت للنص
+                alignment: Alignment.center,
+                child: label.length > 6
+                  ? Marquee(
+                      animationDuration: Duration(seconds: 2),
+                      backDuration: Duration(milliseconds: 1000),
+                      pauseDuration: Duration(milliseconds: 1000),
+                      direction: Axis.horizontal,
+                      textDirection: TextDirection.rtl,
+                      autoRepeat: true,
+                      child: Text(
+                        label,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : Text(
+                      label,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
               ),
             ],
           ),
@@ -1157,16 +1223,37 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
                       ),
                 ),
               ),
-              const SizedBox(height: 8),
-              Text(
-                place.name,
-                style: theme.textTheme.bodyLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  fontSize: 14,
-                ),
-                textAlign: TextAlign.center,
-                maxLines: 2,
-                overflow: TextOverflow.ellipsis,
+              const SizedBox(height: 12), // توحيد المسافة
+              Container(
+                height: 20, // تحديد ارتفاع ثابت للنص
+                alignment: Alignment.center,
+                child: place.name.length > 6
+                  ? Marquee(
+                      animationDuration: Duration(seconds: 2),
+                      backDuration: Duration(milliseconds: 1000),
+                      pauseDuration: Duration(milliseconds: 1000),
+                      direction: Axis.horizontal,
+                      textDirection: TextDirection.rtl,
+                      autoRepeat: true,
+                      child: Text(
+                        place.name,
+                        style: theme.textTheme.bodyLarge?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 14,
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    )
+                  : Text(
+                      place.name,
+                      style: theme.textTheme.bodyLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 14,
+                      ),
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
               ),
             ],
           ),
