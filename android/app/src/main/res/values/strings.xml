@@ -1,7 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">السهم للتسكين</string>
-    <string name="facebook_app_id">690868213430653</string>
-    <string name="fb_login_protocol_scheme">fb690868213430653</string>
-    <string name="facebook_client_token">69c0a36f1b7db11e791e7a32ec034760</string>
+    <!-- Facebook configuration removed -->
 </resources>

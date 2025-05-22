@@ -67,16 +67,7 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
   }
 
   List<Apartment> get _filteredApartments {
-    if (_searchQuery.isEmpty) {
-      return _apartments;
-    }
-
-    final query = _searchQuery.toLowerCase();
-    return _apartments.where((apartment) {
-      return apartment.name.toLowerCase().contains(query) ||
-          apartment.location.toLowerCase().contains(query) ||
-          apartment.description.toLowerCase().contains(query);
-    }).toList();
+    return _apartments;
   }
 
   @override
@@ -91,51 +82,9 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
           style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(left: 16.0),
-            child: IconButton(
-              icon: const Icon(Icons.refresh),
-              onPressed: _loadApartments,
-              tooltip: 'تحديث',
-            ),
-          ),
-        ],
       ),
       body: Column(
         children: [
-          // Search Bar
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: TextFormField(
-              controller: _searchController,
-              decoration: InputDecoration(
-                hintText: 'ابحث عن شقة...',
-                prefixIcon: const Icon(Icons.search),
-                suffixIcon:
-                    _searchQuery.isNotEmpty
-                        ? IconButton(
-                          icon: const Icon(Icons.clear),
-                          onPressed: () {
-                            _searchController.clear();
-                            setState(() {
-                              _searchQuery = '';
-                            });
-                          },
-                        )
-                        : null,
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(10),
-                ),
-              ),
-              onChanged: (value) {
-                setState(() {
-                  _searchQuery = value.trim();
-                });
-              },
-            ),
-          ),
-
           // Error Message
           if (_error != null)
             Padding(
@@ -179,9 +128,7 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
                           ),
                           const SizedBox(height: 16),
                           Text(
-                            _searchQuery.isEmpty
-                                ? 'لا توجد شقق متاحة حالياً'
-                                : 'لا توجد نتائج مطابقة لبحثك',
+                            'لا توجد شقق متاحة حالياً',
                             style: theme.textTheme.titleMedium?.copyWith(
                               color: Colors.grey,
                               fontWeight: FontWeight.bold,

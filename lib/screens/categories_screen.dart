@@ -57,10 +57,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
   // Navigation protection
   bool _isNavigating = false;
 
-  // Search and filter
-  final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
-  
   @override
   void initState() {
     super.initState();
@@ -92,7 +88,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
   void dispose() {
     _tabController.dispose();
     _scrollController.dispose();
-    _searchController.dispose();
     super.dispose();
   }
 
@@ -207,16 +202,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
     }
   }
   
-  // Filter apartments based on search query
-  List<Apartment> get _filteredApartments {
-    if (_searchQuery.isEmpty) return _apartments;
-    
-    return _apartments.where((apartment) {
-      return apartment.name.toLowerCase().contains(_searchQuery.toLowerCase()) ||
-             apartment.location.toLowerCase().contains(_searchQuery.toLowerCase());
-    }).toList();
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -284,19 +269,19 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
       child: NestedScrollView(
         headerSliverBuilder: (context, innerBoxIsScrolled) => [
           SliverAppBar(
-            pinned: true,
-            floating: true,
+            pinned: true, 
+            floating: false, // Changed to false to ensure it stays pinned
+            snap: false, // Added to ensure proper pinning behavior
             automaticallyImplyLeading: false,
-            leading: IconButton(
-              icon: const Icon(Icons.close),
-              onPressed: () => _safelyNavigateBack(context),
-            ),
             title: const Text('الأقسام والأماكن المتاحة'),
             centerTitle: true,
+            forceElevated: innerBoxIsScrolled, // Add elevation when scrolled
+            elevation: innerBoxIsScrolled ? 4.0 : 0.0, // Add elevation when scrolled
             bottom: PreferredSize(
               preferredSize: const Size.fromHeight(52), // Increase from 48 to 52
               child: Container(
                 decoration: BoxDecoration(
+                  color: theme.appBarTheme.backgroundColor ?? theme.primaryColor,
                   border: Border(
                     bottom: BorderSide(
                       color: isDarkMode 
@@ -305,6 +290,14 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
                       width: 1,
                     ),
                   ),
+                  boxShadow: [
+                    if (innerBoxIsScrolled)
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 4,
+                        offset: const Offset(0, 2),
+                      ),
+                  ],
                 ),
                 child: TabBar(
                   controller: _tabController,
@@ -369,10 +362,12 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
             SliverToBoxAdapter(
               child: Padding(
                 padding: const EdgeInsets.fromLTRB(8.0, 8.0, 8.0, 8.0),
-                child: Text(
-                  'تصفح حسب الأقسام',
-                  style: theme.textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
+                child: Center(
+                  child: Text(
+                    'تصفح حسب الأقسام',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ),
@@ -491,44 +486,6 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
                   tooltip: 'الرئيسية',
                 ),
               ],
-              bottom: PreferredSize(
-                preferredSize: const Size.fromHeight(60),
-                child: Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
-                  child: TextField(
-                    controller: _searchController,
-                    onChanged: (value) {
-                      setState(() {
-                        _searchQuery = value;
-                      });
-                    },
-                    decoration: InputDecoration(
-                      hintText: 'ابحث في ${_selectedCategory!}...',
-                      prefixIcon: const Icon(Icons.search),
-                      suffixIcon: _searchQuery.isNotEmpty
-                        ? IconButton(
-                            icon: const Icon(Icons.clear),
-                            onPressed: () {
-                              setState(() {
-                                _searchController.clear();
-                                _searchQuery = '';
-                              });
-                            },
-                          )
-                        : null,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      filled: true,
-                      fillColor: isDarkMode
-                        ? Colors.grey[800]
-                        : Colors.grey[200],
-                      contentPadding: const EdgeInsets.symmetric(vertical: 0),
-                    ),
-                  ),
-                ),
-              ),
             ),
           ],
           body: _isLoadingApartments
@@ -541,13 +498,11 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
   
   // Apartments content
   Widget _buildApartmentsContent(ThemeData theme, bool isDarkMode) {
-    if (_filteredApartments.isEmpty) {
+    if (_apartments.isEmpty) {
       return EmptyStateWidget(
         icon: Icons.apartment,
         title: 'لا توجد عقارات متاحة',
-        message: _searchQuery.isNotEmpty
-          ? 'لم يتم العثور على نتائج مطابقة لبحثك'
-          : 'لا توجد عقارات متاحة في هذا القسم حالياً',
+        message: 'لا توجد عقارات متاحة في هذا القسم حالياً',
         buttonText: 'تحديث',
         onPressed: () => _loadApartmentsByCategory(_selectedCategory!),
       );
@@ -561,9 +516,9 @@ class _CategoriesScreenState extends State<CategoriesScreen> with SingleTickerPr
         child: ListView.builder(
           // Remove bottom padding
           padding: EdgeInsets.zero,
-          itemCount: _filteredApartments.length,
+          itemCount: _apartments.length,
           itemBuilder: (context, index) {
-            final apartment = _filteredApartments[index];
+            final apartment = _apartments[index];
             return Container(
               margin: const EdgeInsets.only(bottom: 20),
               decoration: BoxDecoration(

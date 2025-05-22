@@ -559,10 +559,11 @@ class _LoginScreenState extends State<LoginScreen> {
 
                 // Social Login Buttons
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  mainAxisAlignment: MainAxisAlignment.center, // Changed from spaceEvenly to center
                   children: [
                     // Google Login Button
-                    Expanded(
+                    SizedBox(
+                      width: MediaQuery.of(context).size.width * 0.7, // Adjusted width to be wider since it's the only button now
                       child: ElevatedButton.icon(
                         onPressed: () async {
                           setState(() {
@@ -651,108 +652,6 @@ class _LoginScreenState extends State<LoginScreen> {
                           size: 20,
                         ),
                         label: const Text('جوجل'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black87,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey.shade300),
-                          ),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    // Facebook Login Button
-                    Expanded(
-                      child: ElevatedButton.icon(
-                        onPressed: () async {
-                          setState(() {
-                            _isLoading = true;
-                          });
-
-                          try {
-                            final authProvider = Provider.of<AuthProvider>(
-                              context,
-                              listen: false,
-                            );
-
-                            final success =
-                                await authProvider.signInWithFacebook();
-
-                            if (!mounted) return;
-
-                            if (success) {
-                              if (!mounted) return;
-
-                              // Set the navigation index to 'More' (index 4)
-                              final navProvider =
-                                  Provider.of<NavigationProvider>(
-                                    context,
-                                    listen: false,
-                                  );
-                              navProvider.setIndex(4);
-
-                              print("تسجيل الدخول بنجاح عبر فيسبوك - الانتقال إلى الشاشة الرئيسية");
-                              
-                              // Navigate to the MainNavigationScreen
-                              Navigator.pushReplacement(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (context) => MainNavigationScreen(),
-                                ),
-                              );
-                              
-                              // طلب التحقق من اكتمال الملف الشخصي بعد فترة قصيرة
-                              Future.delayed(const Duration(milliseconds: 500), () {
-                                MainNavigationScreen.checkProfileCompletion();
-                              });
-
-                              // Show success message
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text(
-                                    'تم تسجيل الدخول بنجاح عبر فيسبوك',
-                                  ),
-                                  backgroundColor: Colors.green,
-                                ),
-                              );
-                            } else {
-                              if (!mounted) return;
-
-                              // Show error message
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                const SnackBar(
-                                  content: Text('فشل تسجيل الدخول عبر فيسبوك'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          } catch (e) {
-                            // Show error message
-                            if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('حدث خطأ: ${e.toString()}'),
-                                  backgroundColor: Colors.red,
-                                ),
-                              );
-                            }
-                          } finally {
-                            if (mounted) {
-                              setState(() {
-                                _isLoading = false;
-                              });
-                            }
-                          }
-                        },
-                        icon: const FaIcon(
-                          FontAwesomeIcons.facebook,
-                          color: Colors.blue,
-                          size: 20,
-                        ),
-                        label: const Text('فيسبوك'),
                         style: ElevatedButton.styleFrom(
                           backgroundColor: Colors.white,
                           foregroundColor: Colors.black87,

@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter_facebook_auth/flutter_facebook_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import '../services/firestore_service.dart'; // Import FirestoreService
 import '../services/notification_service.dart'; // Import NotificationService
@@ -69,8 +68,6 @@ class AuthProvider with ChangeNotifier {
         final providerInfo = firebaseUser.providerData.first.providerId;
         if (providerInfo.contains('google')) {
           authProvider = 'Google';
-        } else if (providerInfo.contains('facebook')) {
-          authProvider = 'Facebook';
         }
       }
       
@@ -215,56 +212,6 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       print('Reset Password Error: $e');
       throw e.toString();
-    }
-  }
-
-  // Sign In with Facebook
-  Future<bool> signInWithFacebook() async {
-    _status = AuthStatus.authenticating;
-    notifyListeners();
-
-    try {
-      print('Starting Facebook sign in');
-      _isNewUser = true; // Assume new user before authentication
-      
-      // Trigger the Facebook sign-in flow with specific permissions
-      final LoginResult result = await FacebookAuth.instance.login(
-        permissions: ['public_profile', 'email'],
-      );
-
-      // Check if login was successful
-      if (result.status == LoginStatus.success) {
-        // Get access token
-        final AccessToken accessToken = result.accessToken!;
-
-        // Create a credential from the access token
-        final OAuthCredential credential = FacebookAuthProvider.credential(
-          accessToken.token,
-        );
-
-        // Sign in to Firebase with the Facebook credential
-        await _auth.signInWithCredential(credential);
-
-        print('Facebook sign in successful - User is new: $_isNewUser');
-        // State change will be handled by the listener (_onAuthStateChanged)
-        return true;
-      } else {
-        // Handle cancelled or failed login
-        _status = AuthStatus.unauthenticated;
-        notifyListeners();
-        print('Facebook login failed or cancelled: ${result.status}');
-        return false;
-      }
-    } on FirebaseAuthException catch (e) {
-      print('Facebook Sign In Error: ${e.message}');
-      _status = AuthStatus.unauthenticated;
-      notifyListeners();
-      return false;
-    } catch (e) {
-      print('Facebook Sign In Error: $e');
-      _status = AuthStatus.unauthenticated;
-      notifyListeners();
-      return false;
     }
   }
 

@@ -1299,7 +1299,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         padding: const EdgeInsets.all(8.0),
         child: Wrap(
           spacing: 12.0,
-          runSpacing: 12.0,
+          runSpacing: 16.0, // زيادة المسافة بين الصفوف للعناصر الطويلة
           children:
               features.map((feature) {
                 // تحديد الأيقونة المناسبة للميزة
@@ -1308,8 +1308,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                 return Container(
                   width:
                       MediaQuery.of(context).size.width *
-                      0.28, // تقريبا 3 عناصر في الصف
-                  height: 50,
+                      0.30, // زيادة العرض قليلا
+                  height: 60, // زيادة الارتفاع للنص الطويل
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.topLeft,
@@ -1391,8 +1391,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                           : Colors.blue[800],
                                 ),
                                 textAlign: TextAlign.start,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
+                                softWrap: true,
+                                overflow: TextOverflow.visible,
                               ),
                             ),
                           ],

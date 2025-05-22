@@ -31,6 +31,7 @@ import '../services/firestore_service.dart'; // Import FirestoreService
 import '../screens/why_choose_us_screen.dart'; // Import WhyChooseUsScreen
 import '../screens/login_screen.dart'; // Import LoginScreen
 import '../screens/contact_us_screen.dart'; // Import ContactUsScreen
+import 'featured_properties_screen.dart'; // إضافة استيراد للشاشة الجديدة
 
 // Feature class for Why Choose Us section - moved outside of _HomeScreenState
 class _Feature {
@@ -81,10 +82,12 @@ class _HomeScreenState extends State<HomeScreen> {
   List<Map<String, dynamic>> _categories = [];
   List<Map<String, dynamic>> _availablePlaces = [];
   List<Apartment> _latestApartments = [];
+  List<Apartment> _featuredProperties = []; // قائمة جديدة للعقارات المميزة
   PageController _pageController = PageController();
   bool _isLoading = true;
   bool _isCategoriesLoading = true;
   bool _isPlacesLoading = false;
+  bool _isFeaturedLoading = true; // متغير جديد لحالة تحميل العقارات المميزة
   bool _hasFetchedApartments = false;
   int _currentBannerIndex = 0;
 
@@ -105,6 +108,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // ثم جلب الشقق
       await _fetchLatestApartments();
+
+      // جلب العقارات المميزة
+      await _fetchFeaturedProperties();
 
       // إعداد المستمع للتغييرات بعد تحميل البيانات الأولية
       _setupApartmentsListener();
@@ -435,11 +441,11 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         TextButton.icon(
                           onPressed: () {
-                            // Navigate to all featured properties
+                            // Navigate to featured properties screen
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const ApartmentsListScreen(),
+                                builder: (context) => const FeaturedPropertiesScreen(),
                               ),
                             );
                           },
@@ -479,13 +485,13 @@ class _HomeScreenState extends State<HomeScreen> {
                   
                   SizedBox(
                     height: 240,
-                    child: !_isLoading && _latestApartments.isNotEmpty
+                    child: !_isFeaturedLoading && _featuredProperties.isNotEmpty
                       ? ListView.builder(
                           padding: const EdgeInsets.only(right: 8.0, left: 16.0),
                           scrollDirection: Axis.horizontal,
-                          itemCount: _latestApartments.length > 2 ? 3 : _latestApartments.length,
+                          itemCount: _featuredProperties.length > 3 ? 3 : _featuredProperties.length,
                           itemBuilder: (context, index) {
-                            final apartment = _latestApartments[index];
+                            final apartment = _featuredProperties[index];
                             return Container(
                               width: MediaQuery.of(context).size.width * 0.85,
                               margin: const EdgeInsets.only(right: 12.0),
@@ -536,9 +542,36 @@ class _HomeScreenState extends State<HomeScreen> {
                           },
                         )
                       : Center(
-                          child: CircularProgressIndicator(
-                            color: theme.colorScheme.primary,
-                          ),
+                          child: _isFeaturedLoading 
+                            ? CircularProgressIndicator(
+                                color: theme.colorScheme.primary,
+                              )
+                            : Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.home_outlined,
+                                      size: 48,
+                                      color: theme.colorScheme.primary.withOpacity(0.7),
+                                    ),
+                                    const SizedBox(height: 12),
+                                    Text(
+                                      'لا توجد عقارات مميزة متاحة حالياً',
+                                      textAlign: TextAlign.center,
+                                      style: textTheme.titleMedium?.copyWith(
+                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                      ),
+                                    ),
+                                    const SizedBox(height: 8),
+                                    TextButton(
+                                      onPressed: _fetchFeaturedProperties,
+                                      child: Text('تحديث'),
+                                    ),
+                                  ],
+                                ),
+                              ),
                         ),
                   ),
                 ],
@@ -897,7 +930,7 @@ class _HomeScreenState extends State<HomeScreen> {
         mainAxisSpacing: 10.0,
         childAspectRatio: 2.5,
       ),
-      itemCount: _categories.length,
+      itemCount: _categories.length > 6 ? 6 : _categories.length,
       itemBuilder: (context, index) {
         final category = _categories[index];
         return _buildCategoryCard(
@@ -1504,6 +1537,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // محاولة مسح التخزين المؤقت قبل جلب البيانات الجديدة
       _propertyService.clearCache(key: 'latest_properties');
+      _propertyService.clearCache(key: 'available_properties');
 
       // جلب الشقق من Supabase
       List<Apartment> apartments = [];
@@ -1734,6 +1768,9 @@ class _HomeScreenState extends State<HomeScreen> {
     if (!mounted) return;
 
     try {
+      // مسح التخزين المؤقت للخدمات
+      _propertyService.clearCache();
+      
       // تحديث العقارات
       await _fetchLatestApartments();
 
@@ -1742,6 +1779,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // تحديث الفئات
       await _fetchCategories();
+      
+      // تحديث العقارات المميزة
+      await _fetchFeaturedProperties();
 
       // تحديث بيانات المستخدم (سيؤدي إلى تحديث الرصيد في AppBar)
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
@@ -2799,6 +2839,60 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
       ),
     );
+  }
+
+  // جلب العقارات المميزة
+  Future<void> _fetchFeaturedProperties() async {
+    if (!mounted) return;
+
+    try {
+      setState(() {
+        _isFeaturedLoading = true;
+      });
+
+      // تسجيل حالة الاتصال الحالية
+      if (kDebugMode) {
+        final logger = Logger('HomeScreen');
+        logger.info('بدء جلب العقارات المميزة...');
+      }
+
+      // محاولة مسح التخزين المؤقت قبل جلب البيانات الجديدة
+      _propertyService.clearCache(key: 'featured_properties');
+
+      // جلب الشقق المميزة من Supabase
+      final properties = await _propertyService.getFeaturedProperties(limit: 10);
+
+      if (!mounted) return;
+
+      // تسجيل معلومات الشقق للتشخيص
+      if (kDebugMode) {
+        final logger = Logger('HomeScreen');
+        if (properties.isEmpty) {
+          logger.warning('لم يتم جلب أي عقارات مميزة!');
+        } else {
+          logger.info('تم جلب ${properties.length} عقار مميز');
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _featuredProperties = properties;
+          _isFeaturedLoading = false;
+        });
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        final logger = Logger('HomeScreen');
+        logger.severe('خطأ عام في جلب العقارات المميزة: $e');
+      }
+
+      // حتى في حالة الخطأ، نريد إنهاء حالة التحميل
+      setState(() {
+        _isFeaturedLoading = false;
+      });
+    }
   }
 }
                 

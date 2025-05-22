@@ -36,10 +36,11 @@ class PropertyServiceSupabase {
       _logger.info('بدء جلب أحدث العقارات من Supabase...');
 
       try {
-        // محاولة جلب البيانات بدون تحديد شرط is_available للحصول على كل العقارات
+        // محاولة جلب البيانات مع تطبيق شرط is_available = true فقط
         final response = await _supabase
             .from('properties')
             .select()
+            .eq('is_available', true)
             .order('created_at', ascending: false)
             .limit(limit)
             .timeout(_timeout);
@@ -108,11 +109,12 @@ class PropertyServiceSupabase {
       // استخراج معرفات العقارات
       final propertyIds = response.map<String>((item) => item['property_id'] as String).toList();
 
-      // جلب تفاصيل العقارات
+      // جلب تفاصيل العقارات المتاحة فقط
       final propertiesResponse = await _supabase
           .from('properties')
           .select()
           .inFilter('id', propertyIds)
+          .eq('is_available', true)
           .timeout(_timeout);
 
       // تحويل البيانات إلى كائنات Apartment
@@ -189,6 +191,7 @@ class PropertyServiceSupabase {
       final response = await _supabase
           .from('properties')
           .select()
+          .eq('is_available', true)
           .or('name.ilike.%$query%,address.ilike.%$query%,description.ilike.%$query%')
           .limit(limit)
           .timeout(_timeout);
@@ -214,6 +217,7 @@ class PropertyServiceSupabase {
           .from('properties')
           .select()
           .eq('type', type)
+          .eq('is_available', true)
           .limit(limit)
           .timeout(_timeout);
 
@@ -288,6 +292,7 @@ class PropertyServiceSupabase {
       final response = await _supabase
           .from('properties')
           .select()
+          .eq('is_available', true)
           .gte('price', minPrice)
           .lte('price', maxPrice)
           .limit(limit)
@@ -466,6 +471,7 @@ class PropertyServiceSupabase {
           .from('properties')
           .select()
           .inFilter('id', commonPropertyIds)
+          .eq('is_available', true)
           .limit(limit)
           .timeout(_timeout);
 
@@ -530,6 +536,7 @@ class PropertyServiceSupabase {
           .from('properties')
           .select()
           .inFilter('id', propertyIds)
+          .eq('is_available', true)
           .timeout(_timeout);
 
       // تحويل البيانات إلى كائنات Apartment
@@ -732,5 +739,58 @@ class PropertyServiceSupabase {
       _logger.severe('فشل جلب الأماكن المرتبطة بالعقار: $e');
       return [];
     }
+  }
+
+  // جلب العقارات المميزة (شقق السهم)
+  Future<List<Apartment>> getFeaturedProperties({int limit = 10}) async {
+    const cacheKey = 'featured_properties';
+    const categoryId = '8'; // ID للقسم "شقق السهم"
+    
+    // فحص التخزين المؤقت أولاً
+    if (_isCacheValid(cacheKey)) {
+      _logger.info('استخدام البيانات المخزنة مؤقتاً للعقارات المميزة');
+      return _cache[cacheKey]!;
+    }
+    
+    return _fetchWithRetry(() async {
+      _logger.info('جلب العقارات المميزة من قسم شقق السهم...');
+
+      try {
+        // أولاً نحصل على معرفات العقارات المرتبطة بقسم شقق السهم
+        final categoryPropertiesQuery = await _supabase
+            .from('property_categories')
+            .select('property_id')
+            .eq('category_id', categoryId)
+            .timeout(_timeout);
+
+        if (categoryPropertiesQuery.isEmpty) {
+          _logger.info('لا توجد عقارات مرتبطة بقسم شقق السهم');
+          return [];
+        }
+
+        // استخراج معرفات العقارات
+        final propertyIds = categoryPropertiesQuery.map<String>((item) => item['property_id'] as String).toList();
+
+        // جلب تفاصيل العقارات المتاحة فقط
+        final propertiesResponse = await _supabase
+            .from('properties')
+            .select()
+            .inFilter('id', propertyIds)
+            .eq('is_available', true)
+            .limit(limit)
+            .timeout(_timeout);
+
+        // تحويل البيانات إلى كائنات Apartment
+        final apartments = propertiesResponse.map<Apartment>((data) => Apartment.fromSupabase(data)).toList();
+        
+        // تخزين البيانات مؤقتاً
+        _cacheResponse(cacheKey, apartments);
+        
+        return apartments;
+      } catch (e) {
+        _logger.severe('خطأ في جلب العقارات المميزة: $e');
+        return [];
+      }
+    });
   }
 }
