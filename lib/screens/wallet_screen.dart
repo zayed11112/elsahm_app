@@ -666,7 +666,8 @@ class _WalletScreenState extends State<WalletScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Center(child: Text('شحن المحفظة')),
+        title: const Text('شحن المحفظة'),
+        centerTitle: true,
         backgroundColor: primarySkyBlue,
         foregroundColor: Colors.white,
         elevation: 2.0,

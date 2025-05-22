@@ -169,14 +169,41 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final request = http.MultipartRequest('POST', uri);
     request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
 
+    try {
+      final response = await request.send();
+      final responseData = await response.stream.bytesToString();
+      final jsonData = json.decode(responseData);
+
+      if (response.statusCode == 200 && jsonData['success'] == true) {
+        return jsonData['data']['url'];
+      } else {
+        print('ImgBB upload failed. Trying fallback method...');
+        // If ImgBB fails, try the fallback method
+        return _uploadToFreeImage(imageFile);
+      }
+    } catch (e) {
+      print('Error during ImgBB upload: $e');
+      // If there's an exception, try the fallback method
+      return _uploadToFreeImage(imageFile);
+    }
+  }
+
+  // دالة بديلة لرفع الصورة باستخدام Freeimage.host
+  Future<String> _uploadToFreeImage(File imageFile) async {
+    const String apiKey = '6d207e02198a847aa98d0a2a901485a5'; // مفتاح API الخاص بـ Freeimage.host
+    final uri = Uri.parse('https://freeimage.host/api/1/upload?key=$apiKey');
+    
+    final request = http.MultipartRequest('POST', uri);
+    request.files.add(await http.MultipartFile.fromPath('source', imageFile.path));
+
     final response = await request.send();
     final responseData = await response.stream.bytesToString();
     final jsonData = json.decode(responseData);
 
-    if (response.statusCode == 200 && jsonData['success'] == true) {
-      return jsonData['data']['url'];
+    if (response.statusCode == 200 && jsonData['status_code'] == 200) {
+      return jsonData['image']['url'];
     } else {
-      throw Exception('Failed to upload image: ${jsonData['error']?.toString() ?? 'Unknown error'}');
+      throw Exception('فشل رفع الصورة: ${jsonData['status_txt'] ?? 'خطأ غير معروف'}');
     }
   }
 
@@ -476,6 +503,21 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               ),
                             ),
                           ),
+                          const SizedBox(height: 6),
+                          
+                          // نص توضيحي
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16),
+                            child: Text(
+                              "انقر على الزر لتغيير الصورة الشخصية",
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+                                fontStyle: FontStyle.italic,
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 20),
                           
                           // حقول المعلومات الشخصية
@@ -489,6 +531,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             textColor: textColor,
                             labelColor: labelColor,
                             iconColor: iconColor,
+                            maxLength: 40,
                             validator: (value) => (value == null || value.isEmpty) 
                                 ? 'الرجاء إدخال الاسم' : null,
                           ),
@@ -520,6 +563,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             labelColor: labelColor,
                             iconColor: iconColor,
                             keyboardType: TextInputType.text,
+                            maxLength: 15,
                           ),
                         ],
                       ),
@@ -595,6 +639,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             labelColor: labelColor,
                             iconColor: iconColor,
                             keyboardType: TextInputType.number,
+                            maxLength: 15,
                             validator: (value) => (value == null || value.isEmpty) 
                                 ? 'الرجاء إدخال الدفعة' : null,
                           ),
@@ -686,6 +731,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required Color iconColor,
     TextInputType keyboardType = TextInputType.text,
     String? Function(String?)? validator,
+    int? maxLength,
   }) {
     return TextFormField(
       controller: controller,
@@ -712,7 +758,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         filled: true,
         fillColor: fieldBgColor,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        counterText: maxLength != null ? '' : null,
       ),
+      maxLength: maxLength,
       keyboardType: keyboardType,
       validator: validator,
       enabled: !_isLoading,

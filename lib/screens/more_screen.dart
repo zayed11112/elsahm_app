@@ -661,52 +661,72 @@ class _MoreScreenState extends State<MoreScreen> {
     Color blueButtonColor,
     UserProfile userProfile,
   ) {
-    return Container(
-      margin: const EdgeInsets.only(
-        top: 20,
-      ), // Add margin to position below the Stack elements
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(10),
-        boxShadow: [
-          BoxShadow(
-            color: accentBlue.withOpacity(0.3),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: ElevatedButton(
-        onPressed: () {
-          print(
-            "Edit Profile button pressed!",
-          ); // Keep print statement for testing
-          print(
-            "User Profile to pass: ${userProfile.uid}",
-          ); // Keep print statement
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => EditProfileScreen(userProfile: userProfile),
-            ),
-          );
-        },
-        style: ElevatedButton.styleFrom(
-          backgroundColor: blueButtonColor,
-          foregroundColor: Colors.white,
-          shape: RoundedRectangleBorder(
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.only(
+            top: 20,
+          ), // Add margin to position below the Stack elements
+          decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(10),
+            boxShadow: [
+              BoxShadow(
+                color: accentBlue.withOpacity(0.3),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
           ),
-          padding: const EdgeInsets.symmetric(horizontal: 45, vertical: 12),
-        ),
-        child: const Text(
-          "تعديل بياناتي", // TODO: Localize this
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w600,
-            letterSpacing: 0.5,
+          child: ElevatedButton(
+            onPressed: () {
+              print(
+                "Edit Profile button pressed!",
+              ); // Keep print statement for testing
+              print(
+                "User Profile to pass: ${userProfile.uid}",
+              ); // Keep print statement
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => EditProfileScreen(userProfile: userProfile),
+                ),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: blueButtonColor,
+              foregroundColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(10),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 45, vertical: 12),
+            ),
+            child: const Text(
+              "تعديل بياناتي", // TODO: Localize this
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                letterSpacing: 0.5,
+              ),
+            ),
           ),
         ),
-      ),
+        // إضافة نص توضيحي تحت الزر
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16),
+          child: Text(
+            "انقر على الزر لتتمكن من تغيير البيانات",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 12,
+              color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+              fontStyle: FontStyle.italic,
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -943,10 +963,10 @@ class _MoreScreenState extends State<MoreScreen> {
 
     // قائمة الإجراءات المتاحة
     final List<Map<String, dynamic>> actions = [
+      {'icon': Icons.wallet, 'text': 'شحن محفظتي', 'highlight': true},
       {'icon': Icons.favorite, 'text': 'المفضلة', 'highlight': false},
       {'icon': Icons.place, 'text': 'الاماكن المتاحة', 'highlight': false},
       {'icon': Icons.category, 'text': ' الاقسام', 'highlight': false},
-      {'icon': Icons.wallet, 'text': 'شحن محفظتي', 'highlight': true},
       {'icon': Icons.request_page, 'text': 'طلبات الدفع', 'highlight': false},
       {'icon': Icons.groups, 'text': 'جروبات', 'highlight': false},
       {'icon': Icons.settings, 'text': 'الإعدادات', 'highlight': false},

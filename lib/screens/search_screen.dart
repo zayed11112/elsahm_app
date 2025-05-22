@@ -421,13 +421,6 @@ class _SearchScreenState extends State<SearchScreen> {
       appBar: AppBar(
         title: const Text('البحث', textAlign: TextAlign.center),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshProperties,
-            tooltip: 'تحديث النتائج',
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         child: Column(
@@ -552,13 +545,7 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildPropertyCard(Apartment apartment) {
-    // مؤشر الصورة الحالية للشقة
-    if (_currentImageIndex[apartment.id] == null) {
-      _currentImageIndex[apartment.id] = 0;
-    }
-
     // تحضير بطاقة العقار
-
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       elevation: 4,
@@ -575,7 +562,7 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Image Carousel
+            // Image Section - تم تبسيطه لعرض الصورة الأولى فقط
             Stack(
               alignment: Alignment.bottomCenter,
               children: [
@@ -584,9 +571,7 @@ class _SearchScreenState extends State<SearchScreen> {
                   child:
                       apartment.imageUrls.isNotEmpty
                           ? CachedNetworkImage(
-                            imageUrl:
-                                apartment.imageUrls[_currentImageIndex[apartment
-                                    .id]!],
+                            imageUrl: apartment.imageUrls[0], // عرض الصورة الأولى فقط
                             fit: BoxFit.cover,
                             width: double.infinity,
                             placeholder:
@@ -612,90 +597,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                 ),
 
-                // Image Navigation Arrows
-                if (apartment.imageUrls.length > 1)
-                  Positioned.fill(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        // Previous Image
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _currentImageIndex[apartment.id] =
-                                  (_currentImageIndex[apartment.id]! - 1) %
-                                  apartment.imageUrls.length;
-                            });
-                          },
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            margin: const EdgeInsets.only(left: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.arrow_back_ios,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-
-                        // Next Image
-                        GestureDetector(
-                          onTap: () {
-                            setState(() {
-                              _currentImageIndex[apartment.id] =
-                                  (_currentImageIndex[apartment.id]! + 1) %
-                                  apartment.imageUrls.length;
-                            });
-                          },
-                          child: Container(
-                            width: 30,
-                            height: 30,
-                            margin: const EdgeInsets.only(right: 4),
-                            decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.4),
-                              shape: BoxShape.circle,
-                            ),
-                            child: const Icon(
-                              Icons.arrow_forward_ios,
-                              color: Colors.white,
-                              size: 16,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                // Image Indicators
-                if (apartment.imageUrls.length > 1)
-                  Positioned(
-                    bottom: 8,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: List.generate(
-                        apartment.imageUrls.length,
-                        (index) => Container(
-                          width: 8,
-                          height: 8,
-                          margin: const EdgeInsets.symmetric(horizontal: 2),
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color:
-                                _currentImageIndex[apartment.id] == index
-                                    ? Theme.of(context).colorScheme.primary
-                                    : Colors.white.withOpacity(0.6),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-
-                // زر المفضلة بدلاً من شارة الفئة
+                // زر المفضلة 
                 Positioned(
                   top: 8,
                   right: 8,
