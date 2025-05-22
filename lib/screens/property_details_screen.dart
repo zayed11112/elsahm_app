@@ -15,6 +15,7 @@ import 'package:lottie/lottie.dart';
 import '../providers/auth_provider.dart';
 import '../utils/auth_utils.dart';
 import '../screens/checkout_screen.dart';
+import '../utils/navigation_utils.dart'; // Import NavigationUtils
 
 // TODO: Create a Property model in lib/models/property.dart
 
@@ -43,6 +44,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   final Logger _logger = Logger('PropertyDetailsScreen');
   int _currentImageIndex = 0;
   final PageController _galleryPageController = PageController();
+  bool _isNavigating = false; // Track navigation state
 
   // Get property from widget
   dynamic get property => widget.property;
@@ -129,8 +131,24 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
               child: IconButton(
                 icon: const Icon(Icons.arrow_back, color: Colors.white),
                 onPressed: () {
-                  // العودة إلى الصفحة الرئيسية مباشرة
-                  Navigator.of(context).popUntil((route) => route.isFirst);
+                  // Prevent multiple navigation attempts
+                  if (_isNavigating) return;
+                  _isNavigating = true;
+                  
+                  // Use the safe navigation method instead of popUntil
+                  if (Navigator.canPop(context)) {
+                    Navigator.of(context).pop();
+                  } else {
+                    // Fallback if we can't pop
+                    Navigator.of(context).pushReplacementNamed('/');
+                  }
+                  
+                  // Reset the flag after navigation
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted) {
+                      setState(() => _isNavigating = false);
+                    }
+                  });
                 },
               ),
             ),
@@ -2085,6 +2103,7 @@ class _FullScreenGallery extends StatefulWidget {
 class _FullScreenGalleryState extends State<_FullScreenGallery> {
   late int _currentIndex;
   late PageController _pageController;
+  bool _isNavigating = false; // Add this for navigation tracking
 
   @override
   void initState() {
@@ -2235,7 +2254,24 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
               child: IconButton(
                 icon: const Icon(Icons.close, color: Colors.white, size: 28),
                 onPressed: () {
-                  Navigator.of(context).pop();
+                  // Prevent multiple navigation attempts
+                  if (_isNavigating) return;
+                  _isNavigating = true;
+                  
+                  // Use safe pop
+                  if (Navigator.canPop(context)) {
+                    Navigator.of(context).pop();
+                  } else {
+                    // Fallback if we can't pop
+                    Navigator.of(context).pushReplacementNamed('/');
+                  }
+                  
+                  // Reset the flag after navigation
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    if (mounted) {
+                      setState(() => _isNavigating = false);
+                    }
+                  });
                 },
               ),
             ),
@@ -2386,6 +2422,7 @@ class _FullScreenVideoPlayer extends StatefulWidget {
 
 class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
   final Logger _logger = Logger('VideoPlayer');
+  bool _isNavigating = false; // Add navigation tracking
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
   WebViewController? _webViewController;
@@ -2702,7 +2739,12 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
             ),
             const SizedBox(height: 16),
             TextButton.icon(
-              onPressed: () => Navigator.of(context).pop(),
+              onPressed: () {
+                // Safe navigation back
+                if (Navigator.canPop(context)) {
+                  Navigator.of(context).pop();
+                }
+              },
               icon: const Icon(Icons.arrow_back),
               label: const Text('العودة'),
               style: TextButton.styleFrom(foregroundColor: Colors.white70),

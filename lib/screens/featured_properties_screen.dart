@@ -184,7 +184,7 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
       padding: const EdgeInsets.all(16.0),
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 1,
-        childAspectRatio: 1.6,
+        childAspectRatio: 1.4,
         mainAxisSpacing: 16.0,
         crossAxisSpacing: 16.0,
       ),
