@@ -6,6 +6,7 @@ import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
 import 'dart:async'; // ضروري للتعامل مع الاستثناءات بشكل متزامن
 import 'package:flutter/services.dart'; // لضبط توجيه الشاشة
 import 'package:onesignal_flutter/onesignal_flutter.dart'; // Import OneSignal
+import 'package:intl/date_symbol_data_local.dart'; // إضافة استيراد جديد
 
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
@@ -60,6 +61,9 @@ Future<void> main() async {
       } catch (e) {
         print('Firebase initialization error: $e');
       }
+
+      // تهيئة بيانات اللغة العربية للتواريخ
+      await initializeDateFormatting('ar', null);
 
       // Enable debug prints for widget rebuilds (to diagnose issues)
       // debugPrintRebuildDirtyWidgets = true; // تعطيل هذا يقلل من الضغط على الخيط الرئيسي

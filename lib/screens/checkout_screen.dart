@@ -10,6 +10,8 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:elsahm_app/screens/wallet_screen.dart';
 import 'package:lottie/lottie.dart';
+import '../services/booking_service.dart';
+import 'booking_requests_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
   final String propertyId;
@@ -363,9 +365,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         });
         
         if (isSuccess) {
-          // عرض رسالة النجاح مع الرسوم المتحركة
-          await _showSuccessDialog(_phoneController.text);
-          // لا حاجة للعودة للشاشة السابقة لأن مربع الحوار سيقوم بذلك
+          // عرض رسالة نجاح الحجز ثم العودة للشاشة الرئيسية
+          _showSuccessAndReturnHome();
         } else {
           _showErrorDialog('حدث خطأ أثناء إرسال طلب الحجز، يرجى المحاولة مرة أخرى');
         }
@@ -688,78 +689,76 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     }
   }
 
-  // عرض رسالة نجاح الحجز
-  Future<void> _showSuccessDialog(String phoneNumber) async {
-    return showDialog(
+  // عرض رسالة نجاح الحجز ثم العودة للشاشة الرئيسية
+  void _showSuccessAndReturnHome() {
+    showDialog(
       context: context,
       barrierDismissible: false,
       builder: (BuildContext context) {
         return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          backgroundColor: Colors.white,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
           child: Container(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(20),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                // رسوم متحركة
-                SizedBox(
-                  width: 200,
-                  height: 200,
-                  child: Lottie.asset(
-                    'assets/animations/groub.json',
-                    repeat: true,
-                    animate: true,
+                Container(
+                  height: 120,
+                  width: 120,
+                  decoration: BoxDecoration(
+                    color: Colors.green.shade50,
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.check_circle,
+                    color: Colors.green,
+                    size: 80,
                   ),
                 ),
-                const SizedBox(height: 24),
-                // عنوان النجاح
+                const SizedBox(height: 20),
                 const Text(
-                  "تم الحجز بنجاح!",
+                  "تم الحجز بنجاح",
                   style: TextStyle(
                     fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    color: Colors.green,
                   ),
+                ),
+                const SizedBox(height: 10),
+                const Text(
+                  "يمكنك متابعة حالة الحجز من صفحة طلبات الحجز",
                   textAlign: TextAlign.center,
                 ),
-                const SizedBox(height: 16),
-                // رسالة التأكيد
-                Text(
-                  "سيتم التواصل معك قريباً على رقم الهاتف: $phoneNumber",
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                // زر الإغلاق
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      Navigator.of(context).pop(); // إغلاق الحوار
-                      Navigator.of(context).pop(); // العودة للشاشة السابقة
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Theme.of(context).colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
+                const SizedBox(height: 20),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                      },
+                      child: const Text("حسناً"),
                     ),
-                    child: const Text(
-                      "حسناً",
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
+                    const SizedBox(width: 10),
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.of(context).pop();
+                        // انتقل إلى شاشة طلبات الحجز
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const BookingRequestsScreen(),
+                          ),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Theme.of(context).primaryColor,
+                        foregroundColor: Colors.white,
                       ),
+                      child: const Text("متابعة الحجوزات"),
                     ),
-                  ),
+                  ],
                 ),
               ],
             ),
@@ -767,6 +766,62 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         );
       },
     );
+  }
+
+  // إرسال طلب الحجز
+  Future<bool> _submitRequest() async {
+    try {
+      setState(() {
+        _isLoading = true;
+      });
+      
+      _logger.info('بدء إرسال طلب الحجز للعقار: ${widget.propertyName}');
+      
+      // تحضير بيانات الطلب
+      final Map<String, dynamic> requestData = {
+        'property_id': widget.propertyId,
+        'property_name': widget.propertyName,
+        'property_price': widget.propertyPrice,
+        'customer_name': _nameController.text,
+        'customer_phone': _phoneController.text,
+        'university_id': _universityIdController.text,
+        'college': _collegeController.text,
+        'deposit': _propertyDeposit > 0 ? _propertyDeposit : double.tryParse(_depositController.text) ?? 0.0,
+        'commission': _propertyCommission > 0 ? _propertyCommission : double.tryParse(_commissionController.text) ?? 0.0,
+        'status': _status,
+        'user_id': _userId ?? '',
+        'user_email': _userEmail ?? '',
+        'created_at': DateTime.now().toIso8601String(),
+      };
+      
+      _logger.info('بيانات طلب الحجز: $requestData');
+      
+      // إرسال الطلب إلى Supabase
+      await _checkoutService.addCheckoutRequest(requestData);
+      
+      // إنشاء حجز في Firestore
+      final bookingService = BookingService();
+      final bookingId = await bookingService.createBooking(
+        apartmentId: widget.propertyId,
+        apartmentName: widget.propertyName,
+        totalPrice: widget.propertyPrice,
+        startDate: DateTime.now(), // يمكن تعديل هذه القيم حسب احتياجات التطبيق
+        endDate: DateTime.now().add(const Duration(days: 365)), // سنة كاملة كافتراضي
+        notes: 'تم الحجز من خلال صفحة الحجز',
+        imageUrl: widget.imageUrl,
+      );
+      
+      _logger.info('تم إنشاء الحجز في Firestore بنجاح، المعرف: $bookingId');
+      
+      return true;
+    } catch (e) {
+      _logger.severe('خطأ في إرسال طلب الحجز: $e');
+      return false;
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -1354,7 +1409,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'العمولة: ${_propertyCommission > 0 ? "${formatCurrency(_propertyCommission)} جنيه" : "بدون تحديد"}',
+                            'العمولة: ${_propertyCommission > 0 ? "${_propertyCommission.toStringAsFixed(2)} جنيه" : "بدون تحديد"}',
                             style: textTheme.bodyMedium?.copyWith(
                               color: Colors.amber.shade800,
                               fontWeight: FontWeight.bold,
@@ -1372,7 +1427,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            'العربون: ${_propertyDeposit > 0 ? "${formatCurrency(_propertyDeposit)} جنيه" : "بدون تحديد"}',
+                            'العربون: ${_propertyDeposit > 0 ? "${_propertyDeposit.toStringAsFixed(2)} جنيه" : "بدون تحديد"}',
                             style: textTheme.bodyMedium?.copyWith(
                               color: Colors.blue.shade700,
                               fontWeight: FontWeight.bold,

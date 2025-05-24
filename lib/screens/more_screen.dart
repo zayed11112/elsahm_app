@@ -27,6 +27,7 @@ import 'package:image_picker/image_picker.dart';
 import '../screens/checkout_list_screen.dart';
 import '../services/notification_service.dart'; // استيراد خدمة الإشعارات
 import '../screens/settings_screen.dart'; // استيراد صفحة الإعدادات
+import 'booking_requests_screen.dart'; // استيراد صفحة طلبات الحجز
 // TODO: Import other necessary screens when created (e.g., Prescriptions, Purchases)
 
 // تعريف الألوان الجديدة المستخدمة في الشاشة
@@ -968,6 +969,7 @@ class _MoreScreenState extends State<MoreScreen> {
       {'icon': Icons.place, 'text': 'الاماكن المتاحة', 'highlight': false},
       {'icon': Icons.category, 'text': ' الاقسام', 'highlight': false},
       {'icon': Icons.request_page, 'text': 'طلبات الدفع', 'highlight': false},
+      {'icon': Icons.bookmark_outlined, 'text': 'طلبات الحجز', 'highlight': false},
       {'icon': Icons.groups, 'text': 'جروبات', 'highlight': false},
       {'icon': Icons.settings, 'text': 'الإعدادات', 'highlight': false},
       {'icon': Icons.info, 'text': 'عن السهم', 'highlight': false},
@@ -1077,6 +1079,13 @@ class _MoreScreenState extends State<MoreScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => const PaymentRequestsScreen(),
+            ),
+          );
+        } else if (text == 'طلبات الحجز') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const BookingRequestsScreen(),
             ),
           );
         } else if (text == 'الاماكن المتاحة') {

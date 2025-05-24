@@ -1,4 +1,5 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:logging/logging.dart';
 
 enum BookingStatus {
   pending,
@@ -7,6 +8,7 @@ enum BookingStatus {
 }
 
 class Booking {
+  static final Logger _logger = Logger('Booking');
   final String id;
   final String userId;
   final String userName;
@@ -53,14 +55,20 @@ class Booking {
 
   // Convert string to BookingStatus
   static BookingStatus stringToBookingStatus(String statusStr) {
-    switch (statusStr) {
+    switch (statusStr.toLowerCase()) {
       case 'pending':
+      case 'جاري المعالجة':
+      case 'قيد الانتظار':
         return BookingStatus.pending;
       case 'confirmed':
+      case 'مؤكد':
         return BookingStatus.confirmed;
       case 'cancelled':
+      case 'canceled':
+      case 'ملغى':
         return BookingStatus.cancelled;
       default:
+        _logger.warning('Unknown status: $statusStr, defaulting to pending');
         return BookingStatus.pending;
     }
   }
@@ -68,6 +76,21 @@ class Booking {
   // Create Booking from Firestore document
   factory Booking.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
+    _logger.info('Creating booking from document: ${doc.id}');
+    
+    // Debug data
+    if (data.containsKey('status')) {
+      _logger.info('Status in document: ${data['status']}');
+    } else {
+      _logger.warning('No status field found in document ${doc.id}');
+    }
+    
+    final status = data['status'] != null 
+      ? stringToBookingStatus(data['status'].toString())
+      : BookingStatus.pending;
+      
+    _logger.info('Parsed status as: $status');
+    
     return Booking(
       id: doc.id,
       userId: data['userId'] ?? '',
@@ -75,14 +98,34 @@ class Booking {
       userEmail: data['userEmail'] ?? '',
       apartmentId: data['apartmentId'] ?? '',
       apartmentName: data['apartmentName'] ?? '',
-      startDate: (data['startDate'] as Timestamp).toDate(),
-      endDate: (data['endDate'] as Timestamp).toDate(),
+      startDate: _parseTimestamp(data['startDate']),
+      endDate: _parseTimestamp(data['endDate']),
       totalPrice: (data['totalPrice'] ?? 0).toDouble(),
-      status: stringToBookingStatus(data['status'] ?? 'pending'),
+      status: status,
       notes: data['notes'],
-      createdAt: (data['createdAt'] as Timestamp).toDate(),
-      updatedAt: (data['updatedAt'] as Timestamp).toDate(),
+      createdAt: _parseTimestamp(data['createdAt']),
+      updatedAt: _parseTimestamp(data['updatedAt']),
     );
+  }
+  
+  // Parse timestamp helper
+  static DateTime _parseTimestamp(dynamic timestamp) {
+    if (timestamp == null) return DateTime.now();
+    
+    if (timestamp is Timestamp) {
+      return timestamp.toDate();
+    } else if (timestamp is DateTime) {
+      return timestamp;
+    } else if (timestamp is String) {
+      try {
+        return DateTime.parse(timestamp);
+      } catch (e) {
+        _logger.warning('Invalid date format: $timestamp');
+        return DateTime.now();
+      }
+    }
+    
+    return DateTime.now();
   }
 
   // Convert Booking to Firestore data

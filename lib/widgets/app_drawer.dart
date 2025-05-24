@@ -14,6 +14,7 @@ import '../screens/payment_requests_screen.dart'; // Import payment requests scr
 import '../screens/wallet_screen.dart'; // Import wallet screen
 import '../screens/settings_screen.dart'; // Import the new settings screen
 import '../screens/groups_screen.dart'; // Import groups screen
+import '../screens/booking_requests_screen.dart'; // Import booking requests screen
 // import '../screens/settings_screen.dart'; // Placeholder for settings
 
 class AppDrawer extends StatefulWidget {
@@ -175,6 +176,19 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                             context,
                             MaterialPageRoute(
                               builder: (_) => const PaymentRequestsScreen(),
+                            ),
+                          );
+                        },
+                      ),
+                      _buildDrawerItem(
+                        svgPath: 'assets/icons/calendar.svg', // Assuming you have this SVG or use another appropriate icon
+                        text: 'طلبات الحجز',
+                        onTap: () {
+                          Navigator.pop(context);
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const BookingRequestsScreen(),
                             ),
                           );
                         },
