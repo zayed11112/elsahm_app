@@ -357,7 +357,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         elevation: 4.0, // Add some shadow
         shape: const CircleBorder(), // Ensure it's circular
         child: Lottie.asset(
-          'assets/animations/Animation_app.json',
+          'assets/animations/app_home_new2.json',
           width: 42, // Reduced size
           height: 42, // Reduced size
           fit: BoxFit.contain,

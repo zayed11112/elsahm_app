@@ -181,7 +181,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                         },
                       ),
                       _buildDrawerItem(
-                        svgPath: 'assets/icons/calendar.svg', // Assuming you have this SVG or use another appropriate icon
+                        svgPath: 'assets/icons/booking.svg',
                         text: 'طلبات الحجز',
                         onTap: () {
                           Navigator.pop(context);
@@ -313,24 +313,74 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                                 begin: const Offset(-0.3, 0),
                                 end: Offset.zero,
                               ).animate(itemAnimation),
-                              child: ListTile(
-                                contentPadding: const EdgeInsets.symmetric(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(
                                   horizontal: 20.0,
-                                  vertical: 4.0,
+                                  vertical: 12.0,
                                 ),
-                                leading: Icon(Icons.logout),
-                                title: Center(
-                                  child: Text(
-                                    'تسجيل الخروج',
-                                    style: const TextStyle(fontWeight: FontWeight.bold),
-                                    textAlign: TextAlign.center,
+                                child: Container(
+                                  decoration: BoxDecoration(
+                                    color: Colors.red.shade500,
+                                    borderRadius: BorderRadius.circular(16),
+                                    boxShadow: [
+                                      BoxShadow(
+                                        color: Colors.red.withOpacity(0.3),
+                                        blurRadius: 8,
+                                        offset: const Offset(0, 2),
+                                      ),
+                                    ],
+                                  ),
+                                  child: Material(
+                                    color: Colors.transparent,
+                                    child: InkWell(
+                                      onTap: () async {
+                                        await _animationController.reverse();
+                                        Navigator.pop(context);
+                                        await authProvider.signOut();
+                                      },
+                                      borderRadius: BorderRadius.circular(16),
+                                      child: Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16.0,
+                                          vertical: 16.0,
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              padding: const EdgeInsets.all(8),
+                                              decoration: BoxDecoration(
+                                                color: Colors.white.withOpacity(0.2),
+                                                shape: BoxShape.circle,
+                                              ),
+                                              child: const Icon(
+                                                Icons.logout_rounded,
+                                                color: Colors.white,
+                                                size: 22,
+                                              ),
+                                            ),
+                                            Expanded(
+                                              child: Center(
+                                                child: Text(
+                                                  'تسجيل الخروج',
+                                                  style: const TextStyle(
+                                                    color: Colors.white,
+                                                    fontWeight: FontWeight.bold,
+                                                    fontSize: 16,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                            const Icon(
+                                              Icons.arrow_forward_ios_rounded,
+                                              color: Colors.white,
+                                              size: 16,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    ),
                                   ),
                                 ),
-                                onTap: () async {
-                                  await _animationController.reverse();
-                                  Navigator.pop(context);
-                                  await authProvider.signOut();
-                                },
                               ),
                             ),
                           );

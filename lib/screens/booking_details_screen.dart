@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:lottie/lottie.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
 
@@ -566,12 +568,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               theme,
             ),
             _buildDetailRow(
-              'رقم العقار',
-              booking.apartmentId,
-              Icons.qr_code_rounded,
-              theme,
-            ),
-            _buildDetailRow(
               'السعر الإجمالي',
               '${booking.totalPrice} جنيه',
               Icons.attach_money_rounded,
@@ -595,25 +591,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                     label: 'اتصال',
                     color: Colors.green,
                     onTap: () {
-                      _showToast('ميزة الاتصال غير متاحة حالياً');
+                      _launchPhone('01093130120');
                     },
                   ),
-                  const SizedBox(width: 16),
+                  const SizedBox(width: 24),
                   _buildActionButton(
-                    icon: Icons.message_outlined,
-                    label: 'رسالة',
-                    color: Colors.blue,
+                    icon: FontAwesomeIcons.whatsapp,
+                    label: 'واتساب',
+                    color: Colors.green.shade700,
                     onTap: () {
-                      _showToast('ميزة المراسلة غير متاحة حالياً');
-                    },
-                  ),
-                  const SizedBox(width: 16),
-                  _buildActionButton(
-                    icon: Icons.share_outlined,
-                    label: 'مشاركة',
-                    color: Colors.purple,
-                    onTap: () {
-                      _showToast('تم نسخ رابط العقار');
+                      _launchWhatsapp('+201093130120');
                     },
                   ),
                 ],
@@ -1014,5 +1001,38 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
         margin: const EdgeInsets.all(16),
       ),
     );
+  }
+
+  // Launch phone call
+  void _launchPhone(String phoneNumber) async {
+    final Uri phoneUri = Uri(scheme: 'tel', path: phoneNumber);
+    try {
+      if (await canLaunchUrl(phoneUri)) {
+        await launchUrl(phoneUri);
+      } else {
+        _showToast('لا يمكن الاتصال بالرقم في هذا الجهاز');
+      }
+    } catch (e) {
+      _showToast('حدث خطأ أثناء محاولة الاتصال');
+    }
+  }
+
+  // Launch WhatsApp
+  void _launchWhatsapp(String phoneNumber) async {
+    // تنسيق رقم الهاتف (إزالة أي فراغات أو حروف خاصة)
+    String formattedNumber = phoneNumber.replaceAll(RegExp(r'\s+'), '');
+    
+    // إنشاء رابط واتساب
+    final Uri whatsappUri = Uri.parse('https://wa.me/$formattedNumber');
+    
+    try {
+      if (await canLaunchUrl(whatsappUri)) {
+        await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
+      } else {
+        _showToast('لا يمكن فتح واتساب على هذا الجهاز');
+      }
+    } catch (e) {
+      _showToast('حدث خطأ أثناء محاولة فتح واتساب');
+    }
   }
 } 

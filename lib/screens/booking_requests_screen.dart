@@ -23,10 +23,6 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
   bool _isRefreshing = false;
   bool _isDateFormattingInitialized = false;
   
-  // Status filter
-  String _selectedStatusFilter = 'الكل';
-  final List<String> _statusFilters = ['الكل', 'قيد الانتظار', 'مؤكد', 'ملغى'];
-  
   @override
   void initState() {
     super.initState();
@@ -40,26 +36,30 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
 
   // Filter bookings by status
   List<Booking> _filterBookings(List<Booking> bookings) {
-    if (_selectedStatusFilter == 'الكل') {
-      return bookings;
-    }
+    // بعد إزالة القائمة المنسدلة، نعيد جميع الحجوزات دائماً
+    return bookings;
     
-    BookingStatus statusFilter;
-    switch (_selectedStatusFilter) {
-      case 'قيد الانتظار':
-        statusFilter = BookingStatus.pending;
-        break;
-      case 'مؤكد':
-        statusFilter = BookingStatus.confirmed;
-        break;
-      case 'ملغى':
-        statusFilter = BookingStatus.cancelled;
-        break;
-      default:
-        return bookings;
-    }
-    
-    return bookings.where((booking) => booking.status == statusFilter).toList();
+    // كان الكود السابق:
+    // if (_selectedStatusFilter == 'الكل') {
+    //   return bookings;
+    // }
+    // 
+    // BookingStatus statusFilter;
+    // switch (_selectedStatusFilter) {
+    //   case 'قيد الانتظار':
+    //     statusFilter = BookingStatus.pending;
+    //     break;
+    //   case 'مؤكد':
+    //     statusFilter = BookingStatus.confirmed;
+    //     break;
+    //   case 'ملغى':
+    //     statusFilter = BookingStatus.cancelled;
+    //     break;
+    //   default:
+    //     return bookings;
+    // }
+    // 
+    // return bookings.where((booking) => booking.status == statusFilter).toList();
   }
 
   // Format date
@@ -124,14 +124,6 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
         title: const Text('طلبات الحجز',
             style: TextStyle(fontWeight: FontWeight.bold)),
         centerTitle: true,
-        actions: [
-          // Add refresh button to app bar
-          IconButton(
-            icon: const Icon(Icons.refresh),
-            onPressed: _refreshData,
-            tooltip: 'تحديث البيانات',
-          ),
-        ],
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -149,51 +141,6 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
       ),
       body: Column(
         children: [
-          // Status filter
-          Container(
-            margin: const EdgeInsets.all(16),
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            decoration: BoxDecoration(
-              color: Theme.of(context).cardColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
-                  blurRadius: 10,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: DropdownButtonHideUnderline(
-              child: DropdownButton<String>(
-                isExpanded: true,
-                value: _selectedStatusFilter,
-                items: _statusFilters.map((String filter) {
-                  return DropdownMenuItem<String>(
-                    value: filter,
-                    child: Text(
-                      filter,
-                      style: TextStyle(
-                        fontWeight: filter == _selectedStatusFilter
-                            ? FontWeight.bold
-                            : FontWeight.normal,
-                      ),
-                    ),
-                  );
-                }).toList(),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      _selectedStatusFilter = newValue;
-                    });
-                  }
-                },
-                icon: const Icon(Icons.filter_list),
-                hint: const Text('تصفية حسب الحالة'),
-              ),
-            ),
-          ),
-          
           // Bookings list
           Expanded(
             child: RefreshIndicator(
@@ -353,11 +300,11 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.filter_list, size: 70, color: Colors.grey[400]),
+                          Icon(Icons.search_off_rounded, size: 70, color: Colors.grey[400]),
                           const SizedBox(height: 16),
-                          Text(
-                            'لا توجد طلبات حجز بالحالة: $_selectedStatusFilter',
-                            style: const TextStyle(
+                          const Text(
+                            'لا توجد طلبات حجز',
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
                             ),
@@ -365,7 +312,7 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                           ),
                           const SizedBox(height: 8),
                           const Text(
-                            'جرب تصفية أخرى أو اختر "الكل"',
+                            'قم بإنشاء حجز جديد للبدء',
                             style: TextStyle(
                               fontSize: 14,
                               color: Colors.grey,
@@ -403,7 +350,13 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                                     borderRadius: BorderRadius.circular(12),
                                     color: Colors.grey[200],
                                   ),
-                                  child: const Icon(Icons.home, size: 40, color: Colors.grey),
+                                  child: Padding(
+                                    padding: const EdgeInsets.all(10.0),
+                                    child: Image.asset(
+                                      'assets/icons/icon_real-estate.png',
+                                      fit: BoxFit.contain,
+                                    ),
+                                  ),
                                 ),
                                 
                                 // Property details

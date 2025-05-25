@@ -34,7 +34,7 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
         _hasError = false;
       });
 
-      final properties = await _propertyService.getFeaturedProperties(limit: 50);
+      final properties = await _propertyService.getFeaturedProperties();
       
       if (mounted) {
         setState(() {
@@ -180,18 +180,15 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
   }
 
   Widget _buildPropertiesGrid() {
-    return GridView.builder(
+    return ListView.builder(
       padding: const EdgeInsets.all(16.0),
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 1,
-        childAspectRatio: 1.4,
-        mainAxisSpacing: 16.0,
-        crossAxisSpacing: 16.0,
-      ),
       itemCount: _featuredProperties.length,
       itemBuilder: (context, index) {
         final apartment = _featuredProperties[index];
-        return _buildFeaturedPropertyCard(apartment);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 16.0),
+          child: _buildFeaturedPropertyCard(apartment),
+        );
       },
     );
   }
