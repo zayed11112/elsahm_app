@@ -35,8 +35,6 @@ bool isInitialized = false;
 // OneSignal App ID
 const String ONESIGNAL_APP_ID = '3136dbc6-c09c-4bca-b0aa-fe35421ac513';
 
-// تمت إزالة _firebaseMessagingBackgroundHandler لأنه لم يعد مطلوباً مع OneSignal
-
 Future<void> main() async {
   // التقاط أي أخطاء غير متوقعة في التطبيق
   runZonedGuarded(

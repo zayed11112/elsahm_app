@@ -63,10 +63,10 @@ dependencies:
   shared_preferences: ^2.5.3 # Check for latest version
 
   # Image Picker
-  image_picker: ^1.0.0 # Check for latest version
+  image_picker: ^1.1.2 # Check for latest version
 
   # HTTP client
-  http: ^1.1.0 # Check for latest version
+  http: ^1.4.0 # Check for latest version
 
   # Date and time formatting
   intl: ^0.20.2
@@ -111,6 +111,7 @@ dependencies:
   permission_handler: ^12.0.0+1
   auto_size_text: ^3.0.0
   marquee_widget: ^1.2.0
+  uuid: ^4.5.1
 
 dev_dependencies:
   flutter_test:

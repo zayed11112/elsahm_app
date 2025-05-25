@@ -16,6 +16,7 @@ import 'categories_screen.dart';
 import 'payment_requests_screen.dart';
 import 'groups_screen.dart'; // استيراد صفحة الجروبات الجديدة
 import 'notifications_screen.dart'; // استيراد صفحة الإشعارات الجديدة
+import 'complaints_screen.dart'; // استيراد صفحة الشكاوى الجديدة
 import 'package:share_plus/share_plus.dart';
 import 'dart:async';
 import 'dart:io';
@@ -453,24 +454,33 @@ class _MoreScreenState extends State<MoreScreen> {
               mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               crossAxisAlignment: CrossAxisAlignment.center,
               children: [
-                // أيقونة VIP
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 8,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: Icon(
-                    Icons.chair_outlined, // TODO: Consider different icon?
-                    size: 30,
-                    color: accentBlue,
+                // أيقونة الشكاوى
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.lightImpact(); // إضافة اهتزاز خفيف عند النقر
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const ComplaintsScreen()),
+                    );
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      shape: BoxShape.circle,
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          spreadRadius: 1,
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      Icons.contact_support_outlined, // تغيير الأيقونة إلى أيقونة شكاوى مناسبة
+                      size: 30,
+                      color: accentBlue,
+                    ),
                   ),
                 ),
                 // صورة الملف الشخصي - تبسيط العرض
@@ -968,6 +978,7 @@ class _MoreScreenState extends State<MoreScreen> {
       {'icon': Icons.favorite, 'text': 'المفضلة', 'highlight': false},
       {'icon': Icons.place, 'text': 'الاماكن المتاحة', 'highlight': false},
       {'icon': Icons.category, 'text': ' الاقسام', 'highlight': false},
+      {'icon': Icons.support_agent, 'text': 'الشكاوى', 'highlight': false},
       {'icon': Icons.request_page, 'text': 'طلبات الدفع', 'highlight': false},
       {'icon': Icons.bookmark_outlined, 'text': 'طلبات الحجز', 'highlight': false},
       {'icon': Icons.groups, 'text': 'جروبات', 'highlight': false},
@@ -1122,6 +1133,13 @@ class _MoreScreenState extends State<MoreScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => const ChangePasswordScreen(),
+            ),
+          );
+        } else if (text == 'الشكاوى') {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ComplaintsScreen(),
             ),
           );
         }
