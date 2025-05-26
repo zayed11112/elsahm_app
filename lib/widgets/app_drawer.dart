@@ -354,12 +354,17 @@ class _AppDrawerState extends State<AppDrawer>
                                     color: Colors.transparent,
                                     child: InkWell(
                                       onTap: () async {
-                                        final navigator = Navigator.of(context);
-                                        await _animationController.reverse();
-                                        if (mounted) {
-                                          navigator.pop();
+                                        // Show confirmation dialog first
+                                        final bool? confirmLogout = await _showLogoutConfirmationDialog(context);
+                                        
+                                        if (confirmLogout == true) {
+                                          final navigator = Navigator.of(context);
+                                          await _animationController.reverse();
+                                          if (mounted) {
+                                            navigator.pop();
+                                          }
+                                          await authProvider.signOut();
                                         }
-                                        await authProvider.signOut();
                                       },
                                       borderRadius: BorderRadius.circular(16),
                                       child: Padding(
@@ -573,5 +578,71 @@ class _AppDrawerState extends State<AppDrawer>
         listen: false,
       ).setIndex(tabIndex);
     });
+  }
+
+  // Add logout confirmation dialog
+  Future<bool?> _showLogoutConfirmationDialog(BuildContext context) async {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: isDarkMode ? const Color(0xFF222831) : Colors.white,
+          elevation: 24,
+          title: Row(
+            children: [
+              Icon(
+                Icons.logout_rounded,
+                color: Colors.red,
+                size: 28,
+              ),
+              const SizedBox(width: 10),
+              const Text('تأكيد تسجيل الخروج'),
+            ],
+          ),
+          content: Text(
+            'هل أنت متأكد من أنك تريد تسجيل الخروج؟',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.secondary,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'إلغاء',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.red.shade500,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'تسجيل الخروج',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 }

@@ -149,68 +149,84 @@ class _MoreScreenState extends State<MoreScreen> {
 
     // الحصول على معرف المستخدم الحالي
     final String? userId = authProvider.user?.uid;
+    final bool isLoggedIn = userId != null;
 
     return Scaffold(
       backgroundColor: screenBgColor,
-      body:
-          userId == null
-              ? _buildLoginPrompt(context) // Show login prompt if not logged in
-              : StreamBuilder<UserProfile?>(
-                stream: _firestoreService.getUserProfileStream(userId),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(
-                      child: CircularProgressIndicator(color: primarySkyBlue),
-                    );
-                  }
-                  if (snapshot.hasError) {
-                    return Center(child: Text("خطأ: ${snapshot.error}"));
-                  }
-                  if (!snapshot.hasData || snapshot.data == null) {
-                    return const Center(
-                      child: Text("لم يتم العثور على الملف الشخصي."),
-                    );
-                  }
+      body: isLoggedIn
+          ? StreamBuilder<UserProfile?>(
+              stream: _firestoreService.getUserProfileStream(userId),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(color: primarySkyBlue),
+                  );
+                }
+                if (snapshot.hasError) {
+                  return Center(child: Text("خطأ: ${snapshot.error}"));
+                }
+                if (!snapshot.hasData || snapshot.data == null) {
+                  return const Center(
+                    child: Text("لم يتم العثور على الملف الشخصي."),
+                  );
+                }
 
-                  final userProfile = snapshot.data!;
+                final userProfile = snapshot.data!;
 
-                  return SingleChildScrollView(
-                    child: Column(
-                      children: [
-                        _buildHeaderAndProfile(
-                          context,
-                          headerGradient,
-                          userProfile,
-                        ),
-                        const SizedBox(
-                          height: 40, // Increased space to move details down
-                        ), // Space below header elements (profile pic etc.)
-                        _buildUserDetailsSection(
-                          context,
-                          userProfile,
-                          cardBgColor,
-                          cardTextColor,
-                        ), // Add the new details section
-                        const SizedBox(height: 15),
-                        _buildEditProfileButton(
-                          context,
-                          blueButtonColor,
-                          userProfile,
-                        ),
-                        const SizedBox(height: 25), // Space below edit button
-                        _buildMainWallet(context, cardBgColor, cardTextColor),
-                        const SizedBox(height: 15),
-                        _buildActionGrid(
-                          context,
-                          cardBgColor,
-                          cardTextColor,
-                          primarySkyBlue,
-                        ),
-                      ],
-                    ), // Closes Column
-                  ); // Closes SingleChildScrollView return from builder
-                }, // Closes StreamBuilder builder
-              ), // Closes StreamBuilder
+                return SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildHeaderAndProfile(
+                        context,
+                        headerGradient,
+                        userProfile,
+                      ),
+                      const SizedBox(
+                        height: 40, // Increased space to move details down
+                      ), // Space below header elements (profile pic etc.)
+                      _buildUserDetailsSection(
+                        context,
+                        userProfile,
+                        cardBgColor,
+                        cardTextColor,
+                      ), // Add the new details section
+                      const SizedBox(height: 15),
+                      _buildEditProfileButton(
+                        context,
+                        blueButtonColor,
+                        userProfile,
+                      ),
+                      const SizedBox(height: 25), // Space below edit button
+                      _buildMainWallet(context, cardBgColor, cardTextColor),
+                      const SizedBox(height: 15),
+                      _buildActionGrid(
+                        context,
+                        cardBgColor,
+                        cardTextColor,
+                        primarySkyBlue,
+                        isLoggedIn,
+                      ),
+                    ],
+                  ), // Closes Column
+                ); // Closes SingleChildScrollView return from builder
+              }, // Closes StreamBuilder builder
+            ) // Closes StreamBuilder
+          : SingleChildScrollView(
+              // Non-logged in user view
+              child: Column(
+                children: [
+                  _buildGuestHeaderSection(context, headerGradient),
+                  const SizedBox(height: 60), // Increased from 20 to 60
+                  _buildActionGrid(
+                    context,
+                    cardBgColor,
+                    cardTextColor,
+                    primarySkyBlue,
+                    isLoggedIn,
+                  ),
+                ],
+              ),
+            ),
     ); // Closes Scaffold
   } // Closes build method
 
@@ -861,22 +877,22 @@ class _MoreScreenState extends State<MoreScreen> {
     Color buttonColor,
     Color textColor,
     Color highlightColor,
+    bool isLoggedIn,
   ) {
-
-    // قائمة الإجراءات المتاحة
+    // قائمة جميع الإجراءات
     final List<Map<String, dynamic>> actions = [
-      {'icon': Icons.wallet, 'text': 'شحن محفظتي', 'highlight': true},
-      {'icon': Icons.favorite, 'text': 'المفضلة', 'highlight': false},
-      {'icon': Icons.place, 'text': 'الاماكن المتاحة', 'highlight': false},
-      {'icon': Icons.category, 'text': ' الاقسام', 'highlight': false},
-      {'icon': Icons.support_agent, 'text': 'الشكاوى', 'highlight': false},
-      {'icon': Icons.request_page, 'text': 'طلبات الدفع', 'highlight': false},
-      {'icon': Icons.bookmark_outlined, 'text': 'طلبات الحجز', 'highlight': false},
-      {'icon': Icons.groups, 'text': 'جروبات', 'highlight': false},
-      {'icon': Icons.settings, 'text': 'الإعدادات', 'highlight': false},
-      {'icon': Icons.info, 'text': 'عن السهم', 'highlight': false},
-      {'icon': Icons.key, 'text': 'تغير كلمة المرور', 'highlight': false},
-      {'icon': Icons.phone_outlined, 'text': 'اتصل بنا', 'highlight': false},
+      {'icon': Icons.wallet, 'text': 'شحن محفظتي', 'highlight': true, 'requiresAuth': true},
+      {'icon': Icons.favorite, 'text': 'المفضلة', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.place, 'text': 'الاماكن المتاحة', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.category, 'text': ' الاقسام', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.support_agent, 'text': 'الشكاوى', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.request_page, 'text': 'طلبات الدفع', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.bookmark_outlined, 'text': 'طلبات الحجز', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.groups, 'text': 'جروبات', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.settings, 'text': 'الإعدادات', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.info, 'text': 'عن السهم', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.key, 'text': 'تغير كلمة المرور', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.phone_outlined, 'text': 'اتصل بنا', 'highlight': false, 'requiresAuth': false},
     ];
 
     return Padding(
@@ -896,6 +912,7 @@ class _MoreScreenState extends State<MoreScreen> {
             itemBuilder: (context, index) {
               final action = actions[index];
               final bool isHighlighted = action['highlight'] as bool;
+              final bool requiresAuth = action['requiresAuth'] as bool;
 
               return Container(
                 decoration: BoxDecoration(
@@ -922,37 +939,51 @@ class _MoreScreenState extends State<MoreScreen> {
                   isHighlighted ? primarySkyBlue : buttonColor,
                   isHighlighted ? Colors.white : textColor,
                   isHighlighted,
+                  requiresAuth,
+                  isLoggedIn,
                 ),
               );
             },
           ),
           
-          // Add special logout button that takes full width
+          // حالة تسجيل الدخول
           const SizedBox(height: 25),
-          _buildLogoutButton(context),
+          if (isLoggedIn)
+            _buildLogoutButton(context)
+          else
+            _buildLoginButton(context),
         ],
       ),
     );
   }
 
-  // ويدجت مساعد لإنشاء كل زر إجراء
+  // ويدجت مساعد لإنشاء كل زر إجراء مع فحص تسجيل الدخول
   Widget _buildActionButton(
     BuildContext context,
     IconData icon,
-    String text, // This is the original text key (e.g., 'English', 'خروج')
+    String text,
     Color bgColor,
     Color contentColor,
     bool isHighlighted,
+    bool requiresAuth,
+    bool isLoggedIn,
   ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    // Remove ThemeProvider reference for localization
-
+    
+    // التحقق من حالة تسجيل الدخول وما إذا كان الإجراء يتطلب المصادقة
+    final bool canAccess = !requiresAuth || isLoggedIn;
+    
     return ElevatedButton(
       onPressed: () async {
-        // تنفيذ الإجراء لكل زر
-        _logger.info("تم النقر على: $text"); // Log original key
+        // إذا كان الإجراء يتطلب تسجيل دخول ولكن المستخدم غير مسجل
+        if (requiresAuth && !isLoggedIn) {
+          _showLoginRequiredDialog(context);
+          return;
+        }
 
-        // Use the original 'text' key for logic comparison
+        // تنفيذ الإجراء لكل زر
+        _logger.info("تم النقر على: $text");
+
         if (text == 'المفضلة') {
           Navigator.push(
             context,
@@ -968,7 +999,7 @@ class _MoreScreenState extends State<MoreScreen> {
             context,
             MaterialPageRoute(
               builder: (context) => const WhyChooseUsScreen(),
-            ), // Or a dedicated About screen
+            ),
           );
         } else if (text == 'شحن محفظتي') {
           Navigator.push(
@@ -996,8 +1027,7 @@ class _MoreScreenState extends State<MoreScreen> {
               builder:
                   (context) => const CategoriesScreen(
                     fromMainScreen: false,
-                    scrollToAvailablePlaces:
-                        true, // تمرير true للتمرير إلى قسم الأماكن المتاحة
+                    scrollToAvailablePlaces: true,
                   ),
             ),
           );
@@ -1013,10 +1043,9 @@ class _MoreScreenState extends State<MoreScreen> {
               builder:
                   (context) => const CategoriesScreen(
                     fromMainScreen: false,
-                    scrollToAvailablePlaces:
-                        false, // لا تمرير إلى قسم الأماكن المتاحة
+                    scrollToAvailablePlaces: false,
                   ),
-            ), // Navigate to Categories
+            ),
           );
         } else if (text == 'تغير كلمة المرور') {
           Navigator.push(
@@ -1032,9 +1061,7 @@ class _MoreScreenState extends State<MoreScreen> {
               builder: (context) => const ComplaintsScreen(),
             ),
           );
-        }
-        // Add handling for settings button
-        else if (text == 'الإعدادات') {
+        } else if (text == 'الإعدادات') {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -1044,7 +1071,7 @@ class _MoreScreenState extends State<MoreScreen> {
         }
       },
       style: ElevatedButton.styleFrom(
-        backgroundColor: bgColor,
+        backgroundColor: canAccess ? bgColor : bgColor.withOpacity(0.7),
         foregroundColor: contentColor,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
@@ -1059,27 +1086,373 @@ class _MoreScreenState extends State<MoreScreen> {
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
-        elevation: 0, // إزالة الارتفاع الافتراضي للزر
+        elevation: 0,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
         children: [
           Expanded(
             child: Text(
-              // Use the original text directly
               text,
               textAlign: TextAlign.right,
               style: TextStyle(
                 fontSize: 14,
                 fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w500,
+                color: canAccess ? contentColor : contentColor.withOpacity(0.7),
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
           const SizedBox(width: 10),
-          Icon(icon, size: 22),
+          Icon(icon, size: 22, color: canAccess ? null : contentColor.withOpacity(0.7)),
+          if (requiresAuth && !isLoggedIn)
+            Padding(
+              padding: const EdgeInsets.only(right: 4.0),
+              child: Icon(Icons.lock_outline, size: 14, color: contentColor.withOpacity(0.5)),
+            ),
         ],
       ),
+    );
+  }
+
+  // إضافة زر تسجيل الدخول للمستخدمين غير المسجلين
+  Widget _buildLoginButton(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(15.0),
+        gradient: LinearGradient(
+          colors: [
+            accentBlue.withValues(alpha: 0.8),
+            accentBlue,
+          ],
+          begin: Alignment.centerRight,
+          end: Alignment.centerLeft,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: accentBlue.withValues(alpha: 0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          borderRadius: BorderRadius.circular(15.0),
+          onTap: () {
+            // Add haptic feedback for better UX
+            HapticFeedback.mediumImpact();
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (_) => const LoginScreen()),
+            );
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 20.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Right side: icon in a circle
+                Container(
+                  padding: const EdgeInsets.all(8.0),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.login_rounded,
+                    color: Colors.white,
+                    size: 24,
+                  ),
+                ),
+                // Center: text
+                const Text(
+                  'تسجيل الدخول',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 0.5,
+                  ),
+                ),
+                // Left side: arrow icon
+                const Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white,
+                  size: 20,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // إظهار مربع حوار تسجيل الدخول المطلوب
+  void _showLoginRequiredDialog(BuildContext context) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.0),
+              color: Colors.white,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon for attention
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFFFFD700),
+                  ),
+                  child: Icon(
+                    Icons.priority_high,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Title
+                const Text(
+                  "تسجيل الدخول مطلوب",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.blue,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Message
+                const Text(
+                  "يجب عليك تسجيل الدخول أو إنشاء حساب للوصول إلى المحفظة وإدارة رصيدك",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: Colors.black87,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Cancel button
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: Colors.grey,
+                      ),
+                      child: const Text("إلغاء"),
+                    ),
+                    // Login button
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: accentBlue,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                      ),
+                      child: const Text("تسجيل الدخول"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+
+  // Add a guest header section for non-logged in users
+  Widget _buildGuestHeaderSection(BuildContext context, Gradient headerGradient) {
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: [
+        // الخلفية المنحنية مع تدرج لوني
+        ClipPath(
+          clipper: HeaderCurveClipper(curveDepth: 65.0),
+          child: Container(
+            height: 200,
+            decoration: BoxDecoration(gradient: headerGradient),
+            child: Stack(
+              children: [
+                // زخارف متحركة في الخلفية
+                Positioned.fill(
+                  child: CustomPaint(painter: HeaderPatternPainter()),
+                ),
+
+                // دوائر زخرفية متوهجة
+                Positioned(
+                  top: -30,
+                  left: -30,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withAlpha(30),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withAlpha(15),
+                          blurRadius: 20,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 20,
+                  right: -20,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withAlpha(20),
+                    ),
+                  ),
+                ),
+
+                // نص الترحيب للزائر
+                Positioned(
+                  top: 60,
+                  left: 0,
+                  right: 0,
+                  child: Column(
+                    children: [
+                      // تأثير توهج خلف النص
+                      ShaderMask(
+                        shaderCallback: (Rect bounds) {
+                          return RadialGradient(
+                            center: Alignment.center,
+                            radius: 1.0,
+                            colors: [Colors.white, Colors.white.withAlpha(200)],
+                            tileMode: TileMode.mirror,
+                          ).createShader(bounds);
+                        },
+                        child: Text(
+                          "مرحباً بك في السهم",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                            fontWeight: FontWeight.w500,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withAlpha(50),
+                                blurRadius: 5,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // زر تسجيل الدخول
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.login, color: Colors.white),
+                        label: const Text(
+                          "تسجيل الدخول",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 30,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            side: BorderSide(color: Colors.white, width: 1),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        // شعار التطبيق في المنتصف
+        Positioned(
+          top: 148, // Moved lower on the screen
+          child: Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.15),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.all(10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: CachedNetworkImage(
+                imageUrl: 'https://i.ibb.co/TDGcXVGY/sainai.jpg',
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Center(
+                  child: CircularProgressIndicator(
+                    color: accentBlue,
+                    strokeWidth: 2,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: accentBlue,
+                  child: Icon(
+                    Icons.home_work_outlined,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -1117,29 +1490,9 @@ class _MoreScreenState extends State<MoreScreen> {
             
             // Show confirmation dialog
             if (!mounted) return;
-            final bool confirm = await showDialog(
-              context: context,
-              builder: (context) => AlertDialog(
-                title: const Text('تأكيد الخروج'),
-                content: const Text('هل أنت متأكد من رغبتك في تسجيل الخروج؟'),
-                actions: [
-                  TextButton(
-                    onPressed: () => Navigator.of(context).pop(false),
-                    child: const Text('إلغاء'),
-                  ),
-                  ElevatedButton(
-                    onPressed: () => Navigator.of(context).pop(true),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.redAccent,
-                      foregroundColor: Colors.white,
-                    ),
-                    child: const Text('تسجيل الخروج'),
-                  ),
-                ],
-              ),
-            ) ?? false;
+            final bool? confirmLogout = await _showLogoutConfirmationDialog(context);
             
-            if (confirm) {
+            if (confirmLogout == true) {
               await authProvider.signOut();
             }
           },
@@ -1185,57 +1538,69 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  // Widget to display when the user is not logged in
-  Widget _buildLoginPrompt(BuildContext context) {
-    final theme = Theme.of(context);
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              Icons.person_off_outlined, // Or Icons.login
-              size: 80,
-              color: theme.colorScheme.primary.withValues(alpha: 0.6),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              "الرجاء تسجيل الدخول", //  Localize
-              style: theme.textTheme.headlineSmall?.copyWith(
-                fontWeight: FontWeight.bold,
+  // Add logout confirmation dialog
+  Future<bool?> _showLogoutConfirmationDialog(BuildContext context) async {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          backgroundColor: isDarkMode ? const Color(0xFF222831) : Colors.white,
+          elevation: 24,
+          title: Row(
+            children: [
+              Icon(
+                Icons.logout_rounded,
+                color: Colors.red,
+                size: 28,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            Text(
-              "تحتاج إلى تسجيل الدخول لعرض ملفك الشخصي وإدارة حسابك.", //Localize
-              style: theme.textTheme.bodyMedium?.copyWith(
-                color: Colors.grey[600],
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 32),
-            ElevatedButton.icon(
-              icon: const Icon(Icons.login),
-              label: const Text("الذهاب إلى تسجيل الدخول"), //Localize
-              onPressed: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => const LoginScreen()),
-                );
-              },
-              style: ElevatedButton.styleFrom(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 30,
-                  vertical: 12,
+              const SizedBox(width: 10),
+              const Text('تأكيد تسجيل الخروج'),
+            ],
+          ),
+          content: Text(
+            'هل أنت متأكد من أنك تريد تسجيل الخروج؟',
+            style: TextStyle(fontSize: 16),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              style: TextButton.styleFrom(
+                foregroundColor: Theme.of(context).colorScheme.secondary,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                textStyle: const TextStyle(fontSize: 16),
+              ),
+              child: const Text(
+                'إلغاء',
+                style: TextStyle(fontWeight: FontWeight.bold),
+              ),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              style: ElevatedButton.styleFrom(
+                foregroundColor: Colors.white,
+                backgroundColor: Colors.red.shade500,
+                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                elevation: 2,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              child: const Text(
+                'تسجيل الخروج',
+                style: TextStyle(fontWeight: FontWeight.bold),
               ),
             ),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
 

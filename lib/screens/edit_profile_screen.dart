@@ -586,7 +586,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           const SizedBox(height: 16),
                           _buildTextFormField(
                             controller: _studentIdController,
-                            labelText: 'الرقم التعريفي',
+                            labelText: '(ID) الرقم التعريفي  ',
                             icon: Icons.badge_outlined,
                             isDarkMode: isDarkMode,
                             fieldBgColor: fieldBgColor,

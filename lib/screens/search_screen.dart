@@ -391,7 +391,10 @@ class _SearchScreenState extends State<SearchScreen> {
             // Filter Section
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              height: _showFilters ? 400 : 0, // Fixed height
+              height: _showFilters ? null : 0, // Remove fixed height to allow content to determine height
+              constraints: _showFilters 
+                ? null 
+                : const BoxConstraints(maxHeight: 0),
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
@@ -409,12 +412,10 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               child:
                   _showFilters
-                      ? SingleChildScrollView(
-                        child: Padding(
+                      ? Padding(
                           padding: const EdgeInsets.all(16.0),
                           child: _buildFilterContent(),
-                        ),
-                      )
+                        )
                       : const SizedBox(),
             ),
 
@@ -693,23 +694,16 @@ class _SearchScreenState extends State<SearchScreen> {
     );
   }
 
-  // تم إزالة الدالة غير المستخدمة _buildFeatureItem
-
   // محتوى الفلتر منفصل عن حاوية الفلتر للتنظيم
   Widget _buildFilterContent() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisSize: MainAxisSize.min, // Make the column take minimum required space
       children: [
-        // Header
+        // Header with swapped positions
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'تصفية النتائج',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
             TextButton.icon(
               onPressed: _resetFilters,
               icon: const Icon(Icons.refresh, size: 18),
@@ -718,19 +712,28 @@ class _SearchScreenState extends State<SearchScreen> {
                 foregroundColor: Theme.of(context).colorScheme.primary,
               ),
             ),
+            Text(
+              'تصفية النتائج',
+              style: Theme.of(
+                context,
+              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
+            ),
           ],
         ),
         const Divider(),
         const SizedBox(height: 8),
 
         // First filter: Housing Category (القسم)
-        Text(
-          'القسم',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            'القسم',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8), // Reduced from 12 to 8
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
@@ -777,16 +780,19 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 24),
+        const SizedBox(height: 16), // Reduced from 24 to 16
 
         // Second filter: Area (المنطقة)
-        Text(
-          'المنطقة',
-          style: Theme.of(
-            context,
-          ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+        Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            'المنطقة',
+            style: Theme.of(
+              context,
+            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
+          ),
         ),
-        const SizedBox(height: 12),
+        const SizedBox(height: 8), // Reduced from 12 to 8
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
@@ -833,89 +839,7 @@ class _SearchScreenState extends State<SearchScreen> {
             ),
           ),
         ),
-        const SizedBox(height: 24),
-
-        // Price Range slider
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'السعر الشهري',
-              style: Theme.of(
-                context,
-              ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-            ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-              decoration: BoxDecoration(
-                color: Theme.of(
-                  context,
-                ).colorScheme.primary.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '${_priceRange.start.round()} - ${_priceRange.end.round()} جنيه',
-                style: TextStyle(
-                  fontWeight: FontWeight.bold,
-                  color: Theme.of(context).colorScheme.primary,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        SliderTheme(
-          data: SliderThemeData(
-            activeTrackColor: Theme.of(context).colorScheme.primary,
-            inactiveTrackColor: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.2),
-            thumbColor: Theme.of(context).colorScheme.primary,
-            overlayColor: Theme.of(
-              context,
-            ).colorScheme.primary.withValues(alpha: 0.1),
-            trackHeight: 6.0,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
-            overlayShape: const RoundSliderOverlayShape(overlayRadius: 18.0),
-          ),
-          child: RangeSlider(
-            values: _priceRange,
-            min: 0,
-            max: 20000,
-            divisions: 100,
-            labels: RangeLabels(
-              '${_priceRange.start.round()} جنيه',
-              '${_priceRange.end.round()} جنيه',
-            ),
-            onChanged: (RangeValues values) {
-              setState(() {
-                _priceRange = values;
-                _applyFilters();
-              });
-            },
-          ),
-        ),
-        const SizedBox(height: 24),
-
-        // Apply Filters Button
-        SizedBox(
-          width: double.infinity,
-          child: ElevatedButton(
-            onPressed: _applyFilters,
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(vertical: 16),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-            ),
-            child: const Text(
-              'تطبيق الفلاتر',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-            ),
-          ),
-        ),
+        // No bottom spacing here
       ],
     );
   }
@@ -992,6 +916,8 @@ class _SearchScreenState extends State<SearchScreen> {
         controller: _searchController,
         textDirection: TextDirection.rtl,
         textAlign: TextAlign.right,
+        maxLength: 50, // Limit text to 50 characters
+        buildCounter: (context, {required currentLength, required isFocused, maxLength}) => const SizedBox.shrink(), // Hide the counter
         style: TextStyle(
           fontSize: 16,
           color: isDarkMode ? Colors.white : Colors.black87,

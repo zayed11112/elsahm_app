@@ -14,9 +14,9 @@ class _GroupsScreenState extends State<GroupsScreen>
   late TabController _tabController;
   bool _isLoading = false;
 
-  // تعريف الألوان الرئيسية
-  final Color primaryColor = const Color(0xFF2C3E50);
-  final Color accentColor = const Color(0xFF3498DB);
+  // Theme colors
+  final Color primaryBlue = const Color(0xFF1565C0);
+  final Color secondaryBlue = const Color(0xFF42A5F5);
   final Color facebookColor = const Color(0xFF1877F2);
   final Color whatsappColor = const Color(0xFF25D366);
   final Color telegramColor = const Color(0xFF0088CC);
@@ -24,7 +24,8 @@ class _GroupsScreenState extends State<GroupsScreen>
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 3, vsync: this);
+    // Reordering tabs to prioritize WhatsApp
+    _tabController = TabController(length: 3, vsync: this, initialIndex: 0);
   }
 
   @override
@@ -33,7 +34,7 @@ class _GroupsScreenState extends State<GroupsScreen>
     super.dispose();
   }
 
-  // دالة لفتح الروابط
+  // Launch URL function
   Future<void> _launchUrl(String url) async {
     setState(() {
       _isLoading = true;
@@ -45,8 +46,9 @@ class _GroupsScreenState extends State<GroupsScreen>
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text('لا يمكن فتح الرابط: $url'),
-              backgroundColor: Colors.red,
+              content: const Text('لا يمكن فتح الرابط'),
+              backgroundColor: Colors.red.shade800,
+              behavior: SnackBarBehavior.floating,
             ),
           );
         }
@@ -54,7 +56,11 @@ class _GroupsScreenState extends State<GroupsScreen>
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('حدث خطأ: $e'), backgroundColor: Colors.red),
+          SnackBar(
+            content: Text('حدث خطأ: $e'),
+            backgroundColor: Colors.red.shade800,
+            behavior: SnackBarBehavior.floating,
+          ),
         );
       }
     } finally {
@@ -66,9 +72,31 @@ class _GroupsScreenState extends State<GroupsScreen>
     }
   }
 
+  // Copy URL function
+  void _copyUrl(String url) {
+    Clipboard.setData(ClipboardData(text: url)).then((_) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text('تم نسخ الرابط'),
+          backgroundColor: Colors.green.shade800,
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 1),
+        ),
+      );
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final backgroundColor = isDarkMode ? const Color(0xFF121212) : Colors.white;
+    final cardBackgroundColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
+    final textColor = isDarkMode ? Colors.white : Colors.black87;
+    final subtitleColor = isDarkMode ? Colors.grey[400]! : Colors.grey[700]!;
+    
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
         title: const Text(
           'جروبات السهم',
@@ -81,17 +109,24 @@ class _GroupsScreenState extends State<GroupsScreen>
         ),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: accentColor,
+          indicatorColor: primaryBlue,
           indicatorWeight: 3,
-          labelColor:
-              Theme.of(context).brightness == Brightness.dark
-                  ? Colors.white
-                  : primaryColor,
-          unselectedLabelColor: Colors.grey,
-          tabs: const [
-            Tab(text: 'فيسبوك'),
-            Tab(text: 'واتساب'),
-            Tab(text: 'تليجرام'),
+          labelColor: isDarkMode ? Colors.white : primaryBlue,
+          unselectedLabelColor: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+          tabs: [
+            // Reordering tabs to prioritize WhatsApp
+            Tab(
+              text: 'واتساب',
+              icon: Image.asset('assets/icons/whatsapp_icon.png', width: 24, height: 24),
+            ),
+            Tab(
+              text: 'فيسبوك',
+              icon: Icon(Icons.facebook, color: facebookColor),
+            ),
+            Tab(
+              text: 'تليجرام',
+              icon: Icon(Icons.telegram, color: telegramColor),
+            ),
           ],
         ),
       ),
@@ -100,22 +135,129 @@ class _GroupsScreenState extends State<GroupsScreen>
           TabBarView(
             controller: _tabController,
             children: [
-              _buildFacebookGroups(),
-              _buildWhatsAppGroups(),
-              _buildTelegramGroups(),
+              // Reordering tab content to match new tab order
+              _buildWhatsAppGroups(cardBackgroundColor, textColor, subtitleColor),
+              _buildFacebookGroups(cardBackgroundColor, textColor, subtitleColor),
+              _buildTelegramGroups(cardBackgroundColor, textColor, subtitleColor),
             ],
           ),
           if (_isLoading)
             Container(
-              color: Colors.black.withValues(alpha: 128), // 0.5 ≈ 128/255
-              child: const Center(child: CircularProgressIndicator()),
+              color: Colors.black54,
+              child: const Center(
+                child: CircularProgressIndicator(),
+              ),
             ),
         ],
       ),
     );
   }
 
-  Widget _buildFacebookGroups() {
+  Widget _buildWhatsAppGroups(Color cardBackground, Color textColor, Color subtitleColor) {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // College groups section - prioritized at the top
+          _buildSectionTitle(
+            'جروبات الكليات والمساعدة',
+            Icons.school,
+            primaryBlue,
+            textColor,
+          ),
+          const SizedBox(height: 16),
+          GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildCollageGroupCard(
+                title: 'كلية حاسبات ومعلومات',
+                url: 'https://chat.whatsapp.com/FmtwyGpKeEb4lbi1BIsa2N',
+                color: whatsappColor,
+                icon: Icons.computer,
+                cardBackground: cardBackground,
+                textColor: textColor,
+              ),
+              _buildCollageGroupCard(
+                title: 'كلية هندسة',
+                url: 'https://chat.whatsapp.com/LGTT9PkgbioBJZduXgsm1X',
+                color: whatsappColor,
+                icon: Icons.architecture,
+                cardBackground: cardBackground,
+                textColor: textColor,
+              ),
+              _buildCollageGroupCard(
+                title: 'كلية صيدلة',
+                url: 'https://chat.whatsapp.com/KGCriMsNwmw2BEpIdRqvqa',
+                color: whatsappColor,
+                icon: Icons.local_pharmacy,
+                cardBackground: cardBackground,
+                textColor: textColor,
+              ),
+              _buildCollageGroupCard(
+                title: 'كلية اسنان',
+                url: 'https://chat.whatsapp.com/CgRMonMcvCA4l6JcyhyR9N',
+                color: whatsappColor,
+                icon: Icons.medical_services,
+                cardBackground: cardBackground,
+                textColor: textColor,
+              ),
+              _buildCollageGroupCard(
+                title: 'للاستفسار والتقديم',
+                url: 'https://chat.whatsapp.com/EDAq5ZbnZlL6F4Fhwwt8q6',
+                color: whatsappColor,
+                icon: Icons.help_outline,
+                cardBackground: cardBackground,
+                textColor: textColor,
+              ),
+            ],
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // General housing group section
+          _buildSectionTitle(
+            '  جروبات السكن فرع العريش',
+            Icons.home,
+            whatsappColor,
+            textColor,
+          ),
+          const SizedBox(height: 16),
+          
+          _buildGroupCard(
+            title: 'جروب السهم للتسكين 1',
+            description: 'جروب عام للتسكين الطلابي',
+            url: 'https://chat.whatsapp.com/HLW95JRHLwpH1sBaVhW0A6',
+            iconData: Icons.apartment,
+            color: whatsappColor,
+            cardBackground: cardBackground,
+            textColor: textColor,
+            subtitleColor: subtitleColor,
+            joinText: 'انضمام للجروب',
+          ),
+          const SizedBox(height: 12),
+          
+          _buildGroupCard(
+            title: 'جروب السهم للتسكين 2',
+            description: 'جروب إضافي للتسكين الطلابي',
+            url: 'https://chat.whatsapp.com/JMYVMCTwTxACjKwgNOPDso',
+            iconData: Icons.apartment,
+            color: whatsappColor,
+            cardBackground: cardBackground,
+            textColor: textColor,
+            subtitleColor: subtitleColor,
+            joinText: 'انضمام للجروب',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildFacebookGroups(Color cardBackground, Color textColor, Color subtitleColor) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -124,150 +266,178 @@ class _GroupsScreenState extends State<GroupsScreen>
             'صفحات وجروبات فيسبوك',
             Icons.facebook,
             facebookColor,
+            textColor,
           ),
           const SizedBox(height: 16),
-          _buildFacebookGroupCard(
+          _buildGroupCard(
             title: 'جروب السهم - فيسبوك',
+            description: '+5000 عضو',
             url: 'https://www.facebook.com/groups/590597414668538',
-            imageUrl: '', // لن يتم استخدام هذه القيمة بعد الآن
-            members: '+5000 عضو',
+            imagePath: 'assets/images/app_icon.png',
+            color: facebookColor,
+            cardBackground: cardBackground,
+            textColor: textColor,
+            subtitleColor: subtitleColor,
+            joinText: 'فتح الرابط',
           ),
-          const SizedBox(height: 16),
-          _buildFacebookGroupCard(
-            title: 'صفحة شركة السهم العريش - فيسبوك',
+          const SizedBox(height: 12),
+          _buildGroupCard(
+            title: 'صفحة شركة السهم العريش',
+            description: '+10000 متابع',
             url: 'https://www.facebook.com/elsahm.arish',
-            imageUrl: '', // لن يتم استخدام هذه القيمة بعد الآن
-            members: '+10000 متابع',
+            imagePath: 'assets/images/app_icon.png',
+            color: facebookColor,
+            cardBackground: cardBackground,
+            textColor: textColor,
+            subtitleColor: subtitleColor,
+            joinText: 'فتح الرابط',
           ),
         ],
       ),
     );
   }
 
-  Widget _buildWhatsAppGroups() {
+  Widget _buildTelegramGroups(Color cardBackground, Color textColor, Color subtitleColor) {
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
       child: Column(
-        children: [
-          _buildSectionTitle('جروبات واتساب', Icons.message, whatsappColor),
-          const SizedBox(height: 16),
-          _buildWhatsAppGroupCard(
-            title: 'جروب السهم للتسكين 1',
-            url: 'https://chat.whatsapp.com/HLW95JRHLwpH1sBaVhW0A6',
-            description: 'جروب عام للتسكين الطلابي',
-          ),
-          const SizedBox(height: 12),
-          _buildWhatsAppGroupCard(
-            title: 'جروب السهم للتسكين 2',
-            url: 'https://chat.whatsapp.com/JMYVMCTwTxACjKwgNOPDso',
-            description: 'جروب إضافي للتسكين الطلابي',
-          ),
-          const SizedBox(height: 24),
-
-          _buildSectionTitle(
-            'جروبات الكليات والمساعدة',
-            Icons.school,
-            Colors.amber,
-          ),
-          const SizedBox(height: 16),
-          _buildWhatsAppGroupCard(
-            title: 'جروب كلية حاسبات ومعلومات',
-            url: 'https://chat.whatsapp.com/FmtwyGpKeEb4lbi1BIsa2N',
-            description: 'للطلاب والطالبات في كلية الحاسبات',
-          ),
-          const SizedBox(height: 12),
-          _buildWhatsAppGroupCard(
-            title: 'جروب كلية هندسة',
-            url: 'https://chat.whatsapp.com/LGTT9PkgbioBJZduXgsm1X',
-            description: 'للطلاب والطالبات في كلية الهندسة',
-          ),
-          const SizedBox(height: 12),
-          _buildWhatsAppGroupCard(
-            title: 'جروب كلية صيدلة',
-            url: 'https://chat.whatsapp.com/KGCriMsNwmw2BEpIdRqvqa',
-            description: 'للطلاب والطالبات في كلية الصيدلة',
-          ),
-          const SizedBox(height: 12),
-          _buildWhatsAppGroupCard(
-            title: 'جروب كلية انسان',
-            url: 'https://chat.whatsapp.com/CgRMonMcvCA4l6JcyhyR9N',
-            description: 'للطلاب والطالبات في كلية الآداب والعلوم الإنسانية',
-          ),
-          const SizedBox(height: 12),
-          _buildWhatsAppGroupCard(
-            title: 'جروب للاستفسار والتقديم في الجامعة',
-            url: 'https://chat.whatsapp.com/EDAq5ZbnZlL6F4Fhwwt8q6',
-            description: 'للاستفسارات العامة حول التقديم والقبول بالجامعة',
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildTelegramGroups() {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.all(16),
-      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _buildSectionTitle(
             'جروبات تليجرام شركة السهم',
             Icons.telegram,
             telegramColor,
+            textColor,
           ),
           const SizedBox(height: 16),
-          _buildTelegramGroupCard(
-            title: 'سكن استديو ولاد و بنات',
-            url: 'https://t.me/elsahmStudio',
-            emoji: '', // لن يتم استخدام هذه القيمة بعد الآن
+          
+          // Housing categories
+          Text(
+            'أنواع السكن',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
           ),
           const SizedBox(height: 12),
-          _buildTelegramGroupCard(
-            title: 'سكن بالاوضة او سرير اولاد',
-            url: 'https://t.me/elsahmboys',
-            emoji: '', // لن يتم استخدام هذه القيمة بعد الآن
+          
+          GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildTelegramGroupTile(
+                title: 'سكن استديو',
+                subtitle: 'ولاد و بنات',
+                url: 'https://t.me/elsahmStudio',
+                color: telegramColor,
+                icon: Icons.hotel,
+                cardBackground: cardBackground,
+                textColor: textColor,
+              ),
+              _buildTelegramGroupTile(
+                title: 'سكن بالاوضة او سرير',
+                subtitle: 'اولاد',
+                url: 'https://t.me/elsahmboys',
+                color: telegramColor,
+                icon: Icons.single_bed,
+                cardBackground: cardBackground,
+                textColor: textColor,
+              ),
+              _buildTelegramGroupTile(
+                title: 'سكن بالاوضة او سرير',
+                subtitle: 'بنات',
+                url: 'https://t.me/elsahmgirls',
+                color: telegramColor,
+                icon: Icons.single_bed,
+                cardBackground: cardBackground,
+                textColor: textColor,
+              ),
+              _buildTelegramGroupTile(
+                title: 'قرية سما العريش',
+                subtitle: 'سكن طلابي',
+                url: 'https://t.me/elsahmsama',
+                color: telegramColor,
+                icon: Icons.location_city,
+                cardBackground: cardBackground,
+                textColor: textColor,
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 24),
+          
+          Text(
+            'شقق سكنية',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+              color: textColor,
+            ),
           ),
           const SizedBox(height: 12),
-          _buildTelegramGroupCard(
-            title: 'سكن بالاوضة او سرير بنات',
-            url: 'https://t.me/elsahmgirls',
-            emoji: '', // لن يتم استخدام هذه القيمة بعد الآن
-          ),
-          const SizedBox(height: 12),
-          _buildTelegramGroupCard(
-            title: 'شقق 2 اوضه',
-            url: 'https://t.me/elsahmtwo',
-            emoji: '', // لن يتم استخدام هذه القيمة بعد الآن
-          ),
-          const SizedBox(height: 12),
-          _buildTelegramGroupCard(
-            title: 'شقق 3 اوضه',
-            url: 'https://t.me/elsahmthree',
-            emoji: '', // لن يتم استخدام هذه القيمة بعد الآن
-          ),
-          const SizedBox(height: 12),
-          _buildTelegramGroupCard(
-            title: 'شقق 4 اوضه',
-            url: 'https://t.me/elsahmfour',
-            emoji: '', // لن يتم استخدام هذه القيمة بعد الآن
-          ),
-          const SizedBox(height: 12),
-          _buildTelegramGroupCard(
-            title: 'قرية سما العريش',
-            url: 'https://t.me/elsahmsama',
-            emoji: '', // لن يتم استخدام هذه القيمة بعد الآن
+          
+          GridView.count(
+            crossAxisCount: 3,
+            crossAxisSpacing: 12,
+            mainAxisSpacing: 12,
+            shrinkWrap: true,
+            childAspectRatio: 0.9,
+            physics: const NeverScrollableScrollPhysics(),
+            children: [
+              _buildTelegramGroupTile(
+                title: 'شقق',
+                subtitle: '2 غرفة',
+                url: 'https://t.me/elsahmtwo',
+                color: telegramColor,
+                icon: Icons.apartment,
+                cardBackground: cardBackground,
+                textColor: textColor,
+                compact: true,
+              ),
+              _buildTelegramGroupTile(
+                title: 'شقق',
+                subtitle: '3 غرف',
+                url: 'https://t.me/elsahmthree',
+                color: telegramColor,
+                icon: Icons.apartment,
+                cardBackground: cardBackground,
+                textColor: textColor,
+                compact: true,
+              ),
+              _buildTelegramGroupTile(
+                title: 'شقق',
+                subtitle: '4 غرف',
+                url: 'https://t.me/elsahmfour',
+                color: telegramColor,
+                icon: Icons.apartment,
+                cardBackground: cardBackground,
+                textColor: textColor,
+                compact: true,
+              ),
+            ],
           ),
         ],
       ),
     );
   }
 
-  Widget _buildSectionTitle(String title, IconData icon, Color color) {
+  // Shared section title widget with improved design
+  Widget _buildSectionTitle(
+    String title,
+    IconData icon,
+    Color color,
+    Color textColor,
+  ) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: color.withValues(alpha: 26), // 0.1 ≈ 26/255
+        color: color.withOpacity(0.12),
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withValues(alpha: 77), width: 1), // 0.3 ≈ 77/255
+        border: Border.all(color: color.withOpacity(0.3), width: 1),
       ),
       child: Row(
         children: [
@@ -286,24 +456,27 @@ class _GroupsScreenState extends State<GroupsScreen>
     );
   }
 
-  Widget _buildFacebookGroupCard({
+  // College group card with compact design
+  Widget _buildCollageGroupCard({
     required String title,
     required String url,
-    required String imageUrl,
-    required String members,
+    required Color color,
+    required IconData icon,
+    required Color cardBackground,
+    required Color textColor,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: cardBackground,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: facebookColor.withValues(alpha: 26), // 0.1 ≈ 26/255
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: color.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
-        border: Border.all(color: facebookColor.withValues(alpha: 51)), // 0.2 ≈ 51/255
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -311,125 +484,45 @@ class _GroupsScreenState extends State<GroupsScreen>
           onTap: () => _launchUrl(url),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/images/app_icon.png',
-                    width: 80,
-                    height: 80,
-                    fit: BoxFit.cover,
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(icon, color: color, size: 28),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Icon(Icons.people, size: 16, color: Colors.grey[600]),
-                          const SizedBox(width: 4),
-                          Text(
-                            members,
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey[600],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: facebookColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.open_in_new,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'فتح الرابط',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () {
-                              Clipboard.setData(ClipboardData(text: url)).then((
-                                _,
-                              ) {
-                                if (!mounted) return;
-                                
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('تم نسخ الرابط'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.copy,
-                                    size: 14,
-                                    color: Colors.grey[800],
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'نسخ',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[800],
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
+                const SizedBox(height: 12),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Text(
+                    'انضمام',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
               ],
@@ -440,23 +533,31 @@ class _GroupsScreenState extends State<GroupsScreen>
     );
   }
 
-  Widget _buildWhatsAppGroupCard({
+  // Standard group card with image or icon for WhatsApp and Facebook
+  Widget _buildGroupCard({
     required String title,
-    required String url,
     required String description,
+    required String url,
+    String? imagePath,
+    IconData? iconData,
+    required Color color,
+    required Color cardBackground,
+    required Color textColor,
+    required Color subtitleColor,
+    required String joinText,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: cardBackground,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: whatsappColor.withValues(alpha: 26), // 0.1 ≈ 26/255
+            color: color.withOpacity(0.1),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: whatsappColor.withValues(alpha: 51)), // 0.2 ≈ 51/255
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -467,58 +568,78 @@ class _GroupsScreenState extends State<GroupsScreen>
             padding: const EdgeInsets.all(16),
             child: Row(
               children: [
-                Container(
-                  width: 60,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: whatsappColor.withValues(alpha: 26), // 0.1 ≈ 26/255
-                    shape: BoxShape.circle,
+                // Icon or image
+                if (imagePath != null)
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(12),
+                    child: Image.asset(
+                      imagePath,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    ),
+                  )
+                else if (iconData != null)
+                  Container(
+                    width: 60,
+                    height: 60,
+                    decoration: BoxDecoration(
+                      color: color.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Center(
+                      child: Icon(iconData, color: color, size: 30),
+                    ),
                   ),
-                  child: Center(
-                    child: Icon(Icons.message, color: whatsappColor, size: 30),
-                  ),
-                ),
                 const SizedBox(width: 16),
+                
+                // Content
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
+                        style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.bold,
+                          color: textColor,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         description,
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: subtitleColor,
+                        ),
                       ),
                       const SizedBox(height: 8),
+                      
+                      // Action buttons
                       Row(
                         children: [
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
+                              horizontal: 10,
+                              vertical: 6,
                             ),
                             decoration: BoxDecoration(
-                              color: whatsappColor,
+                              color: color,
                               borderRadius: BorderRadius.circular(12),
                             ),
-                            child: const Row(
+                            child: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
-                                Icon(
+                                const Icon(
                                   Icons.open_in_new,
                                   size: 14,
                                   color: Colors.white,
                                 ),
-                                SizedBox(width: 4),
+                                const SizedBox(width: 4),
                                 Text(
-                                  'انضمام للجروب',
-                                  style: TextStyle(
+                                  joinText,
+                                  style: const TextStyle(
                                     fontSize: 12,
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
@@ -528,29 +649,19 @@ class _GroupsScreenState extends State<GroupsScreen>
                             ),
                           ),
                           const SizedBox(width: 8),
+                          
+                          // Copy button
                           GestureDetector(
-                            onTap: () {
-                              Clipboard.setData(ClipboardData(text: url)).then((
-                                _,
-                              ) {
-                                if (!mounted) return;
-                                
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('تم نسخ الرابط'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              });
-                            },
+                            onTap: () => _copyUrl(url),
                             child: Container(
                               padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
+                                horizontal: 10,
+                                vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: Colors.grey[300],
+                                color: cardBackground,
                                 borderRadius: BorderRadius.circular(12),
+                                border: Border.all(color: Colors.grey.withOpacity(0.3)),
                               ),
                               child: Row(
                                 mainAxisSize: MainAxisSize.min,
@@ -558,14 +669,14 @@ class _GroupsScreenState extends State<GroupsScreen>
                                   Icon(
                                     Icons.copy,
                                     size: 14,
-                                    color: Colors.grey[800],
+                                    color: textColor,
                                   ),
                                   const SizedBox(width: 4),
                                   Text(
                                     'نسخ',
                                     style: TextStyle(
                                       fontSize: 12,
-                                      color: Colors.grey[800],
+                                      color: textColor,
                                       fontWeight: FontWeight.bold,
                                     ),
                                   ),
@@ -586,23 +697,29 @@ class _GroupsScreenState extends State<GroupsScreen>
     );
   }
 
-  Widget _buildTelegramGroupCard({
+  // Telegram group tile with compact design
+  Widget _buildTelegramGroupTile({
     required String title,
+    required String subtitle,
     required String url,
-    required String emoji,
+    required Color color,
+    required IconData icon,
+    required Color cardBackground,
+    required Color textColor,
+    bool compact = false,
   }) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
+        color: cardBackground,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: telegramColor.withValues(alpha: 26), // 0.1 ≈ 26/255
-            blurRadius: 10,
-            offset: const Offset(0, 4),
+            color: color.withOpacity(0.15),
+            blurRadius: 8,
+            offset: const Offset(0, 3),
           ),
         ],
-        border: Border.all(color: telegramColor.withValues(alpha: 51)), // 0.2 ≈ 51/255
+        border: Border.all(color: color.withOpacity(0.2)),
       ),
       child: Material(
         color: Colors.transparent,
@@ -610,114 +727,67 @@ class _GroupsScreenState extends State<GroupsScreen>
           onTap: () => _launchUrl(url),
           borderRadius: BorderRadius.circular(16),
           child: Padding(
-            padding: const EdgeInsets.all(16),
-            child: Row(
+            padding: compact 
+                ? const EdgeInsets.all(10)
+                : const EdgeInsets.all(12),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(12),
-                  child: Image.asset(
-                    'assets/images/telegram-icon.png',
-                    width: 60,
-                    height: 60,
-                    fit: BoxFit.cover,
+                Container(
+                  width: compact ? 40 : 50,
+                  height: compact ? 40 : 50,
+                  decoration: BoxDecoration(
+                    color: color.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: Icon(icon, color: color, size: compact ? 22 : 28),
                   ),
                 ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                SizedBox(height: compact ? 8 : 12),
+                Text(
+                  title,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: compact ? 13 : 15,
+                    fontWeight: FontWeight.bold,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  subtitle,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: compact ? 11 : 13,
+                    color: Colors.grey,
+                  ),
+                ),
+                SizedBox(height: compact ? 8 : 10),
+                Container(
+                  padding: compact
+                      ? const EdgeInsets.symmetric(horizontal: 8, vertical: 3)
+                      : const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: color,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
                     children: [
+                      Icon(
+                        Icons.telegram,
+                        color: Colors.white,
+                        size: compact ? 12 : 14,
+                      ),
+                      SizedBox(width: compact ? 3 : 4),
                       Text(
-                        title,
-                        style: const TextStyle(
-                          fontSize: 16,
+                        'انضمام',
+                        style: TextStyle(
+                          fontSize: compact ? 10 : 12,
+                          color: Colors.white,
                           fontWeight: FontWeight.bold,
                         ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        url.replaceAll('https://t.me/', '@'),
-                        style: TextStyle(fontSize: 14, color: Colors.grey[600]),
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 4,
-                            ),
-                            decoration: BoxDecoration(
-                              color: telegramColor,
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            child: const Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Icon(
-                                  Icons.open_in_new,
-                                  size: 14,
-                                  color: Colors.white,
-                                ),
-                                SizedBox(width: 4),
-                                Text(
-                                  'فتح في تليجرام',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          GestureDetector(
-                            onTap: () {
-                              Clipboard.setData(ClipboardData(text: url)).then((
-                                _,
-                              ) {
-                                if (!mounted) return;
-                                
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(
-                                    content: Text('تم نسخ الرابط'),
-                                    backgroundColor: Colors.green,
-                                  ),
-                                );
-                              });
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: Colors.grey[300],
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    Icons.copy,
-                                    size: 14,
-                                    color: Colors.grey[800],
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    'نسخ',
-                                    style: TextStyle(
-                                      fontSize: 12,
-                                      color: Colors.grey[800],
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          ),
-                        ],
                       ),
                     ],
                   ),
