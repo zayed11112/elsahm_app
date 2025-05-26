@@ -266,8 +266,8 @@ class _CheckoutListScreenState extends State<CheckoutListScreen> {
                 // تفاصيل إضافية
                 _buildInfoRow('الرقم الجامعي', request['university_id'] ?? 'غير محدد'),
                 _buildInfoRow('الكلية', request['college'] ?? 'غير محدد'),
-                _buildInfoRow('العمولة', '${request['commission'] ?? '0'} ريال'),
-                _buildInfoRow('العربون', '${request['deposit'] ?? '0'} ريال'),
+                _buildInfoRow('العمولة', '${request['commission'] ?? '0'} جنيه'),
+                _buildInfoRow('العربون', '${request['deposit'] ?? '0'} جنيه'),
                 _buildInfoRow(
                   'تاريخ الطلب',
                   request['created_at'] != null
