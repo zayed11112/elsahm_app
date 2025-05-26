@@ -16,7 +16,7 @@ class ThemedCard extends StatelessWidget {
   final Widget? footer;
 
   const ThemedCard({
-    Key? key,
+    super.key,
     required this.child,
     this.padding = const EdgeInsets.all(defaultPadding),
     this.color,
@@ -26,13 +26,13 @@ class ThemedCard extends StatelessWidget {
     this.onTap,
     this.header,
     this.footer,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.isDarkMode;
     final effectiveBorderRadius = borderRadius ?? context.defaultBorderRadius;
-    
+
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -48,10 +48,7 @@ class ThemedCard extends StatelessWidget {
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             if (header != null) header!,
-            Padding(
-              padding: padding,
-              child: child,
-            ),
+            Padding(padding: padding, child: child),
             if (footer != null) footer!,
           ],
         ),
@@ -70,19 +67,19 @@ class StatusCard extends StatelessWidget {
   final EdgeInsetsGeometry padding;
 
   const StatusCard({
-    Key? key,
+    super.key,
     required this.status,
     required this.title,
     this.subtitle,
     required this.child,
     this.onTap,
     this.padding = const EdgeInsets.all(defaultPadding),
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final statusColor = context.getStatusColor(status);
-    
+
     return ThemedCard(
       onTap: onTap,
       padding: EdgeInsets.zero,
@@ -128,9 +125,10 @@ class StatusCard extends StatelessWidget {
               Text(
                 subtitle!,
                 style: context.bodySmall?.copyWith(
-                  color: context.isDarkMode 
-                    ? darkTextSecondary 
-                    : lightTextSecondary,
+                  color:
+                      context.isDarkMode
+                          ? darkTextSecondary
+                          : lightTextSecondary,
                 ),
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
@@ -139,17 +137,15 @@ class StatusCard extends StatelessWidget {
             const SizedBox(height: defaultPadding),
             Divider(
               height: 1,
-              color: context.isDarkMode 
-                ? Colors.white.withOpacity(0.1) 
-                : Colors.black.withOpacity(0.1),
+              color:
+                  context.isDarkMode
+                      ? Colors.white.withValues(alpha: 0.1)
+                      : Colors.black.withValues(alpha: 0.1),
             ),
           ],
         ),
       ),
-      child: Padding(
-        padding: padding,
-        child: child,
-      ),
+      child: Padding(padding: padding, child: child),
     );
   }
-} 
+}

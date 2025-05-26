@@ -18,21 +18,16 @@ import '../models/banner.dart' as app_banner; // Import Banner model with prefix
 import '../services/category_service.dart'; // Import CategoryService
 import '../services/banner_service.dart'; // Import BannerService
 import '../services/property_service_supabase.dart'; // Import PropertyServiceSupabase
-import '../utils/icon_helper.dart'; // Import IconHelper
 import '../screens/categories_screen.dart'; // Import CategoriesScreen
-import '../utils/image_utils.dart'; // Import image utilities
 import '../widgets/typewriter_animated_text.dart'; // Import the TypewriterAnimatedText widget
 import '../widgets/cropped_network_image.dart'; // Import the cropped network image widget
 import 'apartments_list_screen.dart'; // Import the apartments list screen
 import 'property_details_screen.dart'; // Import the property details screen
 import '../providers/auth_provider.dart'; // Importar AuthProvider
 import '../utils/auth_utils.dart'; // Importar AuthUtils
-import '../services/available_places_service.dart'; // Import AvailablePlacesService
-import '../screens/place_details_screen.dart'; // Import PlaceDetailsScreen
 import '../services/firestore_service.dart'; // Import FirestoreService
 import '../screens/why_choose_us_screen.dart'; // Import WhyChooseUsScreen
 import '../screens/login_screen.dart'; // Import LoginScreen
-import '../screens/contact_us_screen.dart'; // Import ContactUsScreen
 import 'featured_properties_screen.dart'; // إضافة استيراد للشاشة الجديدة
 
 // Feature class for Why Choose Us section - moved outside of _HomeScreenState
@@ -76,21 +71,15 @@ class _HomeScreenState extends State<HomeScreen> {
   final PropertyServiceSupabase _propertyService = PropertyServiceSupabase();
   final CategoryService _categoryService = CategoryService();
   final BannerService _bannerService = BannerService();
-  final AvailablePlacesService _placesService = AvailablePlacesService();
-  final int _maxRetries = 3;
 
   // متغيرات الحالة
   List<app_banner.Banner> _banners = [];
   List<Map<String, dynamic>> _categories = [];
-  List<Map<String, dynamic>> _availablePlaces = [];
   List<Apartment> _latestApartments = [];
   List<Apartment> _featuredProperties = []; // قائمة جديدة للعقارات المميزة
-  PageController _pageController = PageController();
   bool _isLoading = true;
   bool _isCategoriesLoading = true;
-  bool _isPlacesLoading = false;
   bool _isFeaturedLoading = true; // متغير جديد لحالة تحميل العقارات المميزة
-  bool _hasFetchedApartments = false;
   int _currentBannerIndex = 0;
 
   // استريم لمراقبة التغييرات في الشقق
@@ -223,7 +212,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
+                          color: Colors.black.withValues(alpha: 0.15),
                           blurRadius: 12,
                           offset: const Offset(0, 5),
                         ),
@@ -239,7 +228,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha:0.1),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -251,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: Colors.white.withOpacity(0.1),
+                              color: Colors.white.withValues(alpha:0.1),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -273,7 +262,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     width: isCompact ? 48 : 60,
                                     height: isCompact ? 48 : 60,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withOpacity(0.15),
+                                      color: Colors.white.withValues(alpha:0.15),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
@@ -305,7 +294,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         AutoSizeText(
                                           'للوصول إلى مميزات حصرية وعروض خاصة',
                                           style: textTheme.bodyMedium?.copyWith(
-                                            color: Colors.white.withOpacity(0.9),
+                                            color: Colors.white.withValues(alpha:0.9),
                                           ),
                                           maxLines: 2,
                                           minFontSize: 12,
@@ -450,7 +439,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    theme.colorScheme.primary.withOpacity(0.05),
+                    theme.colorScheme.primary.withValues(alpha:0.05),
                     Colors.transparent,
                   ],
                 ),
@@ -535,7 +524,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                         borderRadius: BorderRadius.circular(6),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.2),
+                                            color: Colors.black.withAlpha(77),
                                             spreadRadius: 1,
                                             blurRadius: 2,
                                             offset: const Offset(0, 1),
@@ -581,14 +570,14 @@ class _HomeScreenState extends State<HomeScreen> {
                                     Icon(
                                       Icons.home_outlined,
                                       size: 48,
-                                      color: theme.colorScheme.primary.withOpacity(0.7),
+                                      color: theme.colorScheme.primary.withValues(alpha:0.7),
                                     ),
                                     const SizedBox(height: 12),
                                     Text(
                                       'لا توجد عقارات مميزة متاحة حالياً',
                                       textAlign: TextAlign.center,
                                       style: textTheme.titleMedium?.copyWith(
-                                        color: theme.colorScheme.onSurface.withOpacity(0.7),
+                                        color: theme.colorScheme.onSurface.withValues(alpha:0.7),
                                       ),
                                     ),
                                     const SizedBox(height: 8),
@@ -614,8 +603,8 @@ class _HomeScreenState extends State<HomeScreen> {
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                   colors: [
-                    theme.colorScheme.primary.withOpacity(0.1),
-                    theme.colorScheme.secondary.withOpacity(0.05),
+                    theme.colorScheme.primary.withValues(alpha:0.1),
+                    theme.colorScheme.secondary.withValues(alpha:0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
@@ -631,7 +620,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withOpacity(0.1),
+                          color: theme.colorScheme.primary.withValues(alpha:0.1),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -713,7 +702,7 @@ class _HomeScreenState extends State<HomeScreen> {
     if (_isLoading) {
       return Column(
         children: [
-          ShimmerLoadingBanner(),
+          _shimmerLoadingBanner(),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -792,7 +781,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                 ),
                                 child: ClipRRect(
                                   borderRadius: BorderRadius.circular(15.0),
-                                  child: ShimmerBannerImage(imageAsset: item),
+                                  child: _shimmerBannerImage(imageAsset: item),
                                 ),
                               );
                             },
@@ -892,7 +881,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               ),
                               child: ClipRRect(
                                 borderRadius: BorderRadius.circular(15.0),
-                                child: NetworkBannerImage(imageUrl: item),
+                                child: _networkBannerImage(imageUrl: item),
                               ),
                             );
                           },
@@ -1002,8 +991,8 @@ class _HomeScreenState extends State<HomeScreen> {
             BoxShadow(
               color:
                   isDarkMode
-                      ? Colors.black.withOpacity(0.2)
-                      : Colors.grey.withOpacity(0.1),
+                      ? Colors.black.withValues(alpha:0.2)
+                      : Colors.grey.withValues(alpha:0.1),
               spreadRadius: 1,
               blurRadius: 5,
               offset: const Offset(0, 2),
@@ -1020,8 +1009,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 decoration: BoxDecoration(
                   color:
                       isDarkMode
-                          ? theme.colorScheme.surface.withOpacity(0.1)
-                          : theme.colorScheme.primary.withOpacity(0.05),
+                          ? theme.colorScheme.surface.withValues(alpha:0.1)
+                          : theme.colorScheme.primary.withValues(alpha:0.05),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -1110,7 +1099,7 @@ class _HomeScreenState extends State<HomeScreen> {
     return Card(
       margin: const EdgeInsets.all(4.0),
       elevation: 2.0,
-      shadowColor: Colors.black.withOpacity(0.2),
+      shadowColor: Colors.black.withValues(alpha:0.2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12.0),
@@ -1127,7 +1116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 width: 36.0,
                 height: 36.0,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  color: theme.colorScheme.primary.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Center(
@@ -1210,27 +1199,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // دالة لاختيار مكان متاح معين
-  void _selectPlace(String place) {
-    if (kDebugMode) {
-      print('تم اختيار المكان: $place');
-    }
-
-    // استخدام AvailablePlacesService للحصول على تفاصيل المكان المتاح
-    final placesService = AvailablePlacesService();
-    placesService.getPlaceByName(place).then((availablePlace) {
-      if (availablePlace != null) {
-        // الانتقال مباشرةً إلى شاشة تفاصيل المكان
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder: (context) => PlaceDetailsScreen(place: availablePlace),
-          ),
-        );
-      }
-    });
-  }
-
   Widget _buildPropertyCard(Apartment apartment) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
@@ -1256,8 +1224,8 @@ class _HomeScreenState extends State<HomeScreen> {
             BoxShadow(
               color:
                   isDarkMode
-                      ? Colors.black.withOpacity(0.3)
-                      : Colors.grey.withOpacity(0.15),
+                      ? Colors.black.withAlpha(77) // ~0.3 opacity
+                      : Colors.grey.withAlpha(38),  // ~0.15 opacity
               spreadRadius: 2,
               blurRadius: 8,
               offset: const Offset(0, 3),
@@ -1298,7 +1266,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withValues(alpha:0.7),
                           Colors.transparent,
                         ],
                       ),
@@ -1386,10 +1354,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
                             // El usuario está autenticado, continuar con la operación
                             try {
+                              final scaffoldMessenger = ScaffoldMessenger.of(context);
                               final isNowFavorite = await favoritesProvider
                                   .toggleFavorite(apartment);
                               if (mounted) {
-                                ScaffoldMessenger.of(context).showSnackBar(
+                                scaffoldMessenger.showSnackBar(
                                   SnackBar(
                                     content: Text(
                                       isNowFavorite
@@ -1401,7 +1370,10 @@ class _HomeScreenState extends State<HomeScreen> {
                                 );
                               }
                             } catch (e) {
-                              print('Error toggling favorite: $e');
+                              if (kDebugMode) {
+                                final logger = Logger('HomeScreen');
+                                logger.warning('Error toggling favorite: $e');
+                              }
                             }
                           },
                           child: Icon(
@@ -1469,7 +1441,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     decoration: BoxDecoration(
                       color:
                           isDarkMode
-                              ? theme.colorScheme.background.withOpacity(0.3)
+                              ? theme.colorScheme.surface.withValues(alpha: 0.3)
                               : Colors.grey[50],
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -1573,18 +1545,6 @@ class _HomeScreenState extends State<HomeScreen> {
         );
   }
 
-  Widget _buildFeature(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 18, color: Colors.blue[700]),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-        ),
-      ],
-    );
-  }
 
   Future<void> _fetchLatestApartments() async {
     if (!mounted) return;
@@ -1832,6 +1792,10 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> _refreshAllData() async {
     if (!mounted) return;
 
+    // Store context and providers before any async operations
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
     try {
       // مسح التخزين المؤقت للخدمات
       _propertyService.clearCache();
@@ -1849,7 +1813,6 @@ class _HomeScreenState extends State<HomeScreen> {
       await _fetchFeaturedProperties();
 
       // تحديث بيانات المستخدم (سيؤدي إلى تحديث الرصيد في AppBar)
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
       if (authProvider.isAuthenticated) {
         // تحديث بيانات المستخدم من Firestore
         final firestoreService = FirestoreService();
@@ -1863,7 +1826,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
       // إعلام المستخدم بنجاح التحديث
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        scaffoldMessenger.showSnackBar(
           const SnackBar(
             content: Text('تم تحديث البيانات بنجاح'),
             backgroundColor: Colors.green,
@@ -1893,11 +1856,10 @@ class _HomeScreenState extends State<HomeScreen> {
   // Featured property card with improved design
   Widget _buildFeaturedPropertyCard(Apartment apartment) {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
     
     return Card(
       elevation: 4,
-      shadowColor: Colors.black.withOpacity(0.2),
+      shadowColor: Colors.black.withAlpha(51),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -1955,7 +1917,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withAlpha(179),
                         ],
                         stops: const [0.6, 1.0],
                       ),
@@ -1974,7 +1936,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha:0.3),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -2133,7 +2095,7 @@ class _HomeScreenState extends State<HomeScreen> {
             borderRadius: BorderRadius.circular(12),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha:0.05),
                 spreadRadius: 0,
                 blurRadius: 10,
                 offset: const Offset(0, 2),
@@ -2148,7 +2110,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: feature.color.withOpacity(0.1),
+                    color: feature.color.withValues(alpha:0.1),
                     borderRadius: BorderRadius.circular(10),
                   ),
                   child: Icon(
@@ -2200,7 +2162,7 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha:0.08),
             blurRadius: 20,
             offset: const Offset(0, 5),
           ),
@@ -2217,7 +2179,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 end: Alignment.bottomLeft,
                 colors: [
                   theme.colorScheme.primary,
-                  theme.colorScheme.primary.withOpacity(0.7),
+                  theme.colorScheme.primary.withValues(alpha:0.7),
                 ],
               ),
               borderRadius: const BorderRadius.only(
@@ -2230,7 +2192,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha:0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -2254,7 +2216,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     Text(
                       'فريقنا جاهز لمساعدتك!',
                       style: textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withOpacity(0.9),
+                        color: Colors.white.withValues(alpha:0.9),
                       ),
                     ),
                   ],
@@ -2303,7 +2265,7 @@ class _HomeScreenState extends State<HomeScreen> {
           // Divider
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Divider(color: Colors.grey.withOpacity(0.3)),
+            child: Divider(color: Colors.grey.withValues(alpha:0.3)),
           ),
           
           // Designer info
@@ -2342,7 +2304,7 @@ class _HomeScreenState extends State<HomeScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.dividerColor.withOpacity(0.1),
+          color: theme.dividerColor.withValues(alpha:0.1),
           width: 1,
         ),
       ),
@@ -2356,7 +2318,7 @@ class _HomeScreenState extends State<HomeScreen> {
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
+                  color: iconColor.withValues(alpha:0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
@@ -2397,39 +2359,9 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
   
-  // Designer social media button
-  Widget _buildDesignerSocialButton({
-    required IconData icon,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(30),
-      child: Container(
-        width: 40,
-        height: 40,
-        decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
-          borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1.5,
-          ),
-        ),
-        child: Center(
-          child: FaIcon(
-            icon,
-            color: color,
-            size: 18,
-          ),
-        ),
-      ),
-    );
-  }
   
   // Shimmer loading banner for placeholder
-  Widget ShimmerLoadingBanner() {
+  Widget _shimmerLoadingBanner() {
     return Shimmer.fromColors(
       baseColor: Colors.grey[300]!,
       highlightColor: Colors.grey[100]!,
@@ -2445,7 +2377,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   
   // Shimmer banner image for fallback banners
-  Widget ShimmerBannerImage({required String imageAsset}) {
+  Widget _shimmerBannerImage({required String imageAsset}) {
     return Image.asset(
       imageAsset,
       fit: BoxFit.cover,
@@ -2464,7 +2396,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
   
   // Network banner image with shimmer loading effect
-  Widget NetworkBannerImage({required String imageUrl}) {
+  Widget _networkBannerImage({required String imageUrl}) {
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: BoxFit.cover,
@@ -2520,15 +2452,15 @@ class _HomeScreenState extends State<HomeScreen> {
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha:0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
         ],
         border: Border.all(
           color: isDark
-              ? Colors.blue.shade800.withOpacity(0.2)
-              : Colors.blue.shade300.withOpacity(0.2),
+              ? Colors.blue.shade800.withValues(alpha:0.2)
+              : Colors.blue.shade300.withValues(alpha:0.2),
           width: 1.5,
         ),
       ),
@@ -2562,7 +2494,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 70, // Reduced from 100
                     height: 70, // Reduced from 100
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha:0.1),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -2574,7 +2506,7 @@ class _HomeScreenState extends State<HomeScreen> {
                     width: 40, // Reduced from 60
                     height: 40, // Reduced from 60
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.1),
+                      color: Colors.white.withValues(alpha:0.1),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -2589,7 +2521,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       children: [
                         Icon(
                           Icons.code,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withValues(alpha:0.9),
                           size: 16,
                         ),
                         const SizedBox(width: 8),
@@ -2626,7 +2558,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0277BD).withOpacity(0.3),
+                          color: const Color(0xFF0277BD).withValues(alpha:0.3),
                           blurRadius: 10,
                           spreadRadius: 1,
                           offset: const Offset(0, 3),
@@ -2682,7 +2614,7 @@ class _HomeScreenState extends State<HomeScreen> {
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0277BD).withOpacity(0.25),
+                              color: const Color(0xFF0277BD).withValues(alpha:0.25),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -2762,7 +2694,7 @@ class _HomeScreenState extends State<HomeScreen> {
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: gradient.last.withOpacity(0.3),
+              color: gradient.last.withValues(alpha:0.3),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),

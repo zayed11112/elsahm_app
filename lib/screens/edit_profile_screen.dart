@@ -9,6 +9,7 @@ import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:logging/logging.dart';
 
 class EditProfileScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -21,6 +22,7 @@ class EditProfileScreen extends StatefulWidget {
 class _EditProfileScreenState extends State<EditProfileScreen> {
   final _formKey = GlobalKey<FormState>();
   final FirestoreService _firestoreService = FirestoreService();
+  final Logger _logger = Logger('EditProfileScreen');
 
   // Define options for dropdowns
   final List<String> _facultyOptions = [
@@ -93,6 +95,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     // إضافة تأثير اهتزاز خفيف عند النقر
     HapticFeedback.lightImpact();
 
+    // الحصول على معرف المستخدم الحالي قبل العمليات غير المتزامنة
+    final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    if (authProvider.user == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('خطأ: المستخدم غير مسجل الدخول.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
+    final uid = authProvider.user!.uid;
+
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(
@@ -108,18 +123,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _isUploadingImage = true;
       });
 
-      // الحصول على معرف المستخدم الحالي
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      if (authProvider.user == null) {
-        throw Exception('User not logged in');
-      }
-
       // رفع الصورة إلى ImgBB
       final String imageUrl = await _uploadToImgBB(File(image.path));
       
+      // تحقق من أن الويدجت لا يزال مثبتًا قبل استخدام setState و context
+      if (!mounted) return;
+
       // تحديث رابط الصورة في Firestore
       await _firestoreService.updateUserProfileField(
-        authProvider.user!.uid,
+        uid,
         {'avatarUrl': imageUrl},
       );
 
@@ -128,6 +140,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         _profileImageUrl = imageUrl;
       });
 
+      // تحقق مرة أخرى من أن الويدجت لا يزال مثبتًا قبل استخدام context
+      if (!mounted) return;
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -146,6 +161,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       );
     } catch (e) {
+      // تحقق من أن الويدجت لا يزال مثبتًا قبل استخدام context
+      if (!mounted) return;
+      
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('حدث خطأ أثناء تحديث الصورة: $e'),
@@ -155,9 +173,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
       );
     } finally {
-      setState(() {
-        _isUploadingImage = false;
-      });
+      // تحديث حالة التحميل فقط إذا كان الويدجت لا يزال مثبتًا
+      if (mounted) {
+        setState(() {
+          _isUploadingImage = false;
+        });
+      }
     }
   }
 
@@ -177,12 +198,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (response.statusCode == 200 && jsonData['success'] == true) {
         return jsonData['data']['url'];
       } else {
-        print('ImgBB upload failed. Trying fallback method...');
+        _logger.warning('ImgBB upload failed. Trying fallback method...');
         // If ImgBB fails, try the fallback method
         return _uploadToFreeImage(imageFile);
       }
     } catch (e) {
-      print('Error during ImgBB upload: $e');
+      _logger.warning('Error during ImgBB upload: $e');
       // If there's an exception, try the fallback method
       return _uploadToFreeImage(imageFile);
     }
@@ -230,7 +251,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
-                    color: Colors.black.withOpacity(0.8),
+                    color: Colors.black.withAlpha(204),
                     child: Center(
                       child: Hero(
                         tag: 'profileImage',
@@ -264,7 +285,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 right: 20,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withAlpha(153),
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
@@ -295,10 +316,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       setState(() { _isLoading = true; });
 
+      // الحصول على معلومات المستخدم قبل العمليات غير المتزامنة
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final uid = authProvider.user?.uid;
 
       if (uid == null) {
+         // Check if the widget is still mounted before using context
+         if (!mounted) return;
+         
          ScaffoldMessenger.of(context).showSnackBar(
            const SnackBar(content: Text('خطأ: المستخدم غير مسجل الدخول.'), backgroundColor: Colors.red),
          );
@@ -317,24 +342,31 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       };
 
       try {
+        // حفظ البيانات في Firestore
         await _firestoreService.updateUserProfileField(uid, updatedData);
-        if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             const SnackBar(
-               content: Text('تم حفظ التغييرات بنجاح!'),
-               backgroundColor: Colors.green,
-             ),
-           );
-           Navigator.pop(context);
-        }
+        
+        // تحقق من أن الويدجت لا يزال مثبتًا
+        if (!mounted) return;
+        
+        // عرض رسالة نجاح وإغلاق الشاشة
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('تم حفظ التغييرات بنجاح!'),
+            backgroundColor: Colors.green,
+          ),
+        );
+        Navigator.pop(context);
       } catch (e) {
-         print("Error saving profile: $e");
-         if (mounted) {
-           ScaffoldMessenger.of(context).showSnackBar(
-             SnackBar(content: Text('فشل حفظ التغييرات: $e'), backgroundColor: Colors.red),
-           );
-         }
+         _logger.severe("Error saving profile: $e");
+         
+         // تحقق من أن الويدجت لا يزال مثبتًا
+         if (!mounted) return;
+         
+         ScaffoldMessenger.of(context).showSnackBar(
+           SnackBar(content: Text('فشل حفظ التغييرات: $e'), backgroundColor: Colors.red),
+         );
       } finally {
+         // تحديث حالة التحميل فقط إذا كان الويدجت لا يزال مثبتًا
          if (mounted) {
            setState(() { _isLoading = false; });
          }
@@ -344,7 +376,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    // أزيل المتغير المحلي غير المستخدم final theme = Theme.of(context);
     // Define colors for better design
     final Color primaryColor = Theme.of(context).primaryColor;
     final Color accentColor = Theme.of(context).colorScheme.secondary;
@@ -448,7 +480,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                         ),
                                         boxShadow: [
                                           BoxShadow(
-                                            color: Colors.black.withOpacity(0.1),
+                                            color: Colors.black.withAlpha(26),
                                             blurRadius: 8,
                                             offset: Offset(0, 3),
                                           ),
@@ -470,14 +502,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                                                     return Icon(
                                                       Icons.account_circle,
                                                       size: 80,
-                                                      color: iconColor.withOpacity(0.7),
+                                                      color: iconColor.withAlpha(179),
                                                     );
                                                   },
                                                 )
                                               : Icon(
                                                   Icons.account_circle,
                                                   size: 80,
-                                                  color: iconColor.withOpacity(0.7),
+                                                  color: iconColor.withAlpha(179),
                                                 ),
                                           ),
                                     ),
@@ -825,7 +857,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       dropdownColor: isDarkMode ? const Color(0xFF2C2C2C) : Theme.of(context).cardColor,
       isExpanded: true,
       style: TextStyle(color: textColor),
-      hint: Text(hint, style: TextStyle(color: textColor.withOpacity(0.7))),
+      hint: Text(hint, style: TextStyle(color: textColor.withAlpha(179))),
       icon: Icon(Icons.arrow_drop_down, color: iconColor),
     );
   }

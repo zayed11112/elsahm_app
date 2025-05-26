@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:carousel_slider/carousel_slider.dart' as cs;
+
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
 import '../models/apartment.dart';
-import '../models/available_place.dart';
+
 import '../services/property_service_supabase.dart';
 import '../services/category_service.dart';
 import '../services/available_places_service.dart';
@@ -22,27 +22,15 @@ class SearchScreen extends StatefulWidget {
 
 class _SearchScreenState extends State<SearchScreen> {
   // Filter state variables
-  String? _selectedUnitType;
   String? _selectedHousingCategory;
   String? _selectedArea;
-  String? _selectedPropertyType;
   RangeValues _priceRange = const RangeValues(0, 20000);
-  int? _minRooms;
-  bool _hasWifi = false;
-  bool _hasWater = false;
 
   // Search results
   List<Apartment> _searchResults = [];
   bool _isLoading = false;
   String _searchText = '';
   final TextEditingController _searchController = TextEditingController();
-
-  // For image carousel
-  Map<String, int> _currentImageIndex = {};
-
-  // Categories data
-  List<Map<String, dynamic>> _categories = [];
-  bool _isCategoriesLoading = false;
 
   // Categories will be loaded dynamically
   final List<String> _housingCategories = ['الكل'];
@@ -376,41 +364,6 @@ class _SearchScreenState extends State<SearchScreen> {
     _loadInitialProperties();
   }
 
-  Future<void> _refreshProperties() async {
-    _logger.info('تحديث كامل للعقارات');
-    // إعادة تعيين الفلاتر والبحث
-    setState(() {
-      _searchController.clear();
-      _searchText = '';
-      _selectedHousingCategory = null;
-      _selectedArea = null;
-      _priceRange = const RangeValues(0, 20000);
-      _isLoading = true;
-    });
-
-    try {
-      // استخدام خدمة العقارات مباشرة لجلب كل العقارات المتاحة
-      final apartments = await _propertyService.getAvailableProperties(
-        limit: 200,
-      );
-
-      if (mounted) {
-        setState(() {
-          _searchResults = apartments;
-          _isLoading = false;
-        });
-        _logger.info('تم إعادة تحميل ${apartments.length} عقار');
-      }
-    } catch (e) {
-      if (mounted) {
-        setState(() {
-          _isLoading = false;
-        });
-        _logger.severe('خطأ في إعادة تحميل العقارات: $e');
-      }
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
@@ -447,7 +400,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     _showFilters
                         ? [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
+                            color: Colors.black.withValues(alpha: 0.1),
                             blurRadius: 8,
                             offset: const Offset(0, 3),
                           ),
@@ -506,7 +459,9 @@ class _SearchScreenState extends State<SearchScreen> {
                         Icon(
                           Icons.search_off,
                           size: 80,
-                          color: theme.colorScheme.primary.withOpacity(0.5),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.5,
+                          ),
                         ),
                         const SizedBox(height: 16),
                         Text('لا توجد نتائج', style: textTheme.headlineSmall),
@@ -571,7 +526,8 @@ class _SearchScreenState extends State<SearchScreen> {
                   child:
                       apartment.imageUrls.isNotEmpty
                           ? CachedNetworkImage(
-                            imageUrl: apartment.imageUrls[0], // عرض الصورة الأولى فقط
+                            imageUrl:
+                                apartment.imageUrls[0], // عرض الصورة الأولى فقط
                             fit: BoxFit.cover,
                             width: double.infinity,
                             placeholder:
@@ -597,7 +553,7 @@ class _SearchScreenState extends State<SearchScreen> {
                           ),
                 ),
 
-                // زر المفضلة 
+                // زر المفضلة
                 Positioned(
                   top: 8,
                   right: 8,
@@ -621,10 +577,13 @@ class _SearchScreenState extends State<SearchScreen> {
 
                           // المستخدم مسجل الدخول، يمكن إضافة/إزالة العقار من المفضلة
                           try {
+                            final scaffoldMessenger = ScaffoldMessenger.of(
+                              context,
+                            );
                             final isNowFavorite = await favoritesProvider
                                 .toggleFavorite(apartment);
                             if (mounted) {
-                              ScaffoldMessenger.of(context).showSnackBar(
+                              scaffoldMessenger.showSnackBar(
                                 SnackBar(
                                   content: Text(
                                     isNowFavorite
@@ -781,7 +740,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.3),
             ),
           ),
           child: DropdownButtonHideUnderline(
@@ -835,7 +796,9 @@ class _SearchScreenState extends State<SearchScreen> {
                     : Colors.white,
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              color: Theme.of(
+                context,
+              ).colorScheme.primary.withValues(alpha: 0.3),
             ),
           ),
           child: DropdownButtonHideUnderline(
@@ -885,7 +848,9 @@ class _SearchScreenState extends State<SearchScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
-                color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                color: Theme.of(
+                  context,
+                ).colorScheme.primary.withValues(alpha: 0.1),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
@@ -904,11 +869,11 @@ class _SearchScreenState extends State<SearchScreen> {
             activeTrackColor: Theme.of(context).colorScheme.primary,
             inactiveTrackColor: Theme.of(
               context,
-            ).colorScheme.primary.withOpacity(0.2),
+            ).colorScheme.primary.withValues(alpha: 0.2),
             thumbColor: Theme.of(context).colorScheme.primary,
             overlayColor: Theme.of(
               context,
-            ).colorScheme.primary.withOpacity(0.1),
+            ).colorScheme.primary.withValues(alpha: 0.1),
             trackHeight: 6.0,
             thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8.0),
             overlayShape: const RoundSliderOverlayShape(overlayRadius: 18.0),
@@ -1017,7 +982,7 @@ class _SearchScreenState extends State<SearchScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.1),
+            color: Colors.black.withValues(alpha: 0.1),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -1088,19 +1053,11 @@ class _SearchScreenState extends State<SearchScreen> {
 
   // Load categories from the CategoryService
   Future<void> _loadCategories() async {
-    if (mounted) {
-      setState(() {
-        _isCategoriesLoading = true;
-      });
-    }
-
     try {
       final categories = await _categoryService.getCategories();
 
       if (mounted) {
         setState(() {
-          _categories = categories;
-
           // Update the housing categories list - start fresh
           _housingCategories.clear();
           _housingCategories.add('الكل');
@@ -1114,18 +1071,11 @@ class _SearchScreenState extends State<SearchScreen> {
               _housingCategories.add(category['label']);
             }
           }
-
-          _isCategoriesLoading = false;
         });
       }
       _logger.info('تم تحميل ${categories.length} قسم للبحث');
     } catch (e) {
       _logger.severe('خطأ في تحميل الأقسام: $e');
-      if (mounted) {
-        setState(() {
-          _isCategoriesLoading = false;
-        });
-      }
     }
   }
 }

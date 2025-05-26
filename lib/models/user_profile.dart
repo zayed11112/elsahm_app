@@ -12,7 +12,8 @@ class UserProfile {
   String status; // e.g., 'طالب'
   String studentId; // Added Student ID
   double balance; // إضافة الرصيد في المحفظة
-  List<Map<String, dynamic>> fcmTokens; // Store FCM tokens for push notifications
+  List<Map<String, dynamic>>
+  fcmTokens; // Store FCM tokens for push notifications
 
   UserProfile({
     required this.uid,
@@ -31,13 +32,13 @@ class UserProfile {
   // Factory constructor to create a UserProfile from a Firestore document
   factory UserProfile.fromFirestore(DocumentSnapshot doc) {
     Map<String, dynamic> data = doc.data() as Map<String, dynamic>;
-    
+
     // Handle fcmTokens properly - convert from Firestore
     List<Map<String, dynamic>> tokensList = [];
     if (data['fcmTokens'] != null) {
       tokensList = List<Map<String, dynamic>>.from(data['fcmTokens'] ?? []);
     }
-    
+
     return UserProfile(
       uid: doc.id, // Use document ID as UID if storing under user's UID
       email: data['email'] ?? '',
@@ -48,7 +49,9 @@ class UserProfile {
       avatarUrl: data['avatarUrl'] ?? '',
       status: data['status'] ?? 'طالب',
       studentId: data['studentId'] ?? '', // Added Student ID
-      balance: (data['balance'] ?? 0.0).toDouble(), // تحويل القيمة إلى double إذا كانت موجودة
+      balance:
+          (data['balance'] ?? 0.0)
+              .toDouble(), // تحويل القيمة إلى double إذا كانت موجودة
       fcmTokens: tokensList, // Add FCM tokens list
     );
   }
@@ -83,8 +86,8 @@ class UserProfile {
     List<Map<String, dynamic>>? fcmTokens,
   }) {
     return UserProfile(
-      uid: this.uid,
-      email: this.email,
+      uid: uid,
+      email: email,
       name: name ?? this.name,
       faculty: faculty ?? this.faculty,
       branch: branch ?? this.branch,

@@ -14,24 +14,18 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
   DataLoadingRoute({
     required this.dataLoader,
     required this.buildPageWithData,
-    String lottieAsset = 'assets/animations/loading.json',
-    Duration animationDuration = const Duration(milliseconds: 800),
-    Duration minimumLoadingTime = const Duration(milliseconds: 1200),
-    Color backgroundColor = Colors.white,
-    double lottieSize = 100,
-    Duration timeout = const Duration(seconds: 15),
+    super.lottieAsset = 'assets/animations/loading.json',
+    super.animationDuration = const Duration(milliseconds: 800),
+    super.minimumLoadingTime = const Duration(milliseconds: 1200),
+    super.backgroundColor = Colors.white,
+    super.lottieSize = 100,
+    super.timeout = const Duration(seconds: 15),
   }) : super(
-          page: Container(), // Placeholder, will be replaced
-          lottieAsset: lottieAsset,
-          animationDuration: animationDuration,
-          minimumLoadingTime: minimumLoadingTime,
-          backgroundColor: backgroundColor,
-          lottieSize: lottieSize,
-          timeout: timeout,
-        ) {
+         page: Container(), // Placeholder, will be replaced
+       ) {
     // Start loading data immediately when route is created
     _dataFuture = dataLoader();
-    
+
     // Set up timeout for data loading
     Future.delayed(timeout).then((_) {
       if (_isActive) {
@@ -39,7 +33,7 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
       }
     });
   }
-  
+
   @override
   void dispose() {
     _isActive = false;
@@ -59,7 +53,7 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
         if (_hasTimedOut) {
           return _buildTimeoutErrorScreen(context);
         }
-        
+
         // Then check data loading states
         if (snapshot.connectionState == ConnectionState.done) {
           if (snapshot.hasError) {
@@ -79,7 +73,7 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
             );
           }
         }
-        
+
         // Still loading data
         return buildLoadingScreen(context);
       },
@@ -91,15 +85,16 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
     // Data is already being loaded through _dataFuture
     return;
   }
-  
+
   Widget _buildTimeoutErrorScreen(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    return WillPopScope(
+
+    return PopScope(
       // Handle back button press safely
-      onWillPop: () async {
-        Navigator.of(context).pop();
-        return false;
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Navigator.of(context).pop();
+        }
       },
       child: Scaffold(
         backgroundColor: isDarkMode ? Colors.black : backgroundColor,
@@ -137,7 +132,10 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 12,
+                  ),
                 ),
                 child: const Text('العودة'),
               ),
@@ -147,15 +145,16 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
       ),
     );
   }
-  
+
   Widget _buildErrorScreen(BuildContext context, dynamic error) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    return WillPopScope(
+
+    return PopScope(
       // Handle back button press safely
-      onWillPop: () async {
-        Navigator.of(context).pop();
-        return false;
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Navigator.of(context).pop();
+        }
       },
       child: Scaffold(
         appBar: AppBar(
@@ -200,7 +199,10 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
                       }
                     },
                     style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                     ),
                     child: const Text('إعادة المحاولة'),
                   ),
@@ -208,7 +210,10 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
                   OutlinedButton(
                     onPressed: () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 24,
+                        vertical: 12,
+                      ),
                     ),
                     child: const Text('العودة'),
                   ),
@@ -220,4 +225,4 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
       ),
     );
   }
-} 
+}

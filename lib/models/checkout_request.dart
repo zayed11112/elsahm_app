@@ -27,9 +27,8 @@ class CheckoutRequest {
     this.deposit = 0.0,
     DateTime? createdAt,
     DateTime? updatedAt,
-  }) : 
-    this.createdAt = createdAt ?? DateTime.now(),
-    this.updatedAt = updatedAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now(),
+       updatedAt = updatedAt ?? DateTime.now();
 
   // تحويل الكائن إلى JSON
   Map<String, dynamic> toJson() {
@@ -64,12 +63,14 @@ class CheckoutRequest {
       status: json['status'] ?? 'جاري المعالجة',
       commission: (json['commission'] ?? 0.0).toDouble(),
       deposit: (json['deposit'] ?? 0.0).toDouble(),
-      createdAt: json['created_at'] != null 
-        ? DateTime.parse(json['created_at'])
-        : null,
-      updatedAt: json['updated_at'] != null 
-        ? DateTime.parse(json['updated_at'])
-        : null,
+      createdAt:
+          json['created_at'] != null
+              ? DateTime.parse(json['created_at'])
+              : null,
+      updatedAt:
+          json['updated_at'] != null
+              ? DateTime.parse(json['updated_at'])
+              : null,
     );
   }
 
@@ -105,4 +106,4 @@ class CheckoutRequest {
       updatedAt: updatedAt ?? this.updatedAt,
     );
   }
-} 
+}

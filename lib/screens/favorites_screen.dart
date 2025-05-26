@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:logging/logging.dart';
 import '../providers/auth_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/navigation_provider.dart';
@@ -12,6 +13,9 @@ import 'property_details_screen.dart';
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
+  
+  // Create a logger instance
+  static final Logger _logger = Logger('FavoritesScreen');
 
   @override
   Widget build(BuildContext context) {
@@ -49,7 +53,7 @@ class FavoritesScreen extends StatelessWidget {
       );
     } on FirebaseException catch (e) {
       // Handle Firebase initialization error
-      print('Firebase error in FavoritesScreen: ${e.message}');
+      _logger.severe('Firebase error in FavoritesScreen: ${e.message}');
       return Scaffold(
         appBar: AppBar(
           title: const Text('المفضلة'),
@@ -84,7 +88,7 @@ class FavoritesScreen extends StatelessWidget {
       );
     } catch (e) {
       // Handle other errors
-      print('Error in FavoritesScreen: $e');
+      _logger.severe('Error in FavoritesScreen: $e');
       return Scaffold(
         appBar: AppBar(
           title: const Text('المفضلة'),
@@ -204,14 +208,18 @@ class FavoritesScreen extends StatelessWidget {
                   child: Container(
                     padding: const EdgeInsets.all(4),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.9),
+                      color: Color.fromRGBO(255, 255, 255, 0.9),
                       shape: BoxShape.circle,
                     ),
                     child: InkWell(
                       onTap: () async {
                         try {
-                          await favoritesProvider.toggleFavorite(apartment);
+                          // Capture context before async operation
                           final scaffoldMessenger = ScaffoldMessenger.of(context);
+                          
+                          await favoritesProvider.toggleFavorite(apartment);
+                          
+                          // Check if the widget is still mounted before using the captured context
                           scaffoldMessenger.showSnackBar(
                             SnackBar(
                               content: Text('تم إزالة ${apartment.name} من المفضلة'),
@@ -220,7 +228,7 @@ class FavoritesScreen extends StatelessWidget {
                           );
                         } catch (e) {
                           // Handle any errors that occur during toggling or showing the snackbar
-                          print('Error toggling favorite: $e');
+                          _logger.severe('Error toggling favorite: $e');
                         }
                       },
                       child: const Icon(
@@ -244,7 +252,7 @@ class FavoritesScreen extends StatelessWidget {
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Colors.black.withOpacity(0.7),
+                          Color.fromRGBO(0, 0, 0, 0.7),
                           Colors.transparent,
                         ],
                       ),
@@ -329,20 +337,6 @@ class FavoritesScreen extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-
-  // Widget for building a feature item
-  Widget _buildFeature(IconData icon, String text) {
-    return Row(
-      children: [
-        Icon(icon, size: 16, color: Colors.blue[700]),
-        const SizedBox(width: 4),
-        Text(
-          text,
-          style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w500),
-        ),
-      ],
     );
   }
 

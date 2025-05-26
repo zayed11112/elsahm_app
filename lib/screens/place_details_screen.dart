@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
+import 'package:logging/logging.dart';
 import '../models/available_place.dart';
 import '../models/apartment.dart';
 import '../services/property_service_supabase.dart';
@@ -15,6 +16,7 @@ class PlaceDetailsScreen extends StatefulWidget {
 }
 
 class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
+  static final Logger _logger = Logger('PlaceDetailsScreen');
   final PropertyServiceSupabase _propertyService = PropertyServiceSupabase();
   bool _isLoading = true;
   List<Apartment> _properties = [];
@@ -22,7 +24,9 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
   @override
   void initState() {
     super.initState();
-    developer.log('PlaceDetailsScreen initialized with place: ${widget.place.name}');
+    developer.log(
+      'PlaceDetailsScreen initialized with place: ${widget.place.name}',
+    );
     _loadProperties();
   }
 
@@ -44,20 +48,22 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
         _properties = properties;
         _isLoading = false;
       });
-      developer.log('Loaded ${properties.length} properties for place: ${widget.place.name}');
+      developer.log(
+        'Loaded ${properties.length} properties for place: ${widget.place.name}',
+      );
     } catch (e) {
       developer.log('Error loading properties: $e', error: e);
       setState(() {
         _isLoading = false;
       });
-      print('Error loading properties: $e');
+      _logger.severe('Error loading properties: $e');
     }
   }
 
   @override
   Widget build(BuildContext context) {
     developer.log('Building PlaceDetailsScreen for: ${widget.place.name}');
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text(widget.place.name),
@@ -70,9 +76,10 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
           },
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : _buildContent(),
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _buildContent(),
     );
   }
 
@@ -118,7 +125,7 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
+                  color: Colors.black.withValues(alpha: 0.1),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),

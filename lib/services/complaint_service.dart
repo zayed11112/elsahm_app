@@ -1,7 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:uuid/uuid.dart';
 import '../models/complaint.dart';
-import '../models/user_profile.dart';
 
 class ComplaintService {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
@@ -17,7 +16,9 @@ class ComplaintService {
         .orderBy('createdAt', descending: true)
         .snapshots()
         .map((snapshot) {
-          return snapshot.docs.map((doc) => Complaint.fromFirestore(doc)).toList();
+          return snapshot.docs
+              .map((doc) => Complaint.fromFirestore(doc))
+              .toList();
         });
   }
 
@@ -43,7 +44,7 @@ class ComplaintService {
     required String description,
   }) async {
     final complaintId = uuid.v4();
-    
+
     await _firestore.collection(complaintsCollection).doc(complaintId).set({
       'userId': userId,
       'userName': userName,
@@ -53,7 +54,7 @@ class ComplaintService {
       'createdAt': Timestamp.now(),
       'responses': [],
     });
-    
+
     return complaintId;
   }
 
@@ -78,21 +79,28 @@ class ComplaintService {
     );
 
     // Get the current complaint document
-    final complaintDoc = await _firestore.collection(complaintsCollection).doc(complaintId).get();
-    
+    final complaintDoc =
+        await _firestore
+            .collection(complaintsCollection)
+            .doc(complaintId)
+            .get();
+
     if (complaintDoc.exists) {
       List<dynamic> currentResponses = complaintDoc.data()?['responses'] ?? [];
       currentResponses.add(response.toMap());
-      
+
       // Update the document with the new response
-      await _firestore.collection(complaintsCollection).doc(complaintId).update({
-        'responses': currentResponses,
-      });
+      await _firestore.collection(complaintsCollection).doc(complaintId).update(
+        {'responses': currentResponses},
+      );
     }
   }
 
   // Update complaint status
-  Future<void> updateComplaintStatus(String complaintId, String newStatus) async {
+  Future<void> updateComplaintStatus(
+    String complaintId,
+    String newStatus,
+  ) async {
     await _firestore.collection(complaintsCollection).doc(complaintId).update({
       'status': newStatus,
     });
@@ -102,4 +110,4 @@ class ComplaintService {
   Future<void> deleteComplaint(String complaintId) async {
     await _firestore.collection(complaintsCollection).doc(complaintId).delete();
   }
-} 
+}

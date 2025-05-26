@@ -48,8 +48,6 @@ class Booking {
         return 'مؤكد';
       case BookingStatus.cancelled:
         return 'ملغى';
-      default:
-        return 'غير معروف';
     }
   }
 
@@ -141,8 +139,6 @@ class Booking {
       case BookingStatus.cancelled:
         statusStr = 'cancelled';
         break;
-      default:
-        statusStr = 'pending';
     }
 
     return {

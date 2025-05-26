@@ -8,11 +8,11 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
   final Duration minimumLoadingTime;
   final Color backgroundColor;
   final double lottieSize;
-  
+
   // Add a timeout to prevent infinite loading
   final Duration timeout;
   bool _hasTimedOut = false;
-  
+
   LoadingRoute({
     required this.page,
     this.lottieAsset = 'assets/animations/loading.json',
@@ -22,20 +22,17 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
     this.lottieSize = 100,
     this.timeout = const Duration(seconds: 10),
   }) : super(
-          pageBuilder: (context, animation, secondaryAnimation) => page,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            // Use a fade transition for smoother experience
-            return FadeTransition(
-              opacity: animation,
-              child: child,
-            );
-          },
-          // Short transition duration to make it smoother but still visual
-          transitionDuration: const Duration(milliseconds: 150),
-          reverseTransitionDuration: const Duration(milliseconds: 100),
-          // Prevent system back gesture during transition to avoid crashes
-          barrierDismissible: false,
-        );
+         pageBuilder: (context, animation, secondaryAnimation) => page,
+         transitionsBuilder: (context, animation, secondaryAnimation, child) {
+           // Use a fade transition for smoother experience
+           return FadeTransition(opacity: animation, child: child);
+         },
+         // Short transition duration to make it smoother but still visual
+         transitionDuration: const Duration(milliseconds: 150),
+         reverseTransitionDuration: const Duration(milliseconds: 100),
+         // Prevent system back gesture during transition to avoid crashes
+         barrierDismissible: false,
+       );
 
   @override
   Widget buildPage(
@@ -64,15 +61,23 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
     try {
       // Set up timeout to prevent infinite loading
       bool completed = false;
-      
+
       // Main loading tasks
       final loadingTask = Future.wait([
         Future.delayed(minimumLoadingTime),
-        Future.microtask(() => precachePageData(context)),
+        // Precache data synchronously to avoid context issues
+        Future.sync(() {
+          try {
+            precachePageData(context);
+          } catch (e) {
+            // Handle precaching errors gracefully
+            debugPrint('Precaching failed: $e');
+          }
+        }),
       ]).then((_) {
         completed = true;
       });
-      
+
       // Timeout handler
       final timeoutTask = Future.delayed(timeout).then((_) {
         if (!completed) {
@@ -80,10 +85,10 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
           debugPrint("⚠️ تجاوز مهلة التحميل");
         }
       });
-      
+
       // Wait for either completion or timeout
       await Future.any([loadingTask, timeoutTask]);
-      
+
       if (completed) {
         debugPrint("✅ انتهاء التحميل بنجاح");
       }
@@ -99,7 +104,7 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
 
   Widget buildLoadingScreen(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Scaffold(
       backgroundColor: isDarkMode ? Colors.black : backgroundColor,
       body: Center(
@@ -129,15 +134,16 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
       ),
     );
   }
-  
+
   Widget _buildTimeoutErrorScreen(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
-    return WillPopScope(
+
+    return PopScope(
       // Handle back button press safely
-      onWillPop: () async {
-        Navigator.of(context).pop();
-        return false;
+      onPopInvokedWithResult: (didPop, result) {
+        if (!didPop) {
+          Navigator.of(context).pop();
+        }
       },
       child: Scaffold(
         backgroundColor: isDarkMode ? Colors.black : backgroundColor,
@@ -175,7 +181,10 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
               ElevatedButton(
                 onPressed: () => Navigator.of(context).pop(),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 30,
+                    vertical: 12,
+                  ),
                 ),
                 child: const Text('العودة'),
               ),
@@ -185,4 +194,4 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
       ),
     );
   }
-} 
+}

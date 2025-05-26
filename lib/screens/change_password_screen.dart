@@ -15,7 +15,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final _currentPasswordController = TextEditingController();
   final _newPasswordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-  
+
   bool _isLoading = false;
   bool _obscureCurrentPassword = true;
   bool _obscureNewPassword = true;
@@ -78,7 +78,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('تغيير كلمة المرور'),
@@ -95,7 +95,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-                  
+
                   // Icon and title
                   Center(
                     child: Icon(
@@ -127,13 +127,13 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     ),
                   ),
                   const SizedBox(height: 30),
-                  
+
                   // Error message if any
                   if (_errorMessage != null)
                     Container(
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
-                        color: Colors.red.withOpacity(0.1),
+                        color: Colors.red.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Text(
@@ -143,7 +143,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       ),
                     ),
                   if (_errorMessage != null) const SizedBox(height: 16),
-                  
+
                   // Current password field
                   TextFormField(
                     controller: _currentPasswordController,
@@ -153,8 +153,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       prefixIcon: const Icon(Icons.lock_outline),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureCurrentPassword 
-                              ? Icons.visibility_off 
+                          _obscureCurrentPassword
+                              ? Icons.visibility_off
                               : Icons.visibility,
                         ),
                         onPressed: () {
@@ -175,7 +175,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // New password field
                   TextFormField(
                     controller: _newPasswordController,
@@ -185,8 +185,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureNewPassword 
-                              ? Icons.visibility_off 
+                          _obscureNewPassword
+                              ? Icons.visibility_off
                               : Icons.visibility,
                         ),
                         onPressed: () {
@@ -210,7 +210,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     },
                   ),
                   const SizedBox(height: 20),
-                  
+
                   // Confirm new password field
                   TextFormField(
                     controller: _confirmPasswordController,
@@ -220,8 +220,8 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       prefixIcon: const Icon(Icons.lock_outlined),
                       suffixIcon: IconButton(
                         icon: Icon(
-                          _obscureConfirmPassword 
-                              ? Icons.visibility_off 
+                          _obscureConfirmPassword
+                              ? Icons.visibility_off
                               : Icons.visibility,
                         ),
                         onPressed: () {
@@ -245,7 +245,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                     },
                   ),
                   const SizedBox(height: 30),
-                  
+
                   // Change password button
                   ElevatedButton(
                     onPressed: _isLoading ? null : _changePassword,
@@ -258,22 +258,23 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
                       ),
                       elevation: 2,
                     ),
-                    child: _isLoading
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              color: Colors.white,
-                              strokeWidth: 2,
+                    child:
+                        _isLoading
+                            ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const Text(
+                              'تغيير كلمة المرور',
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
                             ),
-                          )
-                        : const Text(
-                            'تغيير كلمة المرور',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
                   ),
                 ],
               ),
@@ -288,4 +289,4 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
 // Define colors used in this screen
 const Color primarySkyBlue = Color(0xFF4FC3F7);
 const Color accentBlue = Color(0xFF29B6F6);
-const Color darkHeaderColor = Color(0xFF1A2025); 
+const Color darkHeaderColor = Color(0xFF1A2025);

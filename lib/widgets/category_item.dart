@@ -7,11 +7,11 @@ class CategoryItem extends StatelessWidget {
   final VoidCallback onTap;
 
   const CategoryItem({
-    Key? key,
+    super.key,
     required this.category,
     this.isSelected = false,
     required this.onTap,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -23,9 +23,10 @@ class CategoryItem extends StatelessWidget {
             width: 70,
             height: 70,
             decoration: BoxDecoration(
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).brightness == Brightness.dark
+              color:
+                  isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).brightness == Brightness.dark
                       ? Colors.grey[800]
                       : Colors.grey[200],
               borderRadius: BorderRadius.circular(16),
@@ -34,9 +35,10 @@ class CategoryItem extends StatelessWidget {
               child: Icon(
                 _getIconData(category.iconName),
                 size: 30,
-                color: isSelected
-                    ? Colors.white
-                    : Theme.of(context).colorScheme.primary,
+                color:
+                    isSelected
+                        ? Colors.white
+                        : Theme.of(context).colorScheme.primary,
               ),
             ),
           ),
@@ -45,16 +47,17 @@ class CategoryItem extends StatelessWidget {
             category.name,
             style: TextStyle(
               fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-              color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).textTheme.bodyMedium?.color,
+              color:
+                  isSelected
+                      ? Theme.of(context).colorScheme.primary
+                      : Theme.of(context).textTheme.bodyMedium?.color,
             ),
           ),
         ],
       ),
     );
   }
-  
+
   IconData _getIconData(String iconName) {
     // Convert string icon name to IconData
     switch (iconName.toLowerCase()) {
@@ -80,4 +83,4 @@ class CategoryItem extends StatelessWidget {
         return Icons.category;
     }
   }
-} 
+}

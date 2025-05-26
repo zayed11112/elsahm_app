@@ -3,6 +3,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart';
 import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
+import 'package:logging/logging.dart'; // Import logging
 import 'dart:async'; // ضروري للتعامل مع الاستثناءات بشكل متزامن
 import 'package:flutter/services.dart'; // لضبط توجيه الشاشة
 import 'package:onesignal_flutter/onesignal_flutter.dart'; // Import OneSignal
@@ -32,8 +33,12 @@ const Duration connectionTimeout = Duration(seconds: 8);
 // إضافة متغير للتحكم في حالة البدء
 bool isInitialized = false;
 
+// Logger instance for main.dart
+final Logger _logger = Logger('Main');
+final Logger _oneSignalLogger = Logger('OneSignal');
+
 // OneSignal App ID
-const String ONESIGNAL_APP_ID = '3136dbc6-c09c-4bca-b0aa-fe35421ac513';
+const String oneSignalAppId = '3136dbc6-c09c-4bca-b0aa-fe35421ac513';
 
 Future<void> main() async {
   // التقاط أي أخطاء غير متوقعة في التطبيق
@@ -52,12 +57,12 @@ Future<void> main() async {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
-        print('Firebase initialized successfully');
-        
+        _logger.info('Firebase initialized successfully');
+
         // Initialize OneSignal
         await _initializeOneSignal();
       } catch (e) {
-        print('Firebase initialization error: $e');
+        _logger.severe('Firebase initialization error: $e');
       }
 
       // تهيئة بيانات اللغة العربية للتواريخ
@@ -72,13 +77,13 @@ Future<void> main() async {
 
         // تهيئة Supabase بشكل غير متزامن بعد عرض واجهة المستخدم
         _initializeSupabase();
-        
+
         // Initialize the notification service
         await NotificationService().initialize();
       } catch (e, stackTrace) {
         // في حالة حدوث خطأ أثناء التهيئة، عرض شاشة خطأ
-        print('خطأ أثناء تهيئة التطبيق: $e');
-        print('التفاصيل التقنية: $stackTrace');
+        _logger.severe('خطأ أثناء تهيئة التطبيق: $e');
+        _logger.severe('التفاصيل التقنية: $stackTrace');
 
         // تشغيل تطبيق في وضع الطوارئ (آمن)
         runApp(
@@ -91,8 +96,8 @@ Future<void> main() async {
     },
     (error, stack) {
       // إلتقاط أي استثناءات غير معالجة في التطبيق
-      print('خطأ غير متوقع: $error');
-      print('التفاصيل التقنية: $stack');
+      _logger.severe('خطأ غير متوقع: $error');
+      _logger.severe('التفاصيل التقنية: $stack');
     },
   );
 }
@@ -102,42 +107,42 @@ Future<void> _initializeOneSignal() async {
   try {
     // تهيئة OneSignal مع مستوى سجل مفصل للتصحيح
     OneSignal.Debug.setLogLevel(OSLogLevel.verbose);
-    
+
     // تكوين OneSignal
-    OneSignal.initialize(ONESIGNAL_APP_ID);
+    OneSignal.initialize(oneSignalAppId);
 
     // إضافة مستمع لحالة السماح بالإشعارات (تشخيص)
-    final permission = await OneSignal.Notifications.permission;
-    print('OneSignal Notification permission status: $permission');
-    
+    final permission = OneSignal.Notifications.permission;
+    _logger.info('OneSignal Notification permission status: $permission');
+
     // طلب إذن الإشعارات من المستخدم بشكل صريح
     bool allowed = await OneSignal.Notifications.requestPermission(true);
-    print('OneSignal permission was granted: $allowed');
-    
+    _logger.info('OneSignal permission was granted: $allowed');
+
     // تمكين الإشعارات في المقدمة بشكل صريح
     OneSignal.Notifications.clearAll();
-    
+
     // طباعة معرف الجهاز للتشخيص
-    final deviceState = await OneSignal.User.pushSubscription;
-    print('OneSignal Device ID: ${deviceState.id}');
-    print('OneSignal Device Token: ${deviceState.token}');
-    print('OneSignal Device Opted In: ${deviceState.optedIn}');
-    
+    final deviceState = OneSignal.User.pushSubscription;
+    _logger.info('OneSignal Device ID: ${deviceState.id}');
+    _logger.info('OneSignal Device Token: ${deviceState.token}');
+    _logger.info('OneSignal Device Opted In: ${deviceState.optedIn}');
+
     // إعداد معالج للإشعارات عند فتحها
     OneSignal.Notifications.addClickListener((event) {
-      print('NOTIFICATION OPENED HANDLER CALLED');
-      print('Notification title: ${event.notification.title}');
-      print('Notification body: ${event.notification.body}');
-      
+      _oneSignalLogger.info('NOTIFICATION OPENED HANDLER CALLED');
+      _oneSignalLogger.info('Notification title: ${event.notification.title}');
+      _oneSignalLogger.info('Notification body: ${event.notification.body}');
+
       // التحقق من وجود بيانات إضافية في الإشعار
       Map<String, dynamic>? additionalData = event.notification.additionalData;
-      
+
       if (additionalData != null) {
-        print('Additional Data: $additionalData');
-        
+        _oneSignalLogger.info('Additional Data: $additionalData');
+
         // التعامل مع أنواع مختلفة من الإشعارات
         String? type = additionalData['type'];
-        
+
         if (type == 'wallet') {
           // الانتقال إلى شاشة المحفظة
           navigatorKey.currentState?.pushNamed('/wallet');
@@ -153,22 +158,24 @@ Future<void> _initializeOneSignal() async {
         }
       }
     });
-    
+
     // إعداد معالج للإشعارات عند استلامها (وهي في المقدمة)
     OneSignal.Notifications.addForegroundWillDisplayListener((event) {
-      print('NOTIFICATION RECEIVED IN FOREGROUND');
-      print('Notification ID: ${event.notification.notificationId}');
-      print('Notification title: ${event.notification.title}');
-      print('Notification body: ${event.notification.body}');
-      
+      _oneSignalLogger.info('NOTIFICATION RECEIVED IN FOREGROUND');
+      _oneSignalLogger.info(
+        'Notification ID: ${event.notification.notificationId}',
+      );
+      _oneSignalLogger.info('Notification title: ${event.notification.title}');
+      _oneSignalLogger.info('Notification body: ${event.notification.body}');
+
       // احتفظ بالإشعار واعرضه
       event.preventDefault();
       event.notification.display();
     });
-    
-    print('OneSignal initialized successfully');
+
+    _logger.info('OneSignal initialized successfully');
   } catch (e) {
-    print('Error initializing OneSignal: $e');
+    _logger.severe('Error initializing OneSignal: $e');
   }
 }
 
@@ -177,28 +184,28 @@ Future<void> setOneSignalExternalUserId(String userId) async {
   try {
     // تطهير معرف المستخدم
     final cleanUserId = userId.trim();
-    
+
     // ربط معرف المستخدم
     await OneSignal.login(cleanUserId);
-    print('OneSignal login with user ID: $cleanUserId');
-    
+    _logger.info('OneSignal login with user ID: $cleanUserId');
+
     // إضافة علامة (tag) لمعرف المستخدم للاستهداف المخصص
     await OneSignal.User.addTags({
       'user_id': cleanUserId,
       'auth_time': DateTime.now().millisecondsSinceEpoch.toString(),
     });
-    
+
     // طباعة المعلومات للتشخيص
     final tags = await OneSignal.User.getTags();
-    print('OneSignal tags after login: $tags');
-    
+    _logger.info('OneSignal tags after login: $tags');
+
     // حفظ المعرف في Shared Preferences للاستخدام المستقبلي
-    final pushStatus = await OneSignal.User.pushSubscription;
-    print('OneSignal Device ID: ${pushStatus.id}');
-    print('OneSignal Device Token: ${pushStatus.token}');
-    print('OneSignal user ID set: $cleanUserId');
+    final pushStatus = OneSignal.User.pushSubscription;
+    _logger.info('OneSignal Device ID: ${pushStatus.id}');
+    _logger.info('OneSignal Device Token: ${pushStatus.token}');
+    _logger.info('OneSignal user ID set: $cleanUserId');
   } catch (e) {
-    print('Error setting OneSignal user ID: $e');
+    _logger.severe('Error setting OneSignal user ID: $e');
   }
 }
 
@@ -207,13 +214,13 @@ Future<void> removeOneSignalExternalUserId() async {
   try {
     // إزالة ربط معرف المستخدم
     OneSignal.logout();
-    
+
     // حذف علامة (tag) معرف المستخدم
     OneSignal.User.removeTags(['user_id']);
-    
-    print('OneSignal user ID removed');
+
+    _logger.info('OneSignal user ID removed');
   } catch (e) {
-    print('Error removing OneSignal user ID: $e');
+    _logger.severe('Error removing OneSignal user ID: $e');
   }
 }
 
@@ -229,19 +236,21 @@ Future<void> _initializeSupabase() async {
       ).timeout(
         connectionTimeout,
         onTimeout: () {
-          print('تجاوزت مهلة الاتصال مع Supabase، سيتم إعادة المحاولة لاحقاً');
+          _logger.warning(
+            'تجاوزت مهلة الاتصال مع Supabase، سيتم إعادة المحاولة لاحقاً',
+          );
           throw TimeoutException('تجاوز الوقت');
         },
       );
     } catch (e) {
-      print('خطأ في تهيئة Supabase: $e');
+      _logger.severe('خطأ في تهيئة Supabase: $e');
       // المتابعة حتى مع وجود خطأ
     }
 
     // تم الانتهاء من التهيئة بنجاح
     isInitialized = true;
   } catch (e) {
-    print('حدث خطأ أثناء تهيئة الخدمات: $e');
+    _logger.severe('حدث خطأ أثناء تهيئة الخدمات: $e');
     // ليس ضرورياً إيقاف التطبيق، سيستمر بدون اتصال وتظهر رسالة خطأ عند محاولة استخدام الخدمات
   }
 }
@@ -500,10 +509,13 @@ class MyApp extends StatelessWidget {
             // Add theme animation duration
             builder: (context, child) {
               return AnimatedTheme(
-                data: themeProvider.themeMode == ThemeMode.dark 
-                    ? darkTheme 
-                    : lightTheme,
-                duration: const Duration(milliseconds: 300), // Smooth animation duration
+                data:
+                    themeProvider.themeMode == ThemeMode.dark
+                        ? darkTheme
+                        : lightTheme,
+                duration: const Duration(
+                  milliseconds: 300,
+                ), // Smooth animation duration
                 child: child!,
               );
             },

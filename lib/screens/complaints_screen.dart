@@ -1,12 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../models/complaint.dart';
 import '../services/complaint_service.dart';
 import '../services/firestore_service.dart';
 import 'complaint_detail_screen.dart';
-import 'dart:math' as math;
 
 class ComplaintsScreen extends StatefulWidget {
   const ComplaintsScreen({super.key});
@@ -15,24 +13,25 @@ class ComplaintsScreen extends StatefulWidget {
   State<ComplaintsScreen> createState() => _ComplaintsScreenState();
 }
 
-class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerProviderStateMixin {
+class _ComplaintsScreenState extends State<ComplaintsScreen>
+    with SingleTickerProviderStateMixin {
   final ComplaintService _complaintService = ComplaintService();
   final FirestoreService _firestoreService = FirestoreService();
   late TabController _tabController;
-  
+
   // Form controllers
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _descriptionController = TextEditingController();
-  
+
   bool _isSubmitting = false;
-  
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
   }
-  
+
   @override
   void dispose() {
     _tabController.dispose();
@@ -41,7 +40,11 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
     super.dispose();
   }
 
-  void _showAddComplaintBottomSheet(BuildContext context, String userId, String userName) {
+  void _showAddComplaintBottomSheet(
+    BuildContext context,
+    String userId,
+    String userName,
+  ) {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -61,7 +64,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.15),
+                    color: Color.fromRGBO(0, 0, 0, 0.15),
                     blurRadius: 15,
                     spreadRadius: 0,
                   ),
@@ -87,14 +90,16 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                         ),
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Title
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
                             'تقديم شكوى جديدة',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               color: Theme.of(context).primaryColor,
                             ),
@@ -102,14 +107,19 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                           IconButton(
                             icon: const Icon(Icons.close),
                             style: IconButton.styleFrom(
-                              backgroundColor: Colors.grey.withOpacity(0.1),
+                              backgroundColor: Color.fromRGBO(
+                                128,
+                                128,
+                                128,
+                                0.1,
+                              ),
                             ),
                             onPressed: () => Navigator.pop(context),
                           ),
                         ],
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Title Field
                       TextFormField(
                         controller: _titleController,
@@ -120,17 +130,28 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor.withOpacity(0.3),
+                              color: Color.fromRGBO(
+                                Theme.of(context).primaryColor.r.toInt(),
+                                Theme.of(context).primaryColor.g.toInt(),
+                                Theme.of(context).primaryColor.b.toInt(),
+                                0.3,
+                              ),
                             ),
                           ),
                           filled: true,
-                          fillColor: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[800]
-                              : Colors.grey[100],
+                          fillColor:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.grey[800]
+                                  : Colors.grey[100],
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor.withOpacity(0.3),
+                              color: Color.fromRGBO(
+                                Theme.of(context).primaryColor.r.toInt(),
+                                Theme.of(context).primaryColor.g.toInt(),
+                                Theme.of(context).primaryColor.b.toInt(),
+                                0.3,
+                              ),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -152,7 +173,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                         },
                       ),
                       const SizedBox(height: 20),
-                      
+
                       // Description Field
                       TextFormField(
                         controller: _descriptionController,
@@ -168,17 +189,28 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor.withOpacity(0.3),
+                              color: Color.fromRGBO(
+                                Theme.of(context).primaryColor.r.toInt(),
+                                Theme.of(context).primaryColor.g.toInt(),
+                                Theme.of(context).primaryColor.b.toInt(),
+                                0.3,
+                              ),
                             ),
                           ),
                           filled: true,
-                          fillColor: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey[800]
-                              : Colors.grey[100],
+                          fillColor:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.grey[800]
+                                  : Colors.grey[100],
                           enabledBorder: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(16),
                             borderSide: BorderSide(
-                              color: Theme.of(context).primaryColor.withOpacity(0.3),
+                              color: Color.fromRGBO(
+                                Theme.of(context).primaryColor.r.toInt(),
+                                Theme.of(context).primaryColor.g.toInt(),
+                                Theme.of(context).primaryColor.b.toInt(),
+                                0.3,
+                              ),
                             ),
                           ),
                           focusedBorder: OutlineInputBorder(
@@ -200,103 +232,138 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                         },
                       ),
                       const SizedBox(height: 24),
-                      
+
                       // Submit Button
                       SizedBox(
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed: _isSubmitting
-                              ? null
-                              : () async {
-                                  if (_formKey.currentState!.validate()) {
-                                    setState(() {
-                                      _isSubmitting = true;
-                                    });
-                                    
-                                    try {
-                                      await _complaintService.createComplaint(
-                                        userId: userId,
-                                        userName: userName,
-                                        title: _titleController.text.trim(),
-                                        description: _descriptionController.text.trim(),
-                                      );
-                                      
-                                      if (mounted) {
-                                        Navigator.pop(context);
-                                        _titleController.clear();
-                                        _descriptionController.clear();
-                                        
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Row(
-                                              children: [
-                                                Icon(Icons.check_circle, color: Colors.white),
-                                                SizedBox(width: 12),
-                                                Text('تم تقديم الشكوى بنجاح'),
-                                              ],
-                                            ),
-                                            backgroundColor: Colors.green,
-                                            behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(10),
-                                            ),
-                                          ),
+                          onPressed:
+                              _isSubmitting
+                                  ? null
+                                  : () async {
+                                    if (_formKey.currentState!.validate()) {
+                                      setState(() {
+                                        _isSubmitting = true;
+                                      });
+
+                                      // Capturar context y crear objetos necesarios antes de la operación async
+                                      final scaffoldMessenger =
+                                          ScaffoldMessenger.of(context);
+                                      final navigator = Navigator.of(context);
+
+                                      try {
+                                        // Crear objeto de queja
+                                        await _complaintService.createComplaint(
+                                          userId: userId,
+                                          userName: userName,
+                                          title: _titleController.text.trim(),
+                                          description:
+                                              _descriptionController.text
+                                                  .trim(),
                                         );
-                                      }
-                                    } catch (e) {
-                                      if (mounted) {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Row(
-                                              children: [
-                                                Icon(Icons.error, color: Colors.white),
-                                                SizedBox(width: 12),
-                                                Expanded(child: Text('حدث خطأ: ${e.toString()}')),
-                                              ],
+
+                                        if (mounted) {
+                                          // Usar navigator que capturamos antes
+                                          navigator.pop();
+                                          _titleController.clear();
+                                          _descriptionController.clear();
+
+                                          // Usar scaffoldMessenger que capturamos antes
+                                          scaffoldMessenger.showSnackBar(
+                                            SnackBar(
+                                              content: Row(
+                                                children: const [
+                                                  Icon(
+                                                    Icons.check_circle,
+                                                    color: Colors.white,
+                                                  ),
+                                                  SizedBox(width: 12),
+                                                  Text('تم تقديم الشكوى بنجاح'),
+                                                ],
+                                              ),
+                                              backgroundColor: Colors.green,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
                                             ),
-                                            backgroundColor: Colors.red,
-                                            behavior: SnackBarBehavior.floating,
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(10),
+                                          );
+                                        }
+                                      } catch (e) {
+                                        // Use the pre-captured scaffoldMessenger
+
+                                        if (mounted) {
+                                          scaffoldMessenger.showSnackBar(
+                                            SnackBar(
+                                              content: Row(
+                                                children: [
+                                                  const Icon(
+                                                    Icons.error,
+                                                    color: Colors.white,
+                                                  ),
+                                                  const SizedBox(width: 12),
+                                                  Expanded(
+                                                    child: Text(
+                                                      'حدث خطأ: ${e.toString()}',
+                                                    ),
+                                                  ),
+                                                ],
+                                              ),
+                                              backgroundColor: Colors.red,
+                                              behavior:
+                                                  SnackBarBehavior.floating,
+                                              shape: RoundedRectangleBorder(
+                                                borderRadius:
+                                                    BorderRadius.circular(10),
+                                              ),
                                             ),
-                                          ),
-                                        );
-                                      }
-                                    } finally {
-                                      if (mounted) {
-                                        setState(() {
-                                          _isSubmitting = false;
-                                        });
+                                          );
+                                        }
+                                      } finally {
+                                        if (mounted) {
+                                          setState(() {
+                                            _isSubmitting = false;
+                                          });
+                                        }
                                       }
                                     }
-                                  }
-                                },
+                                  },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: Theme.of(context).primaryColor,
                             foregroundColor: Colors.white,
                             elevation: 3,
-                            shadowColor: Theme.of(context).primaryColor.withOpacity(0.4),
+                            shadowColor: Color.fromRGBO(
+                              Theme.of(context).primaryColor.r.toInt(),
+                              Theme.of(context).primaryColor.g.toInt(),
+                              Theme.of(context).primaryColor.b.toInt(),
+                              0.4,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(16),
                             ),
                           ),
-                          child: _isSubmitting
-                              ? const SizedBox(
-                                  height: 24,
-                                  width: 24,
-                                  child: CircularProgressIndicator(
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                    strokeWidth: 2,
+                          child:
+                              _isSubmitting
+                                  ? const SizedBox(
+                                    height: 24,
+                                    width: 24,
+                                    child: CircularProgressIndicator(
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                  : const Text(
+                                    'تقديم الشكوى',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
-                                )
-                              : const Text(
-                                  'تقديم الشكوى',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
                         ),
                       ),
                     ],
@@ -315,39 +382,34 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
     final authProvider = Provider.of<AuthProvider>(context);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final userId = authProvider.user?.uid;
-    
+
     if (userId == null) {
       return const Scaffold(
-        body: Center(
-          child: Text('يرجى تسجيل الدخول لعرض الشكاوى'),
-        ),
+        body: Center(child: Text('يرجى تسجيل الدخول لعرض الشكاوى')),
       );
     }
-    
+
     return FutureBuilder(
       future: _firestoreService.getUserProfile(userId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
           return const Scaffold(
-            body: Center(
-              child: CircularProgressIndicator(),
-            ),
+            body: Center(child: CircularProgressIndicator()),
           );
         }
-        
+
         if (snapshot.hasError || !snapshot.hasData) {
           return Scaffold(
-            body: Center(
-              child: Text('حدث خطأ: ${snapshot.error}'),
-            ),
+            body: Center(child: Text('حدث خطأ: ${snapshot.error}')),
           );
         }
-        
+
         final userName = snapshot.data!.name;
-        
+
         return Scaffold(
           appBar: AppBar(
-            title: const Text('الشكاوى', 
+            title: const Text(
+              'الشكاوى',
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             centerTitle: true,
@@ -359,7 +421,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                   color: isDarkMode ? Colors.grey[900] : Colors.white,
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.05),
+                      color: Color.fromRGBO(0, 0, 0, 0.05),
                       blurRadius: 5,
                       offset: const Offset(0, 1),
                     ),
@@ -370,21 +432,16 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                   indicatorColor: Theme.of(context).primaryColor,
                   indicatorWeight: 3,
                   labelColor: Theme.of(context).primaryColor,
-                  unselectedLabelColor: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  unselectedLabelColor:
+                      isDarkMode ? Colors.grey[400] : Colors.grey[600],
                   labelStyle: const TextStyle(fontWeight: FontWeight.bold),
                   tabs: [
-                    Tab(
-                      icon: Icon(Icons.fiber_new),
-                      text: 'مفتوحة',
-                    ),
+                    Tab(icon: Icon(Icons.fiber_new), text: 'مفتوحة'),
                     Tab(
                       icon: Icon(Icons.pending_actions),
                       text: 'قيد المعالجة',
                     ),
-                    Tab(
-                      icon: Icon(Icons.check_circle),
-                      text: 'مغلقة',
-                    ),
+                    Tab(icon: Icon(Icons.check_circle), text: 'مغلقة'),
                   ],
                 ),
               ),
@@ -399,12 +456,16 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
             ],
           ),
           floatingActionButton: FloatingActionButton.extended(
-            onPressed: () => _showAddComplaintBottomSheet(context, userId, userName),
+            onPressed:
+                () => _showAddComplaintBottomSheet(context, userId, userName),
             backgroundColor: Theme.of(context).primaryColor,
             foregroundColor: Colors.white,
             elevation: 4,
             icon: const Icon(Icons.add),
-            label: const Text('شكوى جديدة', style: TextStyle(fontWeight: FontWeight.bold)),
+            label: const Text(
+              'شكوى جديدة',
+              style: TextStyle(fontWeight: FontWeight.bold),
+            ),
           ),
         );
       },
@@ -413,14 +474,14 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
 
   Future<void> _refreshComplaints() async {
     await Future.delayed(const Duration(milliseconds: 800));
-    
+
     if (mounted) {
       setState(() {
         // إعادة بناء واجهة المستخدم فقط
         // لا حاجة لتحديث البيانات لأن StreamBuilder يتعامل مع ذلك تلقائيًا
       });
     }
-    
+
     // يمكن إضافة منطق إضافي هنا إذا كنت تريد تحديث أي بيانات
     // غير متصلة بـ StreamBuilder
   }
@@ -430,17 +491,13 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
       stream: _complaintService.getUserComplaints(userId),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         }
-        
+
         if (snapshot.hasError) {
-          return Center(
-            child: Text('حدث خطأ: ${snapshot.error}'),
-          );
+          return Center(child: Text('حدث خطأ: ${snapshot.error}'));
         }
-        
+
         if (!snapshot.hasData || snapshot.data!.isEmpty) {
           return RefreshIndicator(
             onRefresh: _refreshComplaints,
@@ -458,11 +515,12 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                         'assets/images/empty_complaints.png',
                         width: 150,
                         height: 150,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.inbox_outlined,
-                          size: 100,
-                          color: Colors.grey[300],
-                        ),
+                        errorBuilder:
+                            (context, error, stackTrace) => Icon(
+                              Icons.inbox_outlined,
+                              size: 100,
+                              color: Colors.grey[300],
+                            ),
                       ),
                       const SizedBox(height: 24),
                       Text(
@@ -497,9 +555,12 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
             ),
           );
         }
-        
-        final complaints = snapshot.data!.where((complaint) => complaint.status == status).toList();
-        
+
+        final complaints =
+            snapshot.data!
+                .where((complaint) => complaint.status == status)
+                .toList();
+
         if (complaints.isEmpty) {
           return RefreshIndicator(
             onRefresh: _refreshComplaints,
@@ -517,11 +578,12 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                         'assets/images/empty_complaints.png',
                         width: 150,
                         height: 150,
-                        errorBuilder: (context, error, stackTrace) => Icon(
-                          Icons.inbox_outlined,
-                          size: 100,
-                          color: Colors.grey[300],
-                        ),
+                        errorBuilder:
+                            (context, error, stackTrace) => Icon(
+                              Icons.inbox_outlined,
+                              size: 100,
+                              color: Colors.grey[300],
+                            ),
                       ),
                       const SizedBox(height: 24),
                       Text(
@@ -556,7 +618,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
             ),
           );
         }
-        
+
         return RefreshIndicator(
           onRefresh: _refreshComplaints,
           color: Theme.of(context).primaryColor,
@@ -590,14 +652,19 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
   Widget _buildComplaintCard(BuildContext context, Complaint complaint) {
     final Color statusColor = _getStatusColor(complaint.status);
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: statusColor.withOpacity(0.08),
+            color: Color.fromRGBO(
+              statusColor.r.toInt(),
+              statusColor.g.toInt(),
+              statusColor.b.toInt(),
+              0.08,
+            ),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -608,7 +675,12 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
           side: BorderSide(
-            color: statusColor.withOpacity(0.3),
+            color: Color.fromRGBO(
+              statusColor.r.toInt(),
+              statusColor.g.toInt(),
+              statusColor.b.toInt(),
+              0.3,
+            ),
             width: 1.5,
           ),
         ),
@@ -617,7 +689,9 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
             Navigator.push(
               context,
               MaterialPageRoute(
-                builder: (context) => ComplaintDetailScreen(complaintId: complaint.id),
+                builder:
+                    (context) =>
+                        ComplaintDetailScreen(complaintId: complaint.id),
               ),
             );
           },
@@ -636,10 +710,20 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.1),
+                        color: Color.fromRGBO(
+                          statusColor.r.toInt(),
+                          statusColor.g.toInt(),
+                          statusColor.b.toInt(),
+                          0.1,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                         border: Border.all(
-                          color: statusColor.withOpacity(0.5),
+                          color: Color.fromRGBO(
+                            statusColor.r.toInt(),
+                            statusColor.g.toInt(),
+                            statusColor.b.toInt(),
+                            0.5,
+                          ),
                         ),
                       ),
                       child: Row(
@@ -674,7 +758,8 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                       child: Text(
                         _formatDate(complaint.createdAt),
                         style: TextStyle(
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                          color:
+                              isDarkMode ? Colors.grey[400] : Colors.grey[700],
                           fontSize: 12,
                         ),
                       ),
@@ -694,13 +779,17 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                           Icon(
                             Icons.chat_bubble_outline,
                             size: 16,
-                            color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                            color:
+                                isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
                           ),
                           const SizedBox(width: 4),
                           Text(
                             complaint.responses.length.toString(),
                             style: TextStyle(
-                              color: isDarkMode ? Colors.white : Colors.grey[800],
+                              color:
+                                  isDarkMode ? Colors.white : Colors.grey[800],
                               fontSize: 12,
                               fontWeight: FontWeight.bold,
                             ),
@@ -738,7 +827,8 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                       color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
-                        color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                        color:
+                            isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
                         width: 1,
                       ),
                     ),
@@ -753,15 +843,16 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color: complaint.responses.last.isAdmin 
-                                      ? Colors.purple 
-                                      : Theme.of(context).primaryColor,
+                                  color:
+                                      complaint.responses.last.isAdmin
+                                          ? Colors.purple
+                                          : Theme.of(context).primaryColor,
                                   shape: BoxShape.circle,
                                 ),
                                 child: Center(
                                   child: Icon(
-                                    complaint.responses.last.isAdmin 
-                                        ? Icons.admin_panel_settings 
+                                    complaint.responses.last.isAdmin
+                                        ? Icons.admin_panel_settings
                                         : Icons.person,
                                     color: Colors.white,
                                     size: 16,
@@ -778,24 +869,39 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                                         complaint.responses.last.responderName,
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: complaint.responses.last.isAdmin 
-                                              ? Colors.purple 
-                                              : null,
+                                          color:
+                                              complaint.responses.last.isAdmin
+                                                  ? Colors.purple
+                                                  : null,
                                           fontSize: 13,
                                         ),
                                       ),
                                       if (complaint.responses.last.isAdmin)
                                         Container(
-                                          margin: const EdgeInsets.only(right: 6),
+                                          margin: const EdgeInsets.only(
+                                            right: 6,
+                                          ),
                                           padding: const EdgeInsets.symmetric(
                                             horizontal: 8,
                                             vertical: 2,
                                           ),
                                           decoration: BoxDecoration(
-                                            color: Colors.purple.withOpacity(0.1),
-                                            borderRadius: BorderRadius.circular(8),
+                                            color: Color.fromRGBO(
+                                              128,
+                                              0,
+                                              128,
+                                              0.1,
+                                            ),
+                                            borderRadius: BorderRadius.circular(
+                                              8,
+                                            ),
                                             border: Border.all(
-                                              color: Colors.purple.withOpacity(0.5),
+                                              color: Color.fromRGBO(
+                                                128,
+                                                0,
+                                                128,
+                                                0.5,
+                                              ),
                                             ),
                                           ),
                                           child: const Text(
@@ -811,10 +917,15 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                                   ),
                                   const SizedBox(height: 2),
                                   Text(
-                                    _formatTime(complaint.responses.last.createdAt),
+                                    _formatTime(
+                                      complaint.responses.last.createdAt,
+                                    ),
                                     style: TextStyle(
                                       fontSize: 11,
-                                      color: isDarkMode ? Colors.grey[500] : Colors.grey[600],
+                                      color:
+                                          isDarkMode
+                                              ? Colors.grey[500]
+                                              : Colors.grey[600],
                                     ),
                                   ),
                                 ],
@@ -831,7 +942,10 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
                             style: TextStyle(
                               fontSize: 14,
                               height: 1.3,
-                              color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[300]
+                                      : Colors.grey[800],
                             ),
                           ),
                         ),
@@ -850,7 +964,7 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
   String _formatDate(DateTime date) {
     return '${date.day}/${date.month}/${date.year}';
   }
-  
+
   String _formatTime(DateTime date) {
     return '${date.hour}:${date.minute.toString().padLeft(2, '0')}';
   }
@@ -880,4 +994,4 @@ class _ComplaintsScreenState extends State<ComplaintsScreen> with SingleTickerPr
         return Colors.grey;
     }
   }
-} 
+}

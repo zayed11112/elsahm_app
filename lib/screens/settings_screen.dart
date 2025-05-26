@@ -9,26 +9,30 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 class SettingsScreen extends StatelessWidget {
-  const SettingsScreen({Key? key}) : super(key: key);
+  const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context) {
     final themeProvider = Provider.of<ThemeProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
-    final isDarkMode = themeProvider.themeMode == ThemeMode.dark || 
-                       (themeProvider.themeMode == ThemeMode.system && 
-                       MediaQuery.platformBrightnessOf(context) == Brightness.dark);
+    final isDarkMode =
+        themeProvider.themeMode == ThemeMode.dark ||
+        (themeProvider.themeMode == ThemeMode.system &&
+            MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الإعدادات', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'الإعدادات',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16.0),
         children: [
           _buildSectionHeader(context, 'إعدادات الحساب'),
-          
+
           _buildSettingItem(
             context,
             icon: Icons.notifications_outlined,
@@ -37,16 +41,21 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (_) => const NotificationsSettingsScreen()),
+                MaterialPageRoute(
+                  builder: (_) => const NotificationsSettingsScreen(),
+                ),
               );
             },
           ),
-          
+
           _buildSectionHeader(context, 'التطبيق'),
-          
+
           _buildSettingItem(
             context,
-            icon: isDarkMode ? Icons.light_mode_outlined : Icons.dark_mode_outlined,
+            icon:
+                isDarkMode
+                    ? Icons.light_mode_outlined
+                    : Icons.dark_mode_outlined,
             title: isDarkMode ? 'الوضع الفاتح' : 'الوضع الليلي',
             subtitle: 'تغيير مظهر التطبيق',
             onTap: () {
@@ -64,27 +73,37 @@ class SettingsScreen extends StatelessWidget {
                     height: 30,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(15),
-                      color: isDarkMode 
-                          ? Theme.of(context).colorScheme.primary 
-                          : Colors.grey.withOpacity(0.3),
+                      color:
+                          isDarkMode
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey.withValues(alpha: 0.3),
                     ),
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 4.0),
                       child: Row(
-                        mainAxisAlignment: isDarkMode 
-                            ? MainAxisAlignment.end 
-                            : MainAxisAlignment.start,
+                        mainAxisAlignment:
+                            isDarkMode
+                                ? MainAxisAlignment.end
+                                : MainAxisAlignment.start,
                         children: [
                           AnimatedOpacity(
                             opacity: !isDarkMode ? 1.0 : 0.0,
                             duration: const Duration(milliseconds: 200),
-                            child: const Icon(Icons.wb_sunny, size: 16, color: Colors.amber),
+                            child: const Icon(
+                              Icons.wb_sunny,
+                              size: 16,
+                              color: Colors.amber,
+                            ),
                           ),
                           const Spacer(),
                           AnimatedOpacity(
                             opacity: isDarkMode ? 1.0 : 0.0,
                             duration: const Duration(milliseconds: 200),
-                            child: const Icon(Icons.nightlight_round, size: 16, color: Colors.white),
+                            child: const Icon(
+                              Icons.nightlight_round,
+                              size: 16,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -109,19 +128,19 @@ class SettingsScreen extends StatelessWidget {
                               color: Colors.black12,
                               blurRadius: 4,
                               spreadRadius: 1,
-                            )
+                            ),
                           ],
                         ),
                       ),
                     ),
-                  )
+                  ),
                 ],
               ),
             ),
           ),
-          
+
           _buildSectionHeader(context, 'المساعدة والدعم'),
-          
+
           _buildSettingItem(
             context,
             icon: Icons.info_outline,
@@ -131,7 +150,7 @@ class SettingsScreen extends StatelessWidget {
               _showAboutDialog(context);
             },
           ),
-          
+
           _buildSettingItem(
             context,
             icon: Icons.help_outline,
@@ -144,7 +163,7 @@ class SettingsScreen extends StatelessWidget {
               );
             },
           ),
-          
+
           _buildSettingItem(
             context,
             icon: Icons.policy_outlined,
@@ -157,10 +176,13 @@ class SettingsScreen extends StatelessWidget {
               );
             },
           ),
-          
-          if (authProvider.isAuthenticated) 
+
+          if (authProvider.isAuthenticated)
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16.0,
+                vertical: 20.0,
+              ),
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.logout),
                 label: const Text(
@@ -168,8 +190,9 @@ class SettingsScreen extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () async {
+                  final navigator = Navigator.of(context);
                   await authProvider.signOut();
-                  Navigator.pop(context);
+                  navigator.pop();
                 },
                 style: ElevatedButton.styleFrom(
                   foregroundColor: Colors.white,
@@ -209,22 +232,19 @@ class SettingsScreen extends StatelessWidget {
     Widget? trailing,
   }) {
     return ListTile(
-      contentPadding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 4.0),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 20.0,
+        vertical: 4.0,
+      ),
       leading: Container(
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+          color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          icon,
-          color: Theme.of(context).colorScheme.primary,
-        ),
+        child: Icon(icon, color: Theme.of(context).colorScheme.primary),
       ),
-      title: Text(
-        title,
-        style: const TextStyle(fontWeight: FontWeight.bold),
-      ),
+      title: Text(title, style: const TextStyle(fontWeight: FontWeight.bold)),
       subtitle: Text(
         subtitle,
         style: TextStyle(
@@ -241,259 +261,276 @@ class SettingsScreen extends StatelessWidget {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
     final colorScheme = theme.colorScheme;
-    
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDarkMode 
-                ? [
-                    const Color(0xFF2C3E50),
-                    const Color(0xFF1A2533),
-                  ]
-                : [
-                    const Color(0xFFFDFDFD),
-                    const Color(0xFFF1F9FF),
-                  ],
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 5),
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with gradient
-              Container(
-                padding: const EdgeInsets.only(top: 25, bottom: 15),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
-                    colors: [
-                      colorScheme.primary.withOpacity(0.8),
-                      colorScheme.primary,
-                    ],
-                  ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            child: Container(
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors:
+                      isDarkMode
+                          ? [const Color(0xFF2C3E50), const Color(0xFF1A2533)]
+                          : [const Color(0xFFFDFDFD), const Color(0xFFF1F9FF)],
                 ),
-                child: Column(
-                  children: [
-                    // App Logo
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 3),
-                          ),
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
+                  ),
+                ],
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header with gradient
+                  Container(
+                    padding: const EdgeInsets.only(top: 25, bottom: 15),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                        colors: [
+                          colorScheme.primary.withValues(alpha: 0.8),
+                          colorScheme.primary,
                         ],
                       ),
-                      child: Image.asset(
-                        'assets/images/logo_white.png',
-                        height: 60,
-                        width: 60,
-                        errorBuilder: (context, error, stackTrace) => 
-                          const Icon(
-                            Icons.apps, 
-                            size: 60,
-                            color: Colors.blue,
-                          ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
                       ),
                     ),
-                    const SizedBox(height: 12),
-                    // App Name
-                    const Text(
-                      'شركة السهم',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                        height: 1.2,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 6),
-                    // App Slogan
-                    const Text(
-                      'الرائدة في خدمات التسكين الطلابي',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: Colors.white,
-                        fontWeight: FontWeight.w300,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                  ],
-                ),
-              ),
-              
-              // Content
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 20, 24, 15),
-                child: Column(
-                  children: [
-                    // Version info with icon
-                    _buildInfoRow(
-                      context,
-                      Icons.new_releases_outlined,
-                      'إصدار التطبيق',
-                      '1.0.0',
-                      isDarkMode,
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // Developer info
-                    _buildInfoRow(
-                      context,
-                      Icons.code,
-                      'تطوير',
-                      'م. اسلام زايد',
-                      isDarkMode,
-                    ),
-                    const SizedBox(height: 12),
-                    
-                    // Release date
-                    _buildInfoRow(
-                      context,
-                      Icons.calendar_month_outlined,
-                      'تاريخ الإصدار',
-                      'يناير 2024',
-                      isDarkMode,
-                    ),
-                    
-                    const SizedBox(height: 22),
-                    
-                    // Divider with decorative elements
-                    Row(
+                    child: Column(
                       children: [
-                        Expanded(
-                          child: Container(
-                            height: 1,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  Colors.transparent,
-                                  isDarkMode ? Colors.grey.shade600 : Colors.grey.shade300,
-                                ],
+                        // App Logo
+                        Container(
+                          padding: const EdgeInsets.all(12),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.1),
+                                blurRadius: 8,
+                                offset: const Offset(0, 3),
                               ),
-                            ),
+                            ],
+                          ),
+                          child: Image.asset(
+                            'assets/images/logo_white.png',
+                            height: 60,
+                            width: 60,
+                            errorBuilder:
+                                (context, error, stackTrace) => const Icon(
+                                  Icons.apps,
+                                  size: 60,
+                                  color: Colors.blue,
+                                ),
                           ),
                         ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 10),
-                          child: Text(
-                            'تواصل معنا',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade700,
-                              fontWeight: FontWeight.bold,
-                            ),
+                        const SizedBox(height: 12),
+                        // App Name
+                        const Text(
+                          'شركة السهم',
+                          style: TextStyle(
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            height: 1.2,
                           ),
+                          textAlign: TextAlign.center,
                         ),
-                        Expanded(
-                          child: Container(
-                            height: 1,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [
-                                  isDarkMode ? Colors.grey.shade600 : Colors.grey.shade300,
-                                  Colors.transparent,
-                                ],
-                              ),
-                            ),
+                        const SizedBox(height: 6),
+                        // App Slogan
+                        const Text(
+                          'الرائدة في خدمات التسكين الطلابي',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color: Colors.white,
+                            fontWeight: FontWeight.w300,
                           ),
+                          textAlign: TextAlign.center,
                         ),
                       ],
                     ),
-                    
-                    const SizedBox(height: 18),
-                    
-                    // Social Media Links
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(24, 20, 24, 15),
+                    child: Column(
                       children: [
-                        _buildSocialButton(
+                        // Version info with icon
+                        _buildInfoRow(
                           context,
-                          FontAwesomeIcons.whatsapp,
-                          Colors.green,
-                          () => _launchURL('https://wa.me/201093130120', context),
+                          Icons.new_releases_outlined,
+                          'إصدار التطبيق',
+                          '1.0.0',
+                          isDarkMode,
                         ),
-                        const SizedBox(width: 20),
-                        _buildSocialButton(
+                        const SizedBox(height: 12),
+
+                        // Developer info
+                        _buildInfoRow(
                           context,
-                          Icons.phone,
-                          Colors.green,
-                          () => _launchURL('tel:+201093130120', context),
+                          Icons.code,
+                          'تطوير',
+                          'م. اسلام زايد',
+                          isDarkMode,
                         ),
-                        const SizedBox(width: 20),
-                        _buildSocialButton(
+                        const SizedBox(height: 12),
+
+                        // Release date
+                        _buildInfoRow(
                           context,
-                          Icons.facebook,
-                          const Color(0xFF1877F2),
-                          () => _launchURL('https://facebook.com/elsahm.arish', context),
+                          Icons.calendar_month_outlined,
+                          'تاريخ الإصدار',
+                          'يناير 2024',
+                          isDarkMode,
+                        ),
+
+                        const SizedBox(height: 22),
+
+                        // Divider with decorative elements
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Container(
+                                height: 1,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Colors.transparent,
+                                      isDarkMode
+                                          ? Colors.grey.shade600
+                                          : Colors.grey.shade300,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                              ),
+                              child: Text(
+                                'تواصل معنا',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey.shade400
+                                          : Colors.grey.shade700,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: Container(
+                                height: 1,
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      isDarkMode
+                                          ? Colors.grey.shade600
+                                          : Colors.grey.shade300,
+                                      Colors.transparent,
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        const SizedBox(height: 18),
+
+                        // Social Media Links
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _buildSocialButton(
+                              context,
+                              FontAwesomeIcons.whatsapp,
+                              Colors.green,
+                              () => _launchURL(
+                                'https://wa.me/201093130120',
+                                context,
+                              ),
+                            ),
+                            const SizedBox(width: 20),
+                            _buildSocialButton(
+                              context,
+                              Icons.phone,
+                              Colors.green,
+                              () => _launchURL('tel:+201093130120', context),
+                            ),
+                            const SizedBox(width: 20),
+                            _buildSocialButton(
+                              context,
+                              Icons.facebook,
+                              const Color(0xFF1877F2),
+                              () => _launchURL(
+                                'https://facebook.com/elsahm.arish',
+                                context,
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-              
-              // Footer
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.symmetric(vertical: 12),
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.black26 : Colors.grey.shade100,
-                  borderRadius: const BorderRadius.only(
-                    bottomLeft: Radius.circular(20),
-                    bottomRight: Radius.circular(20),
                   ),
-                ),
-                child: const Text(
-                  'جميع الحقوق محفوظة © 2023-2024',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w500,
-                    fontSize: 12,
+
+                  // Footer
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    decoration: BoxDecoration(
+                      color: isDarkMode ? Colors.black26 : Colors.grey.shade100,
+                      borderRadius: const BorderRadius.only(
+                        bottomLeft: Radius.circular(20),
+                        bottomRight: Radius.circular(20),
+                      ),
+                    ),
+                    child: const Text(
+                      'جميع الحقوق محفوظة © 2023-2024',
+                      style: TextStyle(
+                        fontWeight: FontWeight.w500,
+                        fontSize: 12,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
                   ),
-                  textAlign: TextAlign.center,
-                ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
-  
-  Widget _buildInfoRow(BuildContext context, IconData icon, String title, String value, bool isDarkMode) {
+
+  Widget _buildInfoRow(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String value,
+    bool isDarkMode,
+  ) {
     return Row(
       children: [
         Container(
           padding: const EdgeInsets.all(6),
           decoration: BoxDecoration(
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(6),
           ),
           child: Icon(
@@ -522,10 +559,15 @@ class SettingsScreen extends StatelessWidget {
       ],
     );
   }
-  
-  Widget _buildSocialButton(BuildContext context, IconData icon, Color color, VoidCallback onTap) {
+
+  Widget _buildSocialButton(
+    BuildContext context,
+    IconData icon,
+    Color color,
+    VoidCallback onTap,
+  ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return InkWell(
       onTap: onTap,
       borderRadius: BorderRadius.circular(30),
@@ -537,38 +579,30 @@ class SettingsScreen extends StatelessWidget {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: color.withOpacity(0.2),
+              color: color.withValues(alpha: 0.2),
               blurRadius: 5,
               offset: const Offset(0, 2),
             ),
           ],
-          border: Border.all(
-            color: color.withOpacity(0.1),
-            width: 1,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.1), width: 1),
         ),
-        child: Center(
-          child: Icon(
-            icon,
-            color: color,
-            size: 20,
-          ),
-        ),
+        child: Center(child: Icon(icon, color: color, size: 20)),
       ),
     );
   }
-  
+
   // Method to launch URLs (websites, phone, email)
   void _launchURL(String url, [BuildContext? context]) async {
+    // Capture ScaffoldMessenger before async operation
+    final scaffoldMessenger =
+        context != null ? ScaffoldMessenger.of(context) : null;
+
     try {
       final Uri uri = Uri.parse(url);
-      if (!await launchUrl(
-        uri,
-        mode: LaunchMode.externalApplication,
-      )) {
+      if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         // Show a snackbar if URL can't be launched
-        if (context != null) {
-          ScaffoldMessenger.of(context).showSnackBar(
+        if (scaffoldMessenger != null) {
+          scaffoldMessenger.showSnackBar(
             SnackBar(
               content: Text('لا يمكن فتح: $url'),
               behavior: SnackBarBehavior.floating,
@@ -578,8 +612,8 @@ class SettingsScreen extends StatelessWidget {
       }
     } catch (e) {
       // Show user-friendly error message
-      if (context != null) {
-        ScaffoldMessenger.of(context).showSnackBar(
+      if (scaffoldMessenger != null) {
+        scaffoldMessenger.showSnackBar(
           SnackBar(
             content: Text('حدث خطأ أثناء محاولة فتح التطبيق المطلوب'),
             behavior: SnackBarBehavior.floating,
@@ -588,4 +622,4 @@ class SettingsScreen extends StatelessWidget {
       }
     }
   }
-} 
+}

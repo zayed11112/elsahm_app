@@ -8,11 +8,11 @@ class ThemeUtils {
   static Color getTextColorForBackground(Color backgroundColor) {
     // Calculate relative luminance
     double luminance = backgroundColor.computeLuminance();
-    
+
     // Use white text on dark backgrounds, black text on light backgrounds
     return luminance > 0.5 ? Colors.black87 : Colors.white;
   }
-  
+
   /// Get decoration for cards with consistent styling
   static BoxDecoration getCardDecoration({
     required bool isDarkMode,
@@ -26,7 +26,7 @@ class ThemeUtils {
       boxShadow: withShadow && !isDarkMode ? lightShadow : [],
     );
   }
-  
+
   /// Get decoration for buttons with gradient
   static BoxDecoration getGradientButtonDecoration({
     LinearGradient? gradient,
@@ -38,11 +38,14 @@ class ThemeUtils {
       boxShadow: lightShadow,
     );
   }
-  
+
   /// Get status color with opacity
-  static Color getStatusColorWithOpacity(String status, {double opacity = 0.2}) {
+  static Color getStatusColorWithOpacity(
+    String status, {
+    double opacity = 0.2,
+  }) {
     Color baseColor;
-    
+
     switch (status.toLowerCase()) {
       case 'pending':
         baseColor = pendingColor;
@@ -59,10 +62,10 @@ class ThemeUtils {
       default:
         baseColor = Colors.grey;
     }
-    
-    return baseColor.withOpacity(opacity);
+
+    return baseColor.withValues(alpha: opacity);
   }
-  
+
   /// Apply theme to text field
   static InputDecoration getInputDecoration({
     required String labelText,
@@ -104,4 +107,4 @@ class ThemeUtils {
       ),
     );
   }
-} 
+}

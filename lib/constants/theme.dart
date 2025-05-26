@@ -46,7 +46,7 @@ const double iconSize = 24.0;
 // Shadows
 final List<BoxShadow> lightShadow = [
   BoxShadow(
-    color: Colors.black.withOpacity(0.05),
+    color: Colors.black.withValues(alpha: 0.05),
     blurRadius: 10,
     offset: const Offset(0, 5),
   ),
@@ -54,11 +54,11 @@ final List<BoxShadow> lightShadow = [
 
 final List<BoxShadow> mediumShadow = [
   BoxShadow(
-    color: Colors.black.withOpacity(0.1),
+    color: Colors.black.withValues(alpha: 0.1),
     blurRadius: 20,
     offset: const Offset(0, 10),
   ),
 ];
 
 // Font Family Name
-const String fontFamily = 'Tajawal'; 
+const String fontFamily = 'Tajawal';

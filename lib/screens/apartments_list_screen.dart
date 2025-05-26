@@ -4,7 +4,6 @@ import '../models/apartment.dart';
 import 'property_details_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../services/property_service_supabase.dart';
-import '../widgets/refresh_button.dart';
 
 class ApartmentsListScreen extends StatefulWidget {
   const ApartmentsListScreen({super.key});
@@ -18,7 +17,6 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
   List<Apartment> _apartments = [];
   String? _error;
   final TextEditingController _searchController = TextEditingController();
-  String _searchQuery = '';
   final PropertyServiceSupabase _propertyService = PropertyServiceSupabase();
   final Logger _logger = Logger('ApartmentsListScreen');
 
@@ -124,7 +122,7 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
                           Icon(
                             Icons.apartment,
                             size: 80,
-                            color: Colors.grey.withOpacity(0.5),
+                            color: Colors.grey.withAlpha(128),
                           ),
                           const SizedBox(height: 16),
                           Text(
@@ -231,8 +229,8 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
                     decoration: BoxDecoration(
                       color:
                           apartment.isAvailable
-                              ? Colors.green.withOpacity(0.9)
-                              : Colors.red.withOpacity(0.9),
+                              ? Colors.green.withAlpha(230)
+                              : Colors.red.withAlpha(230),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(
@@ -256,7 +254,7 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withOpacity(0.9),
+                      color: theme.colorScheme.primary.withAlpha(230),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Text(

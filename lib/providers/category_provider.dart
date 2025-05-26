@@ -1,9 +1,11 @@
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import '../models/category.dart';
 import '../services/category_service.dart';
 
 class CategoryProvider with ChangeNotifier {
   final CategoryService _categoryService = CategoryService();
+  final Logger _logger = Logger('CategoryProvider');
   List<Category> _categories = [];
   bool _isLoading = false;
   String? _error;
@@ -32,10 +34,10 @@ class CategoryProvider with ChangeNotifier {
       _categories =
           categoriesData.map((data) => Category.fromSupabase(data)).toList();
 
-      print('تم جلب ${_categories.length} قسم من Supabase');
+      _logger.info('تم جلب ${_categories.length} قسم من Supabase');
     } catch (e) {
       _error = 'فشل في جلب الفئات: $e';
-      print(_error);
+      _logger.severe(_error);
     } finally {
       _isLoading = false;
       notifyListeners();

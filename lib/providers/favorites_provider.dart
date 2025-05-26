@@ -1,4 +1,3 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/apartment.dart';
@@ -6,7 +5,7 @@ import '../models/apartment.dart';
 class FavoritesProvider extends ChangeNotifier {
   final String _storageKey = 'favorites';
   Set<String> _favoriteIds = {};
-  List<Apartment> _favorites = [];
+  final List<Apartment> _favorites = [];
   bool _isLoading = false;
 
   // Getter methods
@@ -23,16 +22,16 @@ class FavoritesProvider extends ChangeNotifier {
   Future<void> _loadFavorites() async {
     _isLoading = true;
     notifyListeners();
-    
+
     try {
       final prefs = await SharedPreferences.getInstance();
       final favoritesJson = prefs.getStringList(_storageKey) ?? [];
-      
+
       _favoriteIds = favoritesJson.map((id) => id).toSet();
-      
+
       // The actual Apartment objects will be loaded when needed
       // through the loadFavoriteApartments method
-      
+
       _isLoading = false;
       notifyListeners();
     } catch (e) {
@@ -55,7 +54,7 @@ class FavoritesProvider extends ChangeNotifier {
   // Toggle favorite status
   Future<bool> toggleFavorite(Apartment apartment) async {
     final String apartmentId = apartment.id;
-    
+
     if (_favoriteIds.contains(apartmentId)) {
       _favoriteIds.remove(apartmentId);
       _favorites.removeWhere((item) => item.id == apartmentId);
@@ -63,7 +62,7 @@ class FavoritesProvider extends ChangeNotifier {
       _favoriteIds.add(apartmentId);
       _favorites.add(apartment);
     }
-    
+
     notifyListeners();
     await _saveFavorites();
     return _favoriteIds.contains(apartmentId);
@@ -88,4 +87,4 @@ class FavoritesProvider extends ChangeNotifier {
   List<Apartment> getFavoriteApartments() {
     return _favorites;
   }
-} 
+}

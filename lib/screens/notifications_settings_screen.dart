@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:app_settings/app_settings.dart';
-import 'dart:math' as math;
 
 class NotificationCategory {
   final String title;
@@ -19,7 +17,7 @@ class NotificationCategory {
 }
 
 class NotificationsSettingsScreen extends StatefulWidget {
-  const NotificationsSettingsScreen({Key? key}) : super(key: key);
+  const NotificationsSettingsScreen({super.key});
 
   @override
   State<NotificationsSettingsScreen> createState() => _NotificationsSettingsScreenState();
@@ -96,7 +94,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
         });
       }
     } catch (e) {
-      print('Error loading notification settings: $e');
+      debugPrint('Error loading notification settings: $e');
       if (mounted) {
         setState(() {
           _isLoading = false;
@@ -115,10 +113,12 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
       final prefs = await SharedPreferences.getInstance();
       await prefs.setBool('notifications_$key', value);
     } catch (e) {
-      print('Error saving notification setting: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('حدث خطأ أثناء حفظ الإعدادات')),
-      );
+      debugPrint('Error saving notification setting: $e');
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('حدث خطأ أثناء حفظ الإعدادات')),
+        );
+      }
     }
   }
 
@@ -170,12 +170,12 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                   margin: const EdgeInsets.fromLTRB(16, 16, 16, 8),
                   decoration: BoxDecoration(
                     color: _masterToggle
-                        ? colorScheme.primary.withOpacity(0.1)
+                        ? colorScheme.primary.withValues(alpha: 0.1)
                         : (isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
                       color: _masterToggle
-                          ? colorScheme.primary.withOpacity(0.3)
+                          ? colorScheme.primary.withValues(alpha: 0.3)
                           : Colors.transparent,
                     ),
                   ),
@@ -187,7 +187,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                           padding: const EdgeInsets.all(12),
                           decoration: BoxDecoration(
                             color: _masterToggle
-                                ? colorScheme.primary.withOpacity(0.2)
+                                ? colorScheme.primary.withValues(alpha: 0.2)
                                 : (isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300),
                             shape: BoxShape.circle,
                           ),
@@ -242,15 +242,15 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                 Container(
                   margin: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
                   decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.grey.shade800.withOpacity(0.7) : Colors.white,
+                    color: isDarkMode ? Colors.grey.shade800.withValues(alpha: 0.7) : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
-                      color: colorScheme.primary.withOpacity(0.2),
+                      color: colorScheme.primary.withValues(alpha: 0.2),
                       width: 1,
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 10,
                         offset: const Offset(0, 2),
                       ),
@@ -270,7 +270,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                             Container(
                               padding: const EdgeInsets.all(10),
                               decoration: BoxDecoration(
-                                color: colorScheme.primary.withOpacity(0.1),
+                                color: colorScheme.primary.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(10),
                               ),
                               child: Icon(
@@ -335,7 +335,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                               borderRadius: BorderRadius.circular(12),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.05),
+                                  color: Colors.black.withValues(alpha: 0.05),
                                   blurRadius: 10,
                                   offset: const Offset(0, 2),
                                 ),
@@ -350,7 +350,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
                                   color: isEnabled
-                                      ? _getCategoryColor(index).withOpacity(0.1)
+                                      ? _getCategoryColor(index).withValues(alpha: 0.1)
                                       : (isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
@@ -401,7 +401,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                     padding: const EdgeInsets.all(16.0),
                     child: Card(
                       elevation: 0,
-                      color: colorScheme.primary.withOpacity(0.1),
+                      color: colorScheme.primary.withValues(alpha: 0.1),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
@@ -412,7 +412,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                             Container(
                               padding: const EdgeInsets.all(8),
                               decoration: BoxDecoration(
-                                color: colorScheme.primary.withOpacity(0.2),
+                                color: colorScheme.primary.withValues(alpha: 0.2),
                                 shape: BoxShape.circle,
                               ),
                               child: Icon(
@@ -427,7 +427,7 @@ class _NotificationsSettingsScreenState extends State<NotificationsSettingsScree
                                 'قد تصلك إشعارات إضافية تتعلق بأمان حسابك وتحديثات النظام الهامة',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: colorScheme.primary.withOpacity(0.8),
+                                  color: colorScheme.primary.withValues(alpha: 0.8),
                                 ),
                               ),
                             ),

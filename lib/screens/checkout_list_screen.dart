@@ -4,7 +4,7 @@ import 'package:logging/logging.dart';
 import '../services/checkout_service.dart';
 
 class CheckoutListScreen extends StatefulWidget {
-  const CheckoutListScreen({Key? key}) : super(key: key);
+  const CheckoutListScreen({super.key});
 
   @override
   State<CheckoutListScreen> createState() => _CheckoutListScreenState();
@@ -59,10 +59,6 @@ class _CheckoutListScreenState extends State<CheckoutListScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final textTheme = theme.textTheme;
-
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_needsLogin) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -247,7 +243,12 @@ class _CheckoutListScreenState extends State<CheckoutListScreen> {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.2),
+                        color: Color.fromRGBO(
+                          statusColor.r.toInt(),
+                          statusColor.g.toInt(),
+                          statusColor.b.toInt(),
+                          0.2,
+                        ),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(

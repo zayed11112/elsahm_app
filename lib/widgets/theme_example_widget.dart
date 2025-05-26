@@ -7,13 +7,13 @@ import 'themed_card.dart';
 /// A widget that demonstrates the theme system
 /// This can be used as a reference for how to use the various theme components
 class ThemeExampleWidget extends StatelessWidget {
-  const ThemeExampleWidget({Key? key}) : super(key: key);
+  const ThemeExampleWidget({super.key});
 
   @override
   Widget build(BuildContext context) {
     // Use theme extension to get context-based theme properties
     final isDarkMode = context.isDarkMode;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('نظام التصميم'),
@@ -34,7 +34,7 @@ class ThemeExampleWidget extends StatelessWidget {
             Text('نص أساسي متوسط', style: context.bodyMedium),
             Text('نص أساسي صغير', style: context.bodySmall),
             const Divider(height: defaultPadding * 2),
-            
+
             // Colors Section
             Text('الألوان الأساسية', style: context.titleLarge),
             const SizedBox(height: defaultPadding),
@@ -43,7 +43,7 @@ class ThemeExampleWidget extends StatelessWidget {
             _buildColorRow('لون داكن', darkBlue),
             _buildColorRow('لون فاتح', lightBlue),
             const Divider(height: defaultPadding * 2),
-            
+
             // Status Colors Section
             Text('ألوان الحالة', style: context.titleLarge),
             const SizedBox(height: defaultPadding),
@@ -52,17 +52,15 @@ class ThemeExampleWidget extends StatelessWidget {
             _buildColorRow('مرفوض', rejectedColor),
             _buildColorRow('غير نشط', inactiveColor),
             const Divider(height: defaultPadding * 2),
-            
+
             // Cards Section
             Text('البطاقات', style: context.titleLarge),
             const SizedBox(height: defaultPadding),
-            
+
             // Standard Card
-            ThemedCard(
-              child: const Text('بطاقة قياسية'),
-            ),
+            ThemedCard(child: const Text('بطاقة قياسية')),
             const SizedBox(height: defaultPadding),
-            
+
             // Status Cards
             StatusCard(
               status: 'pending',
@@ -72,16 +70,17 @@ class ThemeExampleWidget extends StatelessWidget {
               onTap: () => _showMessage(context, 'تم النقر على بطاقة معلقة'),
             ),
             const SizedBox(height: defaultPadding),
-            
+
             StatusCard(
               status: 'approved',
               title: 'طلب تمت الموافقة عليه',
               subtitle: 'تمت الموافقة بتاريخ 30/12/2023',
               child: const Text('محتوى البطاقة الموافق عليها'),
-              onTap: () => _showMessage(context, 'تم النقر على بطاقة موافق عليها'),
+              onTap:
+                  () => _showMessage(context, 'تم النقر على بطاقة موافق عليها'),
             ),
             const SizedBox(height: defaultPadding),
-            
+
             StatusCard(
               status: 'rejected',
               title: 'طلب مرفوض',
@@ -90,11 +89,11 @@ class ThemeExampleWidget extends StatelessWidget {
               onTap: () => _showMessage(context, 'تم النقر على بطاقة مرفوضة'),
             ),
             const Divider(height: defaultPadding * 2),
-            
+
             // Buttons Section
             Text('الأزرار', style: context.titleLarge),
             const SizedBox(height: defaultPadding),
-            
+
             // Elevated Button
             SizedBox(
               width: double.infinity,
@@ -104,7 +103,7 @@ class ThemeExampleWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: defaultPadding),
-            
+
             // Outlined Button
             SizedBox(
               width: double.infinity,
@@ -114,7 +113,7 @@ class ThemeExampleWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: defaultPadding),
-            
+
             // Text Button
             SizedBox(
               width: double.infinity,
@@ -124,7 +123,7 @@ class ThemeExampleWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: defaultPadding),
-            
+
             // Gradient Button
             _buildGradientButton(
               'زر متدرج',
@@ -132,11 +131,11 @@ class ThemeExampleWidget extends StatelessWidget {
               () => _showMessage(context, 'تم النقر على زر متدرج'),
             ),
             const Divider(height: defaultPadding * 2),
-            
+
             // Form Elements Section
             Text('عناصر النموذج', style: context.titleLarge),
             const SizedBox(height: defaultPadding),
-            
+
             // Text Field
             TextField(
               decoration: ThemeUtils.getInputDecoration(
@@ -147,7 +146,7 @@ class ThemeExampleWidget extends StatelessWidget {
               ),
             ),
             const SizedBox(height: defaultPadding),
-            
+
             // Number Field
             TextField(
               decoration: ThemeUtils.getInputDecoration(
@@ -159,7 +158,7 @@ class ThemeExampleWidget extends StatelessWidget {
               keyboardType: TextInputType.number,
             ),
             const SizedBox(height: defaultPadding),
-            
+
             // Error Text Field
             TextField(
               decoration: ThemeUtils.getInputDecoration(
@@ -194,7 +193,9 @@ class ThemeExampleWidget extends StatelessWidget {
           const SizedBox(width: 16),
           Text(label),
           const Spacer(),
-          Text('#${color.value.toRadixString(16).toUpperCase().substring(2)}'),
+          Text(
+            '#${color.toARGB32().toRadixString(16).toUpperCase().substring(2)}',
+          ),
         ],
       ),
     );
@@ -231,8 +232,8 @@ class ThemeExampleWidget extends StatelessWidget {
   }
 
   void _showMessage(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
-} 
+}

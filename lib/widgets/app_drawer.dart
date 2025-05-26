@@ -1,7 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:cached_network_image/cached_network_image.dart'; // Import for avatar
-import 'package:lottie/lottie.dart'; // Add Lottie import
 import 'package:flutter_svg/flutter_svg.dart'; // Add SVG support
 
 import '../providers/theme_provider.dart';
@@ -24,7 +22,8 @@ class AppDrawer extends StatefulWidget {
   State<AppDrawer> createState() => _AppDrawerState();
 }
 
-class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMixin {
+class _AppDrawerState extends State<AppDrawer>
+    with SingleTickerProviderStateMixin {
   // إضافة متحكم الرسوم المتحركة للقائمة
   late AnimationController _animationController;
   late Animation<double> _drawerSlideAnimation;
@@ -33,7 +32,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
   @override
   void initState() {
     super.initState();
-    
+
     // إعداد متحكم الرسوم المتحركة
     _animationController = AnimationController(
       vsync: this,
@@ -41,25 +40,13 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
     );
 
     // إنشاء تأثير الانزلاق من اليسار
-    _drawerSlideAnimation = Tween<double>(
-      begin: -0.5,
-      end: 0.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOutCubic,
-      ),
+    _drawerSlideAnimation = Tween<double>(begin: -0.5, end: 0.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOutCubic),
     );
 
     // إنشاء تأثير التدرج للظهور
-    _drawerFadeAnimation = Tween<double>(
-      begin: 0.0,
-      end: 1.0,
-    ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
+    _drawerFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
     // تشغيل التأثير عند فتح القائمة
@@ -80,7 +67,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
         themeProvider.themeMode == ThemeMode.dark ||
         (themeProvider.themeMode == ThemeMode.system &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
-    
+
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
@@ -104,9 +91,13 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                   gradient: LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: isDarkMode 
-                      ? [const Color(0xFF222831), const Color(0xFF1A1C24)]
-                      : [const Color(0xFFF5F5F5), const Color(0xFFE0E0E0)],
+                    colors:
+                        isDarkMode
+                            ? [const Color(0xFF222831), const Color(0xFF1A1C24)]
+                            : [
+                              const Color(0xFFF5F5F5),
+                              const Color(0xFFE0E0E0),
+                            ],
                   ),
                   borderRadius: const BorderRadius.only(
                     topRight: Radius.circular(20),
@@ -114,7 +105,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.2),
+                      color: Colors.black.withValues(alpha: 0.2),
                       blurRadius: 10,
                       spreadRadius: 1,
                     ),
@@ -151,7 +142,9 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                         Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const GroupsScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const GroupsScreen(),
+                          ),
                         );
                       },
                     ),
@@ -163,7 +156,9 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                           Navigator.pop(context);
                           Navigator.push(
                             context,
-                            MaterialPageRoute(builder: (_) => const WalletScreen()),
+                            MaterialPageRoute(
+                              builder: (_) => const WalletScreen(),
+                            ),
                           );
                         },
                       ),
@@ -212,7 +207,9 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                         Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const SettingsScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const SettingsScreen(),
+                          ),
                         );
                       },
                     ),
@@ -221,9 +218,13 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                       builder: (context, child) {
                         final Animation<double> itemAnimation = CurvedAnimation(
                           parent: _animationController,
-                          curve: const Interval(0.5, 1.0, curve: Curves.easeOut),
+                          curve: const Interval(
+                            0.5,
+                            1.0,
+                            curve: Curves.easeOut,
+                          ),
                         );
-                        
+
                         return FadeTransition(
                           opacity: itemAnimation,
                           child: SlideTransition(
@@ -239,7 +240,9 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                               title: Center(
                                 child: Text(
                                   'الوضع الليلي',
-                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                   textAlign: TextAlign.center,
                                 ),
                               ),
@@ -247,7 +250,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                                 child: Text(
                                   'تغيير مظهر التطبيق',
                                   style: TextStyle(
-                                    color: Theme.of(context).textTheme.bodySmall?.color,
+                                    color:
+                                        Theme.of(
+                                          context,
+                                        ).textTheme.bodySmall?.color,
                                     fontSize: 12,
                                   ),
                                   textAlign: TextAlign.center,
@@ -257,15 +263,20 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                                 value: isDarkMode,
                                 onChanged: (_) {
                                   themeProvider.setTheme(
-                                    isDarkMode ? ThemeMode.light : ThemeMode.dark,
+                                    isDarkMode
+                                        ? ThemeMode.light
+                                        : ThemeMode.dark,
                                   );
                                 },
-                                activeColor: Theme.of(context).colorScheme.primary,
+                                activeColor:
+                                    Theme.of(context).colorScheme.primary,
                               ),
                               trailing: Container(
                                 padding: const EdgeInsets.all(8),
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.primary.withAlpha(25),
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withAlpha(25),
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Icon(
@@ -287,7 +298,9 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                         Navigator.pop(context);
                         Navigator.push(
                           context,
-                          MaterialPageRoute(builder: (_) => const ContactUsScreen()),
+                          MaterialPageRoute(
+                            builder: (_) => const ContactUsScreen(),
+                          ),
                         );
                       },
                     ),
@@ -301,11 +314,16 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                       AnimatedBuilder(
                         animation: _animationController,
                         builder: (context, child) {
-                          final Animation<double> itemAnimation = CurvedAnimation(
-                            parent: _animationController,
-                            curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
-                          );
-                          
+                          final Animation<double> itemAnimation =
+                              CurvedAnimation(
+                                parent: _animationController,
+                                curve: const Interval(
+                                  0.6,
+                                  1.0,
+                                  curve: Curves.easeOut,
+                                ),
+                              );
+
                           return FadeTransition(
                             opacity: itemAnimation,
                             child: SlideTransition(
@@ -324,7 +342,9 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                                     borderRadius: BorderRadius.circular(16),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: Colors.red.withOpacity(0.3),
+                                        color: Colors.red.withValues(
+                                          alpha: 0.3,
+                                        ),
                                         blurRadius: 8,
                                         offset: const Offset(0, 2),
                                       ),
@@ -334,8 +354,11 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                                     color: Colors.transparent,
                                     child: InkWell(
                                       onTap: () async {
+                                        final navigator = Navigator.of(context);
                                         await _animationController.reverse();
-                                        Navigator.pop(context);
+                                        if (mounted) {
+                                          navigator.pop();
+                                        }
                                         await authProvider.signOut();
                                       },
                                       borderRadius: BorderRadius.circular(16),
@@ -349,7 +372,9 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                                             Container(
                                               padding: const EdgeInsets.all(8),
                                               decoration: BoxDecoration(
-                                                color: Colors.white.withOpacity(0.2),
+                                                color: Colors.white.withValues(
+                                                  alpha: 0.2,
+                                                ),
                                                 shape: BoxShape.circle,
                                               ),
                                               child: const Icon(
@@ -390,11 +415,16 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                       AnimatedBuilder(
                         animation: _animationController,
                         builder: (context, child) {
-                          final Animation<double> itemAnimation = CurvedAnimation(
-                            parent: _animationController,
-                            curve: const Interval(0.6, 1.0, curve: Curves.easeOut),
-                          );
-                          
+                          final Animation<double> itemAnimation =
+                              CurvedAnimation(
+                                parent: _animationController,
+                                curve: const Interval(
+                                  0.6,
+                                  1.0,
+                                  curve: Curves.easeOut,
+                                ),
+                              );
+
                           return FadeTransition(
                             opacity: itemAnimation,
                             child: SlideTransition(
@@ -409,17 +439,24 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                                 ),
                                 child: ElevatedButton(
                                   onPressed: () async {
+                                    final navigator = Navigator.of(context);
                                     await _animationController.reverse();
-                                    Navigator.pop(context);
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => const LoginScreen()),
-                                    );
+                                    if (mounted) {
+                                      navigator.pop();
+                                      navigator.push(
+                                        MaterialPageRoute(
+                                          builder: (_) => const LoginScreen(),
+                                        ),
+                                      );
+                                    }
                                   },
                                   style: ElevatedButton.styleFrom(
                                     foregroundColor: Colors.white,
-                                    backgroundColor: Theme.of(context).colorScheme.primary,
-                                    padding: const EdgeInsets.symmetric(vertical: 12),
+                                    backgroundColor:
+                                        Theme.of(context).colorScheme.primary,
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(8),
                                     ),
@@ -432,7 +469,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                                       SizedBox(width: 8),
                                       Text(
                                         'تسجيل الدخول',
-                                        style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -472,14 +512,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
             ).animate(
               CurvedAnimation(
                 parent: _animationController,
-                curve: Interval(
-                  delayFactor, 
-                  1.0, 
-                  curve: Curves.easeOut,
-                ),
+                curve: Interval(delayFactor, 1.0, curve: Curves.easeOut),
               ),
             );
-            
+
             return FadeTransition(
               opacity: itemAnimation,
               child: SlideTransition(
@@ -488,23 +524,25 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                   end: Offset.zero,
                 ).animate(itemAnimation),
                 child: ListTile(
-                  contentPadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                  leading: svgPath != null
-                    ? SizedBox(
-                        width: 28,
-                        height: 28,
-                        child: SvgPicture.asset(
-                          svgPath,
-                        ),
-                      )
-                    : Icon(
-                        icon ?? Icons.circle,
-                        color: Theme.of(context).textTheme.bodyLarge?.color,
-                        size: 28,
-                      ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 16.0,
+                    vertical: 8.0,
+                  ),
+                  leading:
+                      svgPath != null
+                          ? SizedBox(
+                            width: 28,
+                            height: 28,
+                            child: SvgPicture.asset(svgPath),
+                          )
+                          : Icon(
+                            icon ?? Icons.circle,
+                            color: Theme.of(context).textTheme.bodyLarge?.color,
+                            size: 28,
+                          ),
                   title: Center(
                     child: Text(
-                      text, 
+                      text,
                       style: const TextStyle(
                         fontWeight: FontWeight.bold,
                         fontSize: 15,
@@ -530,7 +568,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
   void _navigateToTab(BuildContext context, int tabIndex) {
     _animationController.reverse().then((_) {
       Navigator.pop(context);
-      Provider.of<NavigationProvider>(context, listen: false).setIndex(tabIndex);
+      Provider.of<NavigationProvider>(
+        context,
+        listen: false,
+      ).setIndex(tabIndex);
     });
   }
 }

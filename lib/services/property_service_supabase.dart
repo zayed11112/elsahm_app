@@ -7,15 +7,15 @@ class PropertyServiceSupabase {
   final Logger _logger = Logger('PropertyServiceSupabase');
   // استخدام getter method للحصول على client عند الحاجة فقط
   SupabaseClient get _supabase => Supabase.instance.client;
-  
+
   // تخزين مؤقت للبيانات
   final Map<String, List<Apartment>> _cache = {};
   final Duration _cacheDuration = const Duration(minutes: 10);
   final Map<String, DateTime> _cacheTimestamps = {};
-  
+
   // زمن انتظار الطلبات
   final Duration _timeout = const Duration(seconds: 15);
-  
+
   // الحد الأقصى لمحاولات إعادة الاتصال
   final int _maxRetries = 3;
 
@@ -25,13 +25,13 @@ class PropertyServiceSupabase {
   // جلب أحدث العقارات
   Future<List<Apartment>> getLatestProperties({int limit = 10}) async {
     const cacheKey = 'latest_properties';
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey)) {
       _logger.info('استخدام البيانات المخزنة مؤقتاً للعقارات الحديثة');
       return _cache[cacheKey]!;
     }
-    
+
     return _fetchWithRetry(() async {
       _logger.info('بدء جلب أحدث العقارات من Supabase...');
 
@@ -48,11 +48,14 @@ class PropertyServiceSupabase {
         _logger.info('تم استلام ${response.length} عقار من Supabase');
 
         // تحويل البيانات إلى كائنات Apartment
-        final apartments = response.map<Apartment>((data) => Apartment.fromSupabase(data)).toList();
-        
+        final apartments =
+            response
+                .map<Apartment>((data) => Apartment.fromSupabase(data))
+                .toList();
+
         // تخزين البيانات مؤقتاً
         _cacheResponse(cacheKey, apartments);
-        
+
         return apartments;
       } catch (e) {
         _logger.severe('خطأ في جلب أحدث العقارات: $e');
@@ -63,15 +66,18 @@ class PropertyServiceSupabase {
   }
 
   // جلب العقارات حسب القسم
-  Future<List<Apartment>> getPropertiesByCategory(String categoryName, {int limit = 10}) async {
+  Future<List<Apartment>> getPropertiesByCategory(
+    String categoryName, {
+    int limit = 10,
+  }) async {
     final cacheKey = 'category_$categoryName';
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey)) {
       _logger.info('استخدام البيانات المخزنة مؤقتاً للقسم: $categoryName');
       return _cache[cacheKey]!;
     }
-    
+
     return _fetchWithRetry(() async {
       _logger.info('جلب العقارات من القسم: $categoryName');
 
@@ -107,7 +113,10 @@ class PropertyServiceSupabase {
       }
 
       // استخراج معرفات العقارات
-      final propertyIds = response.map<String>((item) => item['property_id'] as String).toList();
+      final propertyIds =
+          response
+              .map<String>((item) => item['property_id'] as String)
+              .toList();
 
       // جلب تفاصيل العقارات المتاحة فقط
       final propertiesResponse = await _supabase
@@ -118,11 +127,14 @@ class PropertyServiceSupabase {
           .timeout(_timeout);
 
       // تحويل البيانات إلى كائنات Apartment
-      final apartments = propertiesResponse.map<Apartment>((data) => Apartment.fromSupabase(data)).toList();
-      
+      final apartments =
+          propertiesResponse
+              .map<Apartment>((data) => Apartment.fromSupabase(data))
+              .toList();
+
       // تخزين البيانات مؤقتاً
       _cacheResponse(cacheKey, apartments);
-      
+
       return apartments;
     });
   }
@@ -130,13 +142,13 @@ class PropertyServiceSupabase {
   // جلب عقار بواسطة المعرف
   Future<Apartment?> getPropertyById(String id) async {
     final cacheKey = 'property_$id';
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey) && _cache[cacheKey]!.isNotEmpty) {
       _logger.info('استخدام البيانات المخزنة مؤقتاً للعقار: $id');
       return _cache[cacheKey]!.first;
     }
-    
+
     return _fetchWithRetry(() async {
       _logger.info('جلب العقار بالمعرف: $id');
 
@@ -156,23 +168,23 @@ class PropertyServiceSupabase {
 
         // 2. جلب الأقسام المرتبطة بالعقار
         final categoriesData = await getCategoriesForProperty(id);
-        
+
         // 3. جلب الأماكن المرتبطة بالعقار
         final placesData = await getPlacesForProperty(id);
-        
+
         // 4. دمج البيانات مع العقار
         final propertyWithRelations = {
           ...response,
           'categories': categoriesData,
           'places': placesData,
         };
-        
+
         // تحويل البيانات إلى كائن Apartment
         final apartment = Apartment.fromSupabase(propertyWithRelations);
-        
+
         // تخزين البيانات مؤقتاً
         _cacheResponse(cacheKey, [apartment]);
-        
+
         return apartment;
       } catch (e) {
         _logger.severe('خطأ في جلب العقار مع العلاقات: $e');
@@ -182,9 +194,12 @@ class PropertyServiceSupabase {
   }
 
   // البحث عن العقارات
-  Future<List<Apartment>> searchProperties(String query, {int limit = 20}) async {
+  Future<List<Apartment>> searchProperties(
+    String query, {
+    int limit = 20,
+  }) async {
     // لا نستخدم التخزين المؤقت لنتائج البحث لأنها قد تتغير بشكل متكرر
-    
+
     return _fetchWithRetry(() async {
       _logger.info('البحث عن العقارات بالاستعلام: $query');
 
@@ -192,24 +207,31 @@ class PropertyServiceSupabase {
           .from('properties')
           .select()
           .eq('is_available', true)
-          .or('name.ilike.%$query%,address.ilike.%$query%,description.ilike.%$query%')
+          .or(
+            'name.ilike.%$query%,address.ilike.%$query%,description.ilike.%$query%',
+          )
           .limit(limit)
           .timeout(_timeout);
 
-      return response.map<Apartment>((data) => Apartment.fromSupabase(data)).toList();
+      return response
+          .map<Apartment>((data) => Apartment.fromSupabase(data))
+          .toList();
     });
   }
 
   // جلب العقارات حسب النوع
-  Future<List<Apartment>> getPropertiesByType(String type, {int limit = 20}) async {
+  Future<List<Apartment>> getPropertiesByType(
+    String type, {
+    int limit = 20,
+  }) async {
     final cacheKey = 'type_$type';
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey)) {
       _logger.info('استخدام البيانات المخزنة مؤقتاً للنوع: $type');
       return _cache[cacheKey]!;
     }
-    
+
     return _fetchWithRetry(() async {
       _logger.info('جلب العقارات من النوع: $type');
 
@@ -221,11 +243,14 @@ class PropertyServiceSupabase {
           .limit(limit)
           .timeout(_timeout);
 
-      final apartments = response.map<Apartment>((data) => Apartment.fromSupabase(data)).toList();
-      
+      final apartments =
+          response
+              .map<Apartment>((data) => Apartment.fromSupabase(data))
+              .toList();
+
       // تخزين البيانات مؤقتاً
       _cacheResponse(cacheKey, apartments);
-      
+
       return apartments;
     });
   }
@@ -233,13 +258,13 @@ class PropertyServiceSupabase {
   // جلب العقارات المتاحة فقط
   Future<List<Apartment>> getAvailableProperties({int limit = 20}) async {
     const cacheKey = 'available_properties';
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey)) {
       _logger.info('استخدام البيانات المخزنة مؤقتاً للعقارات المتاحة');
       return _cache[cacheKey]!;
     }
-    
+
     return _fetchWithRetry(() async {
       _logger.info('جلب العقارات المتاحة...');
 
@@ -253,20 +278,16 @@ class PropertyServiceSupabase {
             .timeout(_timeout);
 
         _logger.info('استجابة الخادم: $response');
-        
-        if (response == null) {
-          _logger.warning('استجابة فارغة من الخادم');
-          return [];
-        }
 
-        final apartments = response.map<Apartment>((data) {
-          _logger.fine('بيانات العقار: $data');
-          return Apartment.fromSupabase(data);
-        }).toList();
-        
+        final apartments =
+            response.map<Apartment>((data) {
+              _logger.fine('بيانات العقار: $data');
+              return Apartment.fromSupabase(data);
+            }).toList();
+
         // تخزين البيانات مؤقتاً
         _cacheResponse(cacheKey, apartments);
-        
+
         _logger.info('تم جلب ${apartments.length} عقار متاح');
         return apartments;
       } catch (e) {
@@ -277,15 +298,21 @@ class PropertyServiceSupabase {
   }
 
   // جلب العقارات حسب نطاق السعر
-  Future<List<Apartment>> getPropertiesByPriceRange(double minPrice, double maxPrice, {int limit = 20}) async {
-    final cacheKey = 'price_${minPrice}_${maxPrice}';
-    
+  Future<List<Apartment>> getPropertiesByPriceRange(
+    double minPrice,
+    double maxPrice, {
+    int limit = 20,
+  }) async {
+    final cacheKey = 'price_$minPrice-$maxPrice';
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey)) {
-      _logger.info('استخدام البيانات المخزنة مؤقتاً لنطاق السعر: $minPrice - $maxPrice');
+      _logger.info(
+        'استخدام البيانات المخزنة مؤقتاً لنطاق السعر: $minPrice - $maxPrice',
+      );
       return _cache[cacheKey]!;
     }
-    
+
     return _fetchWithRetry(() async {
       _logger.info('جلب العقارات في نطاق السعر: $minPrice - $maxPrice');
 
@@ -298,44 +325,47 @@ class PropertyServiceSupabase {
           .limit(limit)
           .timeout(_timeout);
 
-      final apartments = response.map<Apartment>((data) => Apartment.fromSupabase(data)).toList();
-      
+      final apartments =
+          response
+              .map<Apartment>((data) => Apartment.fromSupabase(data))
+              .toList();
+
       // تخزين البيانات مؤقتاً
       _cacheResponse(cacheKey, apartments);
-      
+
       return apartments;
     });
   }
-  
+
   // دالة مساعدة للتحقق من صلاحية التخزين المؤقت
   bool _isCacheValid(String key) {
     if (!_cache.containsKey(key) || !_cacheTimestamps.containsKey(key)) {
       return false;
     }
-    
+
     final timestamp = _cacheTimestamps[key]!;
     final now = DateTime.now();
     return now.difference(timestamp) < _cacheDuration;
   }
-  
+
   // دالة مساعدة لتخزين الاستجابة مؤقتاً
   void _cacheResponse(String key, List<Apartment> data) {
     _cache[key] = data;
     _cacheTimestamps[key] = DateTime.now();
   }
-  
+
   // دالة مساعدة لمحاولة جلب البيانات مع إعادة المحاولة في حالة الفشل
   Future<T> _fetchWithRetry<T>(Future<T> Function() fetcher) async {
     int retries = 0;
     Duration delay = const Duration(milliseconds: 800);
-    
+
     while (true) {
       try {
         return await fetcher();
       } catch (e) {
         retries++;
         _logger.warning('فشلت محاولة الجلب رقم $retries: $e');
-        
+
         if (retries >= _maxRetries) {
           _logger.severe('فشلت عملية الجلب بعد $_maxRetries محاولات: $e');
           // إعادة القائمة الفارغة أو إعادة رمي الاستثناء حسب نوع الدالة
@@ -353,10 +383,12 @@ class PropertyServiceSupabase {
             }
           }
         }
-        
-        _logger.warning('إعادة المحاولة بعد ${delay.inMilliseconds} مللي ثانية');
+
+        _logger.warning(
+          'إعادة المحاولة بعد ${delay.inMilliseconds} مللي ثانية',
+        );
         await Future.delayed(delay);
-        
+
         // زيادة وقت الانتظار بشكل تصاعدي، لكن مع حد أقصى 5 ثواني
         delay = Duration(milliseconds: (delay.inMilliseconds * 1.5).round());
         if (delay > const Duration(seconds: 5)) {
@@ -365,7 +397,7 @@ class PropertyServiceSupabase {
       }
     }
   }
-  
+
   // تعديل دالة مسح التخزين المؤقت لتشمل المخزن المنفصل للأقسام والأماكن
   void clearCache({String? key}) {
     if (key != null) {
@@ -382,15 +414,21 @@ class PropertyServiceSupabase {
   }
 
   // جلب العقارات حسب القسم والمكان
-  Future<List<Apartment>> getPropertiesByCategoryAndPlace(String categoryName, String placeName, {int limit = 10}) async {
+  Future<List<Apartment>> getPropertiesByCategoryAndPlace(
+    String categoryName,
+    String placeName, {
+    int limit = 10,
+  }) async {
     final cacheKey = 'category_${categoryName}_place_$placeName';
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey)) {
-      _logger.info('استخدام البيانات المخزنة مؤقتاً للقسم: $categoryName والمكان: $placeName');
+      _logger.info(
+        'استخدام البيانات المخزنة مؤقتاً للقسم: $categoryName والمكان: $placeName',
+      );
       return _cache[cacheKey]!;
     }
-    
+
     return _fetchWithRetry(() async {
       _logger.info('جلب العقارات من القسم: $categoryName والمكان: $placeName');
 
@@ -453,16 +491,27 @@ class PropertyServiceSupabase {
       }
 
       // استخراج معرفات العقارات للقسم المحدد
-      final categoryPropertyIds = categoryPropertiesQuery.map<String>((item) => item['property_id'] as String).toList();
-      
+      final categoryPropertyIds =
+          categoryPropertiesQuery
+              .map<String>((item) => item['property_id'] as String)
+              .toList();
+
       // استخراج معرفات العقارات للمكان المحدد
-      final placePropertyIds = placePropertiesQuery.map<String>((item) => item['property_id'] as String).toList();
+      final placePropertyIds =
+          placePropertiesQuery
+              .map<String>((item) => item['property_id'] as String)
+              .toList();
 
       // الحصول على معرفات العقارات المشتركة (موجودة في القسم والمكان)
-      final commonPropertyIds = categoryPropertyIds.where((id) => placePropertyIds.contains(id)).toList();
+      final commonPropertyIds =
+          categoryPropertyIds
+              .where((id) => placePropertyIds.contains(id))
+              .toList();
 
       if (commonPropertyIds.isEmpty) {
-        _logger.info('لا توجد عقارات مشتركة بين القسم: $categoryName والمكان: $placeName');
+        _logger.info(
+          'لا توجد عقارات مشتركة بين القسم: $categoryName والمكان: $placeName',
+        );
         return [];
       }
 
@@ -476,25 +525,31 @@ class PropertyServiceSupabase {
           .timeout(_timeout);
 
       // تحويل البيانات إلى كائنات Apartment
-      final apartments = propertiesResponse.map<Apartment>((data) => Apartment.fromSupabase(data)).toList();
-      
+      final apartments =
+          propertiesResponse
+              .map<Apartment>((data) => Apartment.fromSupabase(data))
+              .toList();
+
       // تخزين البيانات مؤقتاً
       _cacheResponse(cacheKey, apartments);
-      
+
       return apartments;
     });
   }
 
   // جلب العقارات حسب المكان المتاح
-  Future<List<Apartment>> getPropertiesByPlace(String placeName, {int limit = 20}) async {
+  Future<List<Apartment>> getPropertiesByPlace(
+    String placeName, {
+    int limit = 20,
+  }) async {
     final cacheKey = 'place_$placeName';
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey)) {
       _logger.info('استخدام البيانات المخزنة مؤقتاً للمكان: $placeName');
       return _cache[cacheKey]!;
     }
-    
+
     return _fetchWithRetry(() async {
       _logger.info('جلب العقارات من المكان: $placeName');
 
@@ -529,7 +584,10 @@ class PropertyServiceSupabase {
       }
 
       // استخراج معرفات العقارات
-      final propertyIds = response.map<String>((item) => item['property_id'] as String).toList();
+      final propertyIds =
+          response
+              .map<String>((item) => item['property_id'] as String)
+              .toList();
 
       // جلب تفاصيل العقارات
       final propertiesResponse = await _supabase
@@ -540,31 +598,34 @@ class PropertyServiceSupabase {
           .timeout(_timeout);
 
       // تحويل البيانات إلى كائنات Apartment
-      final apartments = propertiesResponse.map<Apartment>((data) => Apartment.fromSupabase(data)).toList();
-      
+      final apartments =
+          propertiesResponse
+              .map<Apartment>((data) => Apartment.fromSupabase(data))
+              .toList();
+
       // تخزين البيانات مؤقتاً
       _cacheResponse(cacheKey, apartments);
-      
+
       return apartments;
     });
   }
 
   // ربط عقار بقسم معين
-  Future<bool> linkPropertyToCategory(String propertyId, String categoryId) async {
+  Future<bool> linkPropertyToCategory(
+    String propertyId,
+    String categoryId,
+  ) async {
     try {
       _logger.info('ربط العقار $propertyId بالقسم $categoryId');
-      
+
       await _supabase
           .from('property_categories')
-          .insert({
-            'property_id': propertyId,
-            'category_id': categoryId,
-          })
+          .insert({'property_id': propertyId, 'category_id': categoryId})
           .timeout(_timeout);
-      
+
       // مسح التخزين المؤقت المتعلق بالعقارات
       clearCache();
-      
+
       return true;
     } catch (e) {
       _logger.severe('فشل ربط العقار بالقسم: $e');
@@ -576,18 +637,15 @@ class PropertyServiceSupabase {
   Future<bool> linkPropertyToPlace(String propertyId, String placeId) async {
     try {
       _logger.info('ربط العقار $propertyId بالمكان $placeId');
-      
+
       await _supabase
           .from('property_available_places')
-          .insert({
-            'property_id': propertyId,
-            'place_id': placeId,
-          })
+          .insert({'property_id': propertyId, 'place_id': placeId})
           .timeout(_timeout);
-      
+
       // مسح التخزين المؤقت المتعلق بالعقارات
       clearCache();
-      
+
       return true;
     } catch (e) {
       _logger.severe('فشل ربط العقار بالمكان: $e');
@@ -596,20 +654,23 @@ class PropertyServiceSupabase {
   }
 
   // إلغاء ربط عقار بقسم معين
-  Future<bool> unlinkPropertyFromCategory(String propertyId, String categoryId) async {
+  Future<bool> unlinkPropertyFromCategory(
+    String propertyId,
+    String categoryId,
+  ) async {
     try {
       _logger.info('إلغاء ربط العقار $propertyId من القسم $categoryId');
-      
+
       await _supabase
           .from('property_categories')
           .delete()
           .eq('property_id', propertyId)
           .eq('category_id', categoryId)
           .timeout(_timeout);
-      
+
       // مسح التخزين المؤقت المتعلق بالعقارات
       clearCache();
-      
+
       return true;
     } catch (e) {
       _logger.severe('فشل إلغاء ربط العقار من القسم: $e');
@@ -618,20 +679,23 @@ class PropertyServiceSupabase {
   }
 
   // إلغاء ربط عقار بمكان متاح
-  Future<bool> unlinkPropertyFromPlace(String propertyId, String placeId) async {
+  Future<bool> unlinkPropertyFromPlace(
+    String propertyId,
+    String placeId,
+  ) async {
     try {
       _logger.info('إلغاء ربط العقار $propertyId من المكان $placeId');
-      
+
       await _supabase
           .from('property_available_places')
           .delete()
           .eq('property_id', propertyId)
           .eq('place_id', placeId)
           .timeout(_timeout);
-      
+
       // مسح التخزين المؤقت المتعلق بالعقارات
       clearCache();
-      
+
       return true;
     } catch (e) {
       _logger.severe('فشل إلغاء ربط العقار من المكان: $e');
@@ -640,49 +704,56 @@ class PropertyServiceSupabase {
   }
 
   // جلب الأقسام المرتبطة بعقار معين
-  Future<List<Map<String, dynamic>>> getCategoriesForProperty(String propertyId) async {
+  Future<List<Map<String, dynamic>>> getCategoriesForProperty(
+    String propertyId,
+  ) async {
     final cacheKey = 'property_${propertyId}_categories';
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey) && _cacheMaps.containsKey(cacheKey)) {
-      _logger.info('استخدام البيانات المخزنة مؤقتاً للأقسام المرتبطة بالعقار: $propertyId');
+      _logger.info(
+        'استخدام البيانات المخزنة مؤقتاً للأقسام المرتبطة بالعقار: $propertyId',
+      );
       return _cacheMaps[cacheKey]!;
     }
-    
+
     try {
       _logger.info('جلب الأقسام المرتبطة بالعقار: $propertyId');
-      
+
       // جلب معرفات الأقسام المرتبطة بالعقار
       final response = await _supabase
           .from('property_categories')
           .select('category_id')
           .eq('property_id', propertyId)
           .timeout(_timeout);
-      
+
       if (response.isEmpty) {
         return [];
       }
-      
+
       // استخراج معرفات الأقسام
-      final categoryIds = response.map<String>((item) => item['category_id'] as String).toList();
-      
+      final categoryIds =
+          response
+              .map<String>((item) => item['category_id'] as String)
+              .toList();
+
       // جلب تفاصيل الأقسام
       final categoriesResponse = await _supabase
           .from('categories')
           .select()
           .inFilter('id', categoryIds)
           .timeout(_timeout);
-      
+
       // تحويل البيانات إلى قائمة من Map واضحة
       final List<Map<String, dynamic>> categories = [];
       for (var item in categoriesResponse) {
         categories.add(Map<String, dynamic>.from(item));
       }
-      
+
       // تخزين البيانات في المخزن المؤقت المنفصل
       _cacheMaps[cacheKey] = categories;
       _cacheTimestamps[cacheKey] = DateTime.now();
-      
+
       return categories;
     } catch (e) {
       _logger.severe('فشل جلب الأقسام المرتبطة بالعقار: $e');
@@ -691,49 +762,54 @@ class PropertyServiceSupabase {
   }
 
   // جلب الأماكن المرتبطة بعقار معين
-  Future<List<Map<String, dynamic>>> getPlacesForProperty(String propertyId) async {
+  Future<List<Map<String, dynamic>>> getPlacesForProperty(
+    String propertyId,
+  ) async {
     final cacheKey = 'property_${propertyId}_places';
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey) && _cacheMaps.containsKey(cacheKey)) {
-      _logger.info('استخدام البيانات المخزنة مؤقتاً للأماكن المرتبطة بالعقار: $propertyId');
+      _logger.info(
+        'استخدام البيانات المخزنة مؤقتاً للأماكن المرتبطة بالعقار: $propertyId',
+      );
       return _cacheMaps[cacheKey]!;
     }
-    
+
     try {
       _logger.info('جلب الأماكن المرتبطة بالعقار: $propertyId');
-      
+
       // جلب معرفات الأماكن المرتبطة بالعقار
       final response = await _supabase
           .from('property_available_places')
           .select('place_id')
           .eq('property_id', propertyId)
           .timeout(_timeout);
-      
+
       if (response.isEmpty) {
         return [];
       }
-      
+
       // استخراج معرفات الأماكن
-      final placeIds = response.map<String>((item) => item['place_id'] as String).toList();
-      
+      final placeIds =
+          response.map<String>((item) => item['place_id'] as String).toList();
+
       // جلب تفاصيل الأماكن
       final placesResponse = await _supabase
           .from('available_places')
           .select()
           .inFilter('id', placeIds)
           .timeout(_timeout);
-      
+
       // تحويل البيانات إلى قائمة من Map واضحة
       final List<Map<String, dynamic>> places = [];
       for (var item in placesResponse) {
         places.add(Map<String, dynamic>.from(item));
       }
-      
+
       // تخزين البيانات في المخزن المؤقت المنفصل
       _cacheMaps[cacheKey] = places;
       _cacheTimestamps[cacheKey] = DateTime.now();
-      
+
       return places;
     } catch (e) {
       _logger.severe('فشل جلب الأماكن المرتبطة بالعقار: $e');
@@ -745,13 +821,13 @@ class PropertyServiceSupabase {
   Future<List<Apartment>> getFeaturedProperties({int limit = 10}) async {
     const cacheKey = 'featured_properties';
     const categoryId = '8'; // ID للقسم "شقق السهم"
-    
+
     // فحص التخزين المؤقت أولاً
     if (_isCacheValid(cacheKey)) {
       _logger.info('استخدام البيانات المخزنة مؤقتاً للعقارات المميزة');
       return _cache[cacheKey]!;
     }
-    
+
     return _fetchWithRetry(() async {
       _logger.info('جلب العقارات المميزة من قسم شقق السهم...');
 
@@ -769,7 +845,10 @@ class PropertyServiceSupabase {
         }
 
         // استخراج معرفات العقارات
-        final propertyIds = categoryPropertiesQuery.map<String>((item) => item['property_id'] as String).toList();
+        final propertyIds =
+            categoryPropertiesQuery
+                .map<String>((item) => item['property_id'] as String)
+                .toList();
 
         // جلب تفاصيل العقارات المتاحة فقط
         final propertiesResponse = await _supabase
@@ -781,11 +860,14 @@ class PropertyServiceSupabase {
             .timeout(_timeout);
 
         // تحويل البيانات إلى كائنات Apartment
-        final apartments = propertiesResponse.map<Apartment>((data) => Apartment.fromSupabase(data)).toList();
-        
+        final apartments =
+            propertiesResponse
+                .map<Apartment>((data) => Apartment.fromSupabase(data))
+                .toList();
+
         // تخزين البيانات مؤقتاً
         _cacheResponse(cacheKey, apartments);
-        
+
         return apartments;
       } catch (e) {
         _logger.severe('خطأ في جلب العقارات المميزة: $e');

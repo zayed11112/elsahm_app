@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
+import 'package:logging/logging.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
 import 'wallet_screen.dart';
@@ -17,19 +18,12 @@ import 'payment_requests_screen.dart';
 import 'groups_screen.dart'; // استيراد صفحة الجروبات الجديدة
 import 'notifications_screen.dart'; // استيراد صفحة الإشعارات الجديدة
 import 'complaints_screen.dart'; // استيراد صفحة الشكاوى الجديدة
-import 'package:share_plus/share_plus.dart';
 import 'dart:async';
-import 'dart:io';
-import 'dart:convert';
-import 'dart:math' as math;
-import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:image_picker/image_picker.dart';
-import '../screens/checkout_list_screen.dart';
 import '../services/notification_service.dart'; // استيراد خدمة الإشعارات
 import '../screens/settings_screen.dart'; // استيراد صفحة الإعدادات
 import 'booking_requests_screen.dart'; // استيراد صفحة طلبات الحجز
-// TODO: Import other necessary screens when created (e.g., Prescriptions, Purchases)
+//  Import other necessary screens when created (e.g., Prescriptions, Purchases)
 
 // تعريف الألوان الجديدة المستخدمة في الشاشة
 const Color primarySkyBlue = Color(0xFF4FC3F7); // لون أزرق سماوي
@@ -51,6 +45,7 @@ class MoreScreen extends StatefulWidget {
 }
 
 class _MoreScreenState extends State<MoreScreen> {
+  final Logger _logger = Logger('MoreScreen');
   final FirestoreService _firestoreService = FirestoreService();
   final NotificationService _notificationService = NotificationService(); // إضافة خدمة الإشعارات
   UserProfile? userProfile;
@@ -58,102 +53,6 @@ class _MoreScreenState extends State<MoreScreen> {
   int unreadNotificationsCount = 0; // إضافة متغير لتخزين عدد الإشعارات غير المقروءة
   StreamSubscription? _notificationCountSubscription; // إضافة متغير للاشتراك
 
-  void _pickAndUploadImage() async {
-    // إضافة تأثير اهتزاز خفيف عند النقر
-    HapticFeedback.lightImpact();
-
-    try {
-      final ImagePicker picker = ImagePicker();
-      final XFile? image = await picker.pickImage(
-        source: ImageSource.gallery,
-        maxWidth: 800,
-        maxHeight: 800,
-        imageQuality: 85,
-      );
-
-      if (image == null) return;
-
-      setState(() {
-        isLoading = true;
-      });
-
-      // الحصول على معرف المستخدم الحالي
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      if (authProvider.user == null) {
-        throw Exception('User not logged in');
-      }
-
-      // رفع الصورة إلى ImgBB
-      final String imageUrl = await _uploadToImgBB(File(image.path));
-
-      // تحديث رابط الصورة في Firestore
-      await _firestoreService.updateUserProfileField(authProvider.user!.uid, {
-        'avatarUrl': imageUrl,
-      });
-
-      // تحديث حالة الواجهة
-      setState(() {
-        if (userProfile != null) {
-          userProfile = userProfile!.copyWith(avatarUrl: imageUrl);
-        }
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10),
-              Text('تم تحديث صورة الملف الشخصي بنجاح'),
-            ],
-          ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
-          ),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('حدث خطأ أثناء تحديث الصورة: $e'),
-          backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-    } finally {
-      setState(() {
-        isLoading = false;
-      });
-    }
-  }
-
-  // دالة مساعدة لرفع الصورة إلى ImgBB
-  Future<String> _uploadToImgBB(File imageFile) async {
-    const String apiKey =
-        '9acda31c4576aa648bc36802829b3b9d'; // استبدل هذا بمفتاح API الخاص بك
-    final uri = Uri.parse('https://api.imgbb.com/1/upload?key=$apiKey');
-
-    final request = http.MultipartRequest('POST', uri);
-    request.files.add(
-      await http.MultipartFile.fromPath('image', imageFile.path),
-    );
-
-    final response = await request.send();
-    final responseData = await response.stream.bytesToString();
-    final jsonData = json.decode(responseData);
-
-    if (response.statusCode == 200 && jsonData['success'] == true) {
-      return jsonData['data']['url'];
-    } else {
-      throw Exception(
-        'Failed to upload image: ${jsonData['error']?.toString() ?? 'Unknown error'}',
-      );
-    }
-  }
 
   Future<void> _loadUserProfile() async {
     setState(() {
@@ -168,7 +67,7 @@ class _MoreScreenState extends State<MoreScreen> {
         );
       }
     } catch (error) {
-      print('Error loading profile: $error');
+      _logger.warning('Error loading profile: $error');
     } finally {
       setState(() {
         isLoading = false;
@@ -209,7 +108,7 @@ class _MoreScreenState extends State<MoreScreen> {
           }
         }, onError: (error) {
           // التعامل مع الأخطاء
-          print('خطأ في تحميل عدد الإشعارات: $error');
+          _logger.warning('خطأ في تحميل عدد الإشعارات: $error');
           if (mounted) {
             setState(() {
               unreadNotificationsCount = 0;
@@ -217,7 +116,7 @@ class _MoreScreenState extends State<MoreScreen> {
           }
         });
       } catch (e) {
-        print('استثناء في عداد الإشعارات: $e');
+        _logger.severe('استثناء في عداد الإشعارات: $e');
         if (mounted) {
           setState(() {
             unreadNotificationsCount = 0;
@@ -235,7 +134,6 @@ class _MoreScreenState extends State<MoreScreen> {
     final isDarkMode = themeProvider.themeMode == ThemeMode.dark;
 
     // تحديد الألوان بناءً على السمة والصورة
-    final Color headerBgColor = darkHeaderColor;
     final Color screenBgColor =
         isDarkMode ? darkBackgroundColor : lightBackgroundColor;
     final Color cardBgColor = isDarkMode ? darkCardColor : Colors.white;
@@ -470,7 +368,7 @@ class _MoreScreenState extends State<MoreScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
@@ -506,7 +404,7 @@ class _MoreScreenState extends State<MoreScreen> {
                               ), // Slight rounding
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.15),
+                                  color: Colors.black.withValues(alpha: 0.15),
                                   blurRadius: 10,
                                   spreadRadius: 2,
                                   offset: Offset(0, 4),
@@ -538,7 +436,7 @@ class _MoreScreenState extends State<MoreScreen> {
                                           child: Icon(
                                             Icons.person,
                                             size: 45,
-                                            color: accentBlue.withOpacity(0.8),
+                                            color: accentBlue.withValues(alpha: 0.8),
                                           ),
                                         )
                                         : null,
@@ -551,7 +449,7 @@ class _MoreScreenState extends State<MoreScreen> {
                               width: profileImageSize + 16,
                               height: profileImageSize + 16,
                               decoration: BoxDecoration(
-                                color: Colors.black.withOpacity(0.5),
+                                color: Colors.black.withValues(alpha: 0.5),
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
                               child: const Center(
@@ -591,7 +489,7 @@ class _MoreScreenState extends State<MoreScreen> {
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
+                          color: Colors.black.withValues(alpha: 0.1),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
@@ -621,7 +519,7 @@ class _MoreScreenState extends State<MoreScreen> {
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withOpacity(0.1),
+                                    color: Colors.black.withValues(alpha: 0.1),
                                     blurRadius: 2,
                                     spreadRadius: 0,
                                   ),
@@ -684,7 +582,7 @@ class _MoreScreenState extends State<MoreScreen> {
             borderRadius: BorderRadius.circular(10),
             boxShadow: [
               BoxShadow(
-                color: accentBlue.withOpacity(0.3),
+                color: accentBlue.withValues(alpha: 0.3),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -692,12 +590,8 @@ class _MoreScreenState extends State<MoreScreen> {
           ),
           child: ElevatedButton(
             onPressed: () {
-              print(
-                "Edit Profile button pressed!",
-              ); // Keep print statement for testing
-              print(
-                "User Profile to pass: ${userProfile.uid}",
-              ); // Keep print statement
+              _logger.info("Edit Profile button pressed!");
+              _logger.info("User Profile to pass: ${userProfile.uid}");
               Navigator.push(
                 context,
                 MaterialPageRoute(
@@ -714,7 +608,7 @@ class _MoreScreenState extends State<MoreScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 45, vertical: 12),
             ),
             child: const Text(
-              "تعديل بياناتي", // TODO: Localize this
+              "تعديل بياناتي", 
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -753,14 +647,14 @@ class _MoreScreenState extends State<MoreScreen> {
   ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final detailIconColor =
-        isDarkMode ? primarySkyBlue.withOpacity(0.8) : primarySkyBlue;
+        isDarkMode ? primarySkyBlue.withValues(alpha: 0.8) : primarySkyBlue;
     final detailLabelColor = isDarkMode ? Colors.white70 : Colors.grey[600];
     final detailValueColor = cardTextColor;
 
     // Helper to create each detail item row
     Widget buildDetailItem(IconData icon, String label, String value) {
       final displayValue =
-          value.isNotEmpty ? value : "غير محدد"; // TODO: Localize this
+          value.isNotEmpty ? value : "غير محدد"; 
       return Padding(
         padding: const EdgeInsets.symmetric(
           vertical: 6.0,
@@ -770,7 +664,7 @@ class _MoreScreenState extends State<MoreScreen> {
             Icon(icon, size: 20, color: detailIconColor),
             const SizedBox(width: 12),
             Text(
-              "$label:", // TODO: Localize this label
+              "$label:", // Localize this label
               style: TextStyle(
                 fontSize: 13,
                 color: detailLabelColor,
@@ -804,7 +698,7 @@ class _MoreScreenState extends State<MoreScreen> {
         boxShadow: [
           if (!isDarkMode)
             BoxShadow(
-              color: Colors.grey.withOpacity(0.15),
+              color: Colors.grey.withValues(alpha: 0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -815,31 +709,31 @@ class _MoreScreenState extends State<MoreScreen> {
         children: [
           buildDetailItem(
             Icons.verified_user_outlined,
-            "الحالة", // TODO: Localize
+            "الحالة", //  Localize
             userProfile.status,
           ),
           Divider(
-            color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.1),
+            color: (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.1),
           ),
           buildDetailItem(
             Icons.badge_outlined,
-            "ID   ّ", // TODO: Localize
+            "ID   ّ", //  Localize
             userProfile.studentId,
           ),
           Divider(
-            color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.1),
+            color: (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.1),
           ),
           buildDetailItem(
             Icons.school_outlined,
-            "الكلية", // TODO: Localize
+            "الكلية", //  Localize
             userProfile.faculty,
           ),
           Divider(
-            color: (isDarkMode ? Colors.white : Colors.black).withOpacity(0.1),
+            color: (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.1),
           ),
           buildDetailItem(
             Icons.location_city_outlined,
-            "الفرع", // TODO: Localize
+            "الفرع", 
             userProfile.branch,
           ),
         ],
@@ -855,7 +749,7 @@ class _MoreScreenState extends State<MoreScreen> {
   ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final walletCardBg =
-        isDarkMode ? darkCardColor.withOpacity(0.7) : Colors.white;
+        isDarkMode ? darkCardColor.withValues(alpha: 0.7) : Colors.white;
     final walletTextColor = isDarkMode ? Colors.white70 : Colors.black87;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
 
@@ -900,13 +794,13 @@ class _MoreScreenState extends State<MoreScreen> {
               boxShadow: [
                 if (Theme.of(context).brightness == Brightness.light)
                   BoxShadow(
-                    color: primarySkyBlue.withOpacity(0.12),
+                    color: primarySkyBlue.withValues(alpha: 0.12),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
               ],
               border: Border.all(
-                color: primarySkyBlue.withOpacity(0.15),
+                color: primarySkyBlue.withValues(alpha: 0.15),
                 width: 1.5,
               ),
             ),
@@ -916,9 +810,9 @@ class _MoreScreenState extends State<MoreScreen> {
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Text(
-                      "المحفظة الاساسية", // TODO: Localize
+                      "المحفظة الاساسية", 
                       style: TextStyle(
-                        color: walletTextColor.withOpacity(0.8),
+                        color: walletTextColor.withValues(alpha: 0.8),
                         fontSize: 15,
                         fontWeight: FontWeight.w500,
                       ),
@@ -936,7 +830,7 @@ class _MoreScreenState extends State<MoreScreen> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      "جنيه", // TODO: Localize currency
+                      "جنيه", // Localize currency
                       style: TextStyle(
                         color: walletTextColor,
                         fontSize: 16,
@@ -968,9 +862,6 @@ class _MoreScreenState extends State<MoreScreen> {
     Color textColor,
     Color highlightColor,
   ) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final authProvider = Provider.of<AuthProvider>(context);
-    final isLoggedIn = authProvider.isAuthenticated;
 
     // قائمة الإجراءات المتاحة
     final List<Map<String, dynamic>> actions = [
@@ -1012,13 +903,13 @@ class _MoreScreenState extends State<MoreScreen> {
                   boxShadow: [
                     if (isHighlighted)
                       BoxShadow(
-                        color: primarySkyBlue.withOpacity(0.3),
+                        color: primarySkyBlue.withValues(alpha: 0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
                     else if (Theme.of(context).brightness == Brightness.light)
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -1054,13 +945,12 @@ class _MoreScreenState extends State<MoreScreen> {
     bool isHighlighted,
   ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
     // Remove ThemeProvider reference for localization
 
     return ElevatedButton(
       onPressed: () async {
         // تنفيذ الإجراء لكل زر
-        print("تم النقر على: $text"); // Log original key
+        _logger.info("تم النقر على: $text"); // Log original key
 
         // Use the original 'text' key for logic comparison
         if (text == 'المفضلة') {
@@ -1164,7 +1054,7 @@ class _MoreScreenState extends State<MoreScreen> {
                     ? Colors.transparent
                     : (isDarkMode
                         ? Colors.transparent
-                        : primarySkyBlue.withOpacity(0.1)),
+                        : primarySkyBlue.withValues(alpha: 0.1)),
             width: 1.0,
           ),
         ),
@@ -1195,7 +1085,6 @@ class _MoreScreenState extends State<MoreScreen> {
 
   // New method for the logout button
   Widget _buildLogoutButton(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
     return Container(
@@ -1212,7 +1101,7 @@ class _MoreScreenState extends State<MoreScreen> {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.redAccent.withOpacity(0.3),
+            color: Colors.redAccent.withValues(alpha: 0.3),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1227,6 +1116,7 @@ class _MoreScreenState extends State<MoreScreen> {
             HapticFeedback.mediumImpact();
             
             // Show confirmation dialog
+            if (!mounted) return;
             final bool confirm = await showDialog(
               context: context,
               builder: (context) => AlertDialog(
@@ -1262,7 +1152,7 @@ class _MoreScreenState extends State<MoreScreen> {
                 Container(
                   padding: const EdgeInsets.all(8.0),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -1307,11 +1197,11 @@ class _MoreScreenState extends State<MoreScreen> {
             Icon(
               Icons.person_off_outlined, // Or Icons.login
               size: 80,
-              color: theme.colorScheme.primary.withOpacity(0.6),
+              color: theme.colorScheme.primary.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 24),
             Text(
-              "الرجاء تسجيل الدخول", // TODO: Localize
+              "الرجاء تسجيل الدخول", //  Localize
               style: theme.textTheme.headlineSmall?.copyWith(
                 fontWeight: FontWeight.bold,
               ),
@@ -1319,7 +1209,7 @@ class _MoreScreenState extends State<MoreScreen> {
             ),
             const SizedBox(height: 12),
             Text(
-              "تحتاج إلى تسجيل الدخول لعرض ملفك الشخصي وإدارة حسابك.", // TODO: Localize
+              "تحتاج إلى تسجيل الدخول لعرض ملفك الشخصي وإدارة حسابك.", //Localize
               style: theme.textTheme.bodyMedium?.copyWith(
                 color: Colors.grey[600],
               ),
@@ -1328,7 +1218,7 @@ class _MoreScreenState extends State<MoreScreen> {
             const SizedBox(height: 32),
             ElevatedButton.icon(
               icon: const Icon(Icons.login),
-              label: const Text("الذهاب إلى تسجيل الدخول"), // TODO: Localize
+              label: const Text("الذهاب إلى تسجيل الدخول"), //Localize
               onPressed: () {
                 Navigator.push(
                   context,
@@ -1375,7 +1265,7 @@ class _MoreScreenState extends State<MoreScreen> {
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
-                    color: Colors.black.withOpacity(0.8),
+                    color: Colors.black.withValues(alpha: 0.8),
                     child: Center(
                       child: Hero(
                         tag: 'profileImage',
@@ -1417,7 +1307,7 @@ class _MoreScreenState extends State<MoreScreen> {
                 right: 20,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(

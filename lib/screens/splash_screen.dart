@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:logging/logging.dart';
 import 'package:elsahm_app/screens/main_navigation_screen.dart';
 
 class SplashScreen extends StatefulWidget {
@@ -12,6 +13,7 @@ class SplashScreen extends StatefulWidget {
 
 class _SplashScreenState extends State<SplashScreen>
     with TickerProviderStateMixin {
+  final Logger _logger = Logger('SplashScreen');
   String _displayedSlogan = "";
   final String _fullSlogan = "احجز ....أوفر أسهل أسرع";
   int _currentCharIndex = 0;
@@ -155,7 +157,7 @@ class _SplashScreenState extends State<SplashScreen>
       }
     } catch (e) {
       // التعامل مع الأخطاء
-      print('Error loading app: $e');
+      _logger.severe('Error loading app: $e');
       if (mounted) {
         setState(() {
           _isAppLoaded = true; // نضمن الانتقال حتى في حالة حدوث خطأ
@@ -299,7 +301,7 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => MainNavigationScreen()),
     );
-    
+
     // التحقق من اكتمال الملف الشخصي بعد فترة قصيرة من دخول المستخدم
     Future.delayed(const Duration(milliseconds: 800), () {
       MainNavigationScreen.checkProfileCompletion();
@@ -308,10 +310,6 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
-    // Define gradient colors - improved with more depth
-    const gradientStartColor = Color(0xFF1A2025);
-    const gradientEndColor = Color(0xFF0A0D10);
-
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(
@@ -320,7 +318,9 @@ class _SplashScreenState extends State<SplashScreen>
             image: AssetImage('assets/images/backgrond_app.jpg'),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              Colors.black.withOpacity(0.7), // Darken the image slightly for better text visibility
+              Colors.black.withValues(
+                alpha: 0.7,
+              ), // Darken the image slightly for better text visibility
               BlendMode.darken,
             ),
           ),
@@ -333,8 +333,8 @@ class _SplashScreenState extends State<SplashScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withOpacity(0.6),
-                      Colors.black.withOpacity(0.3),
+                      Colors.black.withValues(alpha: 0.6),
+                      Colors.black.withValues(alpha: 0.3),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -342,7 +342,7 @@ class _SplashScreenState extends State<SplashScreen>
                 ),
               ),
             ),
-            
+
             // Subtle background pattern (optional but keeps the existing style)
             Positioned.fill(
               child: Opacity(
@@ -367,7 +367,7 @@ class _SplashScreenState extends State<SplashScreen>
                           turns: _rotateAnimation,
                           child: FadeTransition(
                             opacity: _fadeAnimation,
-                            child: Container(
+                            child: SizedBox(
                               height: 150,
                               width: 150,
                               child: Image.asset(
@@ -395,7 +395,7 @@ class _SplashScreenState extends State<SplashScreen>
                           _easterEggActivated
                               ? [
                                 Shadow(
-                                  color: _currentColor.withOpacity(0.7),
+                                  color: _currentColor.withValues(alpha: 0.7),
                                   blurRadius: 10,
                                   offset: const Offset(0, 2),
                                 ),
@@ -479,7 +479,7 @@ class _SplashScreenState extends State<SplashScreen>
                   Text(
                     "رقم التواصل",
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 15.0,
                       fontFamily: 'Cairo',
                       fontWeight: FontWeight.w500,
@@ -495,11 +495,11 @@ class _SplashScreenState extends State<SplashScreen>
                       vertical: 8,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.08),
+                      color: Colors.white.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.white.withOpacity(0.05),
+                          color: Colors.white.withValues(alpha: 0.05),
                           blurRadius: 10,
                           spreadRadius: 1,
                         ),
@@ -514,7 +514,7 @@ class _SplashScreenState extends State<SplashScreen>
                           color:
                               _easterEggActivated
                                   ? _currentColor
-                                  : Colors.white.withOpacity(0.9),
+                                  : Colors.white.withValues(alpha: 0.9),
                           size: 18.0,
                         ),
                         const SizedBox(width: 8),
@@ -524,7 +524,7 @@ class _SplashScreenState extends State<SplashScreen>
                             color:
                                 _easterEggActivated
                                     ? _currentColor
-                                    : Colors.white.withOpacity(0.9),
+                                    : Colors.white.withValues(alpha: 0.9),
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',
@@ -535,7 +535,7 @@ class _SplashScreenState extends State<SplashScreen>
                       ],
                     ),
                   ),
-                  
+
                   // Add the designer info below contact number
                   const SizedBox(height: 15),
                   FadeTransition(
@@ -551,7 +551,7 @@ class _SplashScreenState extends State<SplashScreen>
                             shape: BoxShape.circle,
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.white.withOpacity(0.1),
+                                color: Colors.white.withValues(alpha: 0.1),
                                 blurRadius: 5,
                                 spreadRadius: 1,
                               ),
@@ -569,9 +569,10 @@ class _SplashScreenState extends State<SplashScreen>
                         Text(
                           "By : Eslam Zayed",
                           style: TextStyle(
-                            color: _easterEggActivated 
-                              ? _currentColor 
-                              : Colors.white.withOpacity(0.7),
+                            color:
+                                _easterEggActivated
+                                    ? _currentColor
+                                    : Colors.white.withValues(alpha: 0.7),
                             fontSize: 12,
                             fontWeight: FontWeight.w500,
                             fontFamily: 'Cairo',
@@ -596,7 +597,7 @@ class GridPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final paint =
         Paint()
-          ..color = Colors.white.withOpacity(0.5)
+          ..color = Colors.white.withValues(alpha: 0.5)
           ..strokeWidth = 0.5;
 
     const spacing = 20.0;
@@ -627,8 +628,8 @@ class LightEffectPainter extends CustomPainter {
         Paint()
           ..shader = RadialGradient(
             colors: [
-              Colors.blue.withOpacity(0.7 * progress),
-              Colors.lightBlue.withOpacity(0.5 * progress),
+              Colors.blue.withValues(alpha: 0.7 * progress),
+              Colors.lightBlue.withValues(alpha: 0.5 * progress),
               Colors.transparent,
             ],
             stops: [0.0, 0.5, 1.0],
@@ -646,7 +647,7 @@ class LightEffectPainter extends CustomPainter {
     // إضافة نقاط ضوء متوهجة
     final sparkPaint =
         Paint()
-          ..color = Colors.white.withOpacity(0.8 * progress)
+          ..color = Colors.white.withValues(alpha: 0.8 * progress)
           ..style = PaintingStyle.fill;
 
     // رسم نقاط الضوء المتوهجة

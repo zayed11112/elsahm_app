@@ -10,9 +10,9 @@ class BookingDetailsScreen extends StatefulWidget {
   final String bookingId;
 
   const BookingDetailsScreen({
-    Key? key,
+    super.key,
     required this.bookingId,
-  }) : super(key: key);
+  });
 
   @override
   State<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
@@ -90,8 +90,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
         return Colors.green.shade600;
       case BookingStatus.cancelled:
         return Colors.red.shade600;
-      default:
-        return Colors.grey;
     }
   }
 
@@ -104,22 +102,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
         return Icons.check_circle_rounded;
       case BookingStatus.cancelled:
         return Icons.cancel_rounded;
-      default:
-        return Icons.info_outline;
-    }
-  }
-
-  // Get status background gradient
-  List<Color> _getStatusGradient(BookingStatus status) {
-    switch (status) {
-      case BookingStatus.pending:
-        return [Colors.amber.shade300, Colors.amber.shade700];
-      case BookingStatus.confirmed:
-        return [Colors.green.shade300, Colors.green.shade700];
-      case BookingStatus.cancelled:
-        return [Colors.red.shade300, Colors.red.shade700];
-      default:
-        return [Colors.grey.shade300, Colors.grey.shade700];
     }
   }
 
@@ -162,7 +144,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.red.withOpacity(0.1),
+                  color: Colors.red.withAlpha(26),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -217,7 +199,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.blue.withOpacity(0.1),
+                  color: Colors.blue.withAlpha(26),
                   blurRadius: 10,
                   offset: const Offset(0, 4),
                 ),
@@ -356,11 +338,9 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
   }
 
   Widget _buildStatusCard(Booking booking, ThemeData theme) {
-    final statusGradient = _getStatusGradient(booking.status);
-    
     return Card(
       elevation: 8,
-      shadowColor: _getStatusColor(booking.status).withOpacity(0.4),
+      shadowColor: _getStatusColor(booking.status).withAlpha(102),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -369,8 +349,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
           borderRadius: BorderRadius.circular(16),
           gradient: LinearGradient(
             colors: [
-              _getStatusColor(booking.status).withOpacity(0.7),
-              _getStatusColor(booking.status).withOpacity(0.9),
+              _getStatusColor(booking.status).withAlpha(179),
+              _getStatusColor(booking.status).withAlpha(230),
             ],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
@@ -402,7 +382,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                         'حالة الحجز',
                         style: TextStyle(
                           fontSize: 14,
-                          color: Colors.white.withOpacity(0.9),
+                          color: Colors.white.withAlpha(230),
                           fontWeight: FontWeight.w500,
                         ),
                       ),
@@ -462,7 +442,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: theme.primaryColor.withOpacity(0.1),
+                color: theme.primaryColor.withAlpha(26),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -494,8 +474,8 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                 borderRadius: BorderRadius.circular(12),
                 gradient: LinearGradient(
                   colors: [
-                    theme.primaryColor.withOpacity(0.4),
-                    theme.primaryColor.withOpacity(0.8),
+                    theme.primaryColor.withAlpha(102),
+                    theme.primaryColor.withAlpha(204),
                   ],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -506,7 +486,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                   Center(
                     child: Icon(
                       Icons.business,
-                      color: Colors.white.withOpacity(0.8),
+                      color: Colors.white.withAlpha(204),
                       size: 80,
                     ),
                   ),
@@ -519,7 +499,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.6),
+                        color: Colors.black.withAlpha(153),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
@@ -541,7 +521,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                         shape: BoxShape.circle,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withAlpha(51),
                             blurRadius: 6,
                             offset: const Offset(0, 2),
                           ),
@@ -627,7 +607,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               margin: const EdgeInsets.only(bottom: 16),
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Colors.amber.withOpacity(0.1),
+                color: Colors.amber.withAlpha(26),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -654,10 +634,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               width: double.infinity,
               padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
               decoration: BoxDecoration(
-                color: Colors.grey.withOpacity(0.05),
+                color: Colors.grey.withAlpha(13),
                 borderRadius: BorderRadius.circular(12),
                 border: Border.all(
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withAlpha(51),
                 ),
               ),
               child: Text(
@@ -683,7 +663,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: theme.primaryColor.withOpacity(0.1),
+              color: theme.primaryColor.withAlpha(26),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Icon(
@@ -735,7 +715,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
             );
           },
           child: AlertDialog(
-            backgroundColor: Colors.white.withOpacity(0.95),
+            backgroundColor: Colors.white.withAlpha(242),
             elevation: 20,
             title: Row(
               children: const [
@@ -810,6 +790,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                   final success = await _bookingService.cancelBooking(bookingId);
                   
                   // Hide loading indicator
+                  if (!context.mounted) return;
                   Navigator.of(context).pop();
                   
                   if (success) {
@@ -959,10 +940,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
           vertical: 8,
         ),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withAlpha(26),
           borderRadius: BorderRadius.circular(12),
           border: Border.all(
-            color: color.withOpacity(0.3),
+            color: color.withAlpha(77),
           ),
         ),
         child: Column(

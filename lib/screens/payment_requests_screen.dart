@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/theme.dart';
 import '../extensions/theme_extensions.dart';
-import '../utils/theme_utils.dart';
 import '../widgets/themed_card.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' as math;
@@ -26,13 +25,14 @@ class PaymentRequestsScreen extends StatefulWidget {
   State<PaymentRequestsScreen> createState() => _PaymentRequestsScreenState();
 }
 
-class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with SingleTickerProviderStateMixin {
+class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
+    with SingleTickerProviderStateMixin {
   // تخزين الاستعلامات المختلفة
   final Map<String, Stream<List<Map<String, dynamic>>>> _streams = {};
-  
+
   // Tab controller for switching between request types
   late TabController _tabController;
-  
+
   // Animation for card reveal
   final List<GlobalKey<AnimatedListState>> _listKeys = [
     GlobalKey<AnimatedListState>(),
@@ -40,16 +40,13 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
     GlobalKey<AnimatedListState>(),
   ];
 
-  // Current tab index
-  int _currentTabIndex = 0;
-  
   // التنسيقات الخاصة بحالات الطلبات
   final Map<String, String> _statusLabels = {
     'pending': 'قيد المراجعة',
     'approved': 'تمت الموافقة',
     'rejected': 'تم الرفض',
   };
-  
+
   // أيقونات حالات الطلبات
   final Map<String, IconData> _statusIcons = {
     'pending': Icons.hourglass_top,
@@ -61,13 +58,6 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _tabController.addListener(() {
-      if (!_tabController.indexIsChanging) {
-        setState(() {
-          _currentTabIndex = _tabController.index;
-        });
-      }
-    });
   }
 
   @override
@@ -81,7 +71,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
   Stream<List<Map<String, dynamic>>> _getStream(String userId, String status) {
     final key = '$userId-$status';
     if (!_streams.containsKey(key)) {
-      _streams[key] = supabaseService.getUserPaymentRequestsStream(userId, status);
+      _streams[key] = supabaseService.getUserPaymentRequestsStream(
+        userId,
+        status,
+      );
     }
     return _streams[key]!;
   }
@@ -100,12 +93,17 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
   Future<void> _openWhatsApp() async {
     final phoneNumber = '+201093130120';
     final Uri whatsappUri = Uri.parse('https://wa.me/$phoneNumber');
-    
+
     try {
       if (!await launchUrl(whatsappUri, mode: LaunchMode.externalApplication)) {
         // إذا فشل في فتح واتساب، يمكن استخدام رابط بديل
-        final Uri fallbackUri = Uri.parse('https://api.whatsapp.com/send?phone=$phoneNumber');
-        if (!await launchUrl(fallbackUri, mode: LaunchMode.externalApplication)) {
+        final Uri fallbackUri = Uri.parse(
+          'https://api.whatsapp.com/send?phone=$phoneNumber',
+        );
+        if (!await launchUrl(
+          fallbackUri,
+          mode: LaunchMode.externalApplication,
+        )) {
           _showErrorSnackBar();
         }
       }
@@ -113,7 +111,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
       _showErrorSnackBar();
     }
   }
-  
+
   void _showErrorSnackBar() {
     if (!mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
@@ -129,7 +127,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
     final authProvider = Provider.of<AuthProvider>(context);
     final userId = authProvider.user?.uid;
     final isDarkMode = context.isDarkMode;
-    
+
     if (userId == null) {
       return Scaffold(
         appBar: AppBar(
@@ -180,25 +178,25 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                 children: [
                   // Pending requests tab
                   _buildRequestsTab(
-                    userId: userId, 
+                    userId: userId,
                     status: 'pending',
                     emptyMessage: 'لا توجد طلبات قيد المراجعة حالياً',
                     emptyIcon: Icons.hourglass_empty,
                     listKey: _listKeys[0],
                   ),
-                  
+
                   // Approved requests tab
                   _buildRequestsTab(
-                    userId: userId, 
+                    userId: userId,
                     status: 'approved',
                     emptyMessage: 'لا توجد طلبات موافق عليها',
                     emptyIcon: Icons.check_circle_outline,
                     listKey: _listKeys[1],
                   ),
-                  
+
                   // Rejected requests tab
                   _buildRequestsTab(
-                    userId: userId, 
+                    userId: userId,
                     status: 'rejected',
                     emptyMessage: 'لا توجد طلبات مرفوضة',
                     emptyIcon: Icons.cancel_outlined,
@@ -206,7 +204,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                   ),
                 ],
               ),
-              
+
               // WhatsApp support button
               Positioned(
                 bottom: 20,
@@ -230,9 +228,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
       foregroundColor: Colors.white,
       elevation: 0,
       shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          bottom: Radius.circular(16),
-        ),
+        borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
       ),
       bottom: TabBar(
         controller: _tabController,
@@ -240,7 +236,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
         indicatorWeight: 3,
         indicatorSize: TabBarIndicatorSize.label,
         labelColor: Colors.white,
-        unselectedLabelColor: Colors.white.withOpacity(0.7),
+        unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
         labelStyle: const TextStyle(fontWeight: FontWeight.bold),
         tabs: [
           Tab(
@@ -274,7 +270,8 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
     return StreamBuilder<List<Map<String, dynamic>>>(
       stream: _getStream(userId, status),
       builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting && !snapshot.hasData) {
+        if (snapshot.connectionState == ConnectionState.waiting &&
+            !snapshot.hasData) {
           return const Center(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -297,18 +294,28 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      const Icon(Icons.error_outline, color: rejectedColor, size: 48),
+                      const Icon(
+                        Icons.error_outline,
+                        color: rejectedColor,
+                        size: 48,
+                      ),
                       const SizedBox(height: 16),
                       const Text(
                         'حدث خطأ أثناء تحميل الطلبات',
-                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                        ),
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: 8),
                       Text(
                         snapshot.error.toString(),
                         style: TextStyle(
-                          color: context.isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                          color:
+                              context.isDarkMode
+                                  ? Colors.grey[400]
+                                  : Colors.grey[700],
                           fontSize: 12,
                         ),
                         textAlign: TextAlign.center,
@@ -319,7 +326,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                         style: ElevatedButton.styleFrom(
                           backgroundColor: primarySkyBlue,
                           foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 12,
+                          ),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(8),
                           ),
@@ -335,7 +345,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
         }
 
         final requests = snapshot.data ?? [];
-        
+
         if (requests.isEmpty) {
           return _buildEmptyState(emptyIcon, emptyMessage);
         }
@@ -355,19 +365,18 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
               animation: _tabController,
               builder: (context, child) {
                 // Only animate if this is the current tab
-                final shouldAnimate = _tabController.index == _getTabIndexForStatus(status);
-                
+                final shouldAnimate =
+                    _tabController.index == _getTabIndexForStatus(status);
+
                 return AnimatedOpacity(
-                  opacity: shouldAnimate ? 1.0 : 0.0, 
+                  opacity: shouldAnimate ? 1.0 : 0.0,
                   duration: kCardAnimationDuration,
                   curve: Curves.easeInOut,
                   child: AnimatedSlide(
-                    offset: shouldAnimate 
-                      ? Offset.zero 
-                      : const Offset(0, 0.05),
+                    offset: shouldAnimate ? Offset.zero : const Offset(0, 0.05),
                     duration: kCardAnimationDuration,
                     curve: Interval(
-                      index * 0.1, 
+                      index * 0.1,
                       math.min(1.0, index * 0.1 + 0.5),
                       curve: Curves.easeOutQuart,
                     ),
@@ -377,7 +386,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                       curve: Curves.easeOutBack,
                       child: Padding(
                         padding: const EdgeInsets.only(bottom: 12),
-                        child: _buildRequestCard(requests[index], context.isDarkMode),
+                        child: _buildRequestCard(
+                          requests[index],
+                          context.isDarkMode,
+                        ),
                       ),
                     ),
                   ),
@@ -393,10 +405,14 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
   // Helper to get tab index from status
   int _getTabIndexForStatus(String status) {
     switch (status) {
-      case 'pending': return 0;
-      case 'approved': return 1;
-      case 'rejected': return 2;
-      default: return 0;
+      case 'pending':
+        return 0;
+      case 'approved':
+        return 1;
+      case 'rejected':
+        return 2;
+      default:
+        return 0;
     }
   }
 
@@ -409,9 +425,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
           Container(
             padding: const EdgeInsets.all(24),
             decoration: BoxDecoration(
-              color: context.isDarkMode 
-                ? Colors.grey[800]!.withOpacity(0.3) 
-                : Colors.grey[200]!.withOpacity(0.5),
+              color:
+                  context.isDarkMode
+                      ? Colors.grey[800]!.withValues(alpha: 0.3)
+                      : Colors.grey[200]!.withValues(alpha: 0.5),
               shape: BoxShape.circle,
             ),
             child: Icon(
@@ -440,11 +457,12 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
     final statusColor = context.getStatusColor(status);
     final amount = '${request['amount']} جنيه';
     final date = _formatDate(request['createdAt']);
-    
+
     // Get payment method icon
-    IconData paymentIcon = request['paymentMethod'].toString().contains('فودافون')
-        ? Icons.phone_android
-        : Icons.account_balance_wallet;
+    IconData paymentIcon =
+        request['paymentMethod'].toString().contains('فودافون')
+            ? Icons.phone_android
+            : Icons.account_balance_wallet;
 
     return GestureDetector(
       onTap: () => _showRequestDetails(request),
@@ -454,7 +472,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
           borderRadius: BorderRadius.circular(16),
           boxShadow: [
             BoxShadow(
-              color: statusColor.withOpacity(0.08),
+              color: statusColor.withValues(alpha: 0.08),
               offset: const Offset(0, 4),
               blurRadius: 12,
             ),
@@ -467,7 +485,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
             Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: statusColor.withOpacity(0.1),
+                color: statusColor.withValues(alpha: 0.1),
                 borderRadius: const BorderRadius.only(
                   topLeft: Radius.circular(16),
                   topRight: Radius.circular(16),
@@ -482,7 +500,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: statusColor.withOpacity(0.15),
+                          color: statusColor.withValues(alpha: 0.15),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -506,14 +524,17 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                             date,
                             style: TextStyle(
                               fontSize: 12,
-                              color: isDarkMode ? darkTextSecondary : lightTextSecondary,
+                              color:
+                                  isDarkMode
+                                      ? darkTextSecondary
+                                      : lightTextSecondary,
                             ),
                           ),
                         ],
                       ),
                     ],
                   ),
-                  
+
                   // Status badge
                   Container(
                     padding: const EdgeInsets.symmetric(
@@ -521,7 +542,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                       vertical: 6,
                     ),
                     decoration: BoxDecoration(
-                      color: statusColor.withOpacity(0.15),
+                      color: statusColor.withValues(alpha: 0.15),
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Row(
@@ -547,7 +568,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                 ],
               ),
             ),
-            
+
             // Card content
             Padding(
               padding: const EdgeInsets.all(16),
@@ -561,40 +582,44 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                     value: request['paymentMethod'],
                     isDarkMode: isDarkMode,
                   ),
-                  
+
                   const SizedBox(height: 12),
-                  
+
                   // User info if available
-                  if (request['userName'] != null && request['userName'].toString().isNotEmpty)
+                  if (request['userName'] != null &&
+                      request['userName'].toString().isNotEmpty)
                     _buildInfoRow(
                       icon: Icons.person,
                       label: 'الاسم',
                       value: request['userName'],
                       isDarkMode: isDarkMode,
                     ),
-                    
-                  if (request['userName'] != null && request['userName'].toString().isNotEmpty)
+
+                  if (request['userName'] != null &&
+                      request['userName'].toString().isNotEmpty)
                     const SizedBox(height: 12),
-                    
+
                   // University ID if available
-                  if (request['universityId'] != null && request['universityId'].toString().isNotEmpty)
+                  if (request['universityId'] != null &&
+                      request['universityId'].toString().isNotEmpty)
                     _buildInfoRow(
                       icon: Icons.badge,
                       label: 'الرقم الجامعي',
                       value: request['universityId'],
                       isDarkMode: isDarkMode,
                     ),
-                    
+
                   // Show rejection reason for rejected requests
-                  if (status == 'rejected' && request['rejectionReason'] != null) ...[
+                  if (status == 'rejected' &&
+                      request['rejectionReason'] != null) ...[
                     const SizedBox(height: 16),
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: rejectedColor.withOpacity(0.08),
+                        color: rejectedColor.withValues(alpha: 0.08),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: rejectedColor.withOpacity(0.3),
+                          color: rejectedColor.withValues(alpha: 0.3),
                           width: 1,
                         ),
                       ),
@@ -634,7 +659,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                       ),
                     ),
                   ],
-                  
+
                   // View details
                   Align(
                     alignment: Alignment.centerLeft,
@@ -658,7 +683,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
       ),
     );
   }
-  
+
   // بناء صف معلومات داخل بطاقة الطلب
   Widget _buildInfoRow({
     required IconData icon,
@@ -691,10 +716,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                 color: isDarkMode ? darkTextSecondary : lightTextSecondary,
               ),
             ),
-            Text(
-              value,
-              style: const TextStyle(fontWeight: FontWeight.w500),
-            ),
+            Text(value, style: const TextStyle(fontWeight: FontWeight.w500)),
           ],
         ),
       ],
@@ -706,7 +728,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
     final isDarkMode = context.isDarkMode;
     final status = request['status'] as String;
     final statusColor = context.getStatusColor(status);
-    
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -736,9 +758,12 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
               // Status Header
               Container(
                 width: double.infinity,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 20,
+                ),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusColor.withValues(alpha: 0.1),
                   borderRadius: const BorderRadius.only(
                     topLeft: Radius.circular(24),
                     topRight: Radius.circular(24),
@@ -749,7 +774,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                     Container(
                       padding: const EdgeInsets.all(16),
                       decoration: BoxDecoration(
-                        color: statusColor.withOpacity(0.2),
+                        color: statusColor.withValues(alpha: 0.2),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -767,16 +792,20 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                         fontSize: 24,
                       ),
                     ),
-                    if (status == 'rejected' && request['rejectionReason'] != null)
+                    if (status == 'rejected' &&
+                        request['rejectionReason'] != null)
                       Padding(
                         padding: const EdgeInsets.only(top: 12),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 12,
+                          ),
                           decoration: BoxDecoration(
-                            color: rejectedColor.withOpacity(0.08),
+                            color: rejectedColor.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(12),
                             border: Border.all(
-                              color: rejectedColor.withOpacity(0.2),
+                              color: rejectedColor.withValues(alpha: 0.2),
                               width: 1,
                             ),
                           ),
@@ -804,9 +833,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                               Text(
                                 request['rejectionReason'],
                                 textAlign: TextAlign.center,
-                                style: const TextStyle(
-                                  color: rejectedColor,
-                                ),
+                                style: const TextStyle(color: rejectedColor),
                               ),
                             ],
                           ),
@@ -818,7 +845,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
               // Content
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 20,
+                  ),
                   physics: const BouncingScrollPhysics(),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -827,10 +857,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                       Container(
                         padding: const EdgeInsets.all(16),
                         decoration: BoxDecoration(
-                          color: primarySkyBlue.withOpacity(0.08),
+                          color: primarySkyBlue.withValues(alpha: 0.08),
                           borderRadius: BorderRadius.circular(16),
                           border: Border.all(
-                            color: primarySkyBlue.withOpacity(0.2),
+                            color: primarySkyBlue.withValues(alpha: 0.2),
                             width: 1,
                           ),
                         ),
@@ -839,7 +869,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                             Container(
                               padding: const EdgeInsets.all(12),
                               decoration: BoxDecoration(
-                                color: primarySkyBlue.withOpacity(0.15),
+                                color: primarySkyBlue.withValues(alpha: 0.15),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
@@ -871,47 +901,51 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                           ],
                         ),
                       ),
-                      
+
                       const SizedBox(height: 24),
-                      
+
                       // تفاصيل الطلب
                       _buildDetailsSectionHeader(
                         title: 'تفاصيل الطلب',
                         icon: Icons.receipt_long,
                       ),
                       const SizedBox(height: 16),
-                      
+
                       _buildDetailItemCard(
                         icon: Icons.receipt,
                         title: 'رقم الطلب',
                         value: request['id'] ?? 'غير متوفر',
                         color: primarySkyBlue,
                       ),
-                      
+
                       _buildDetailItemCard(
                         icon: Icons.calendar_today,
                         title: 'تاريخ الطلب',
                         value: _formatDate(request['createdAt']),
                         color: primarySkyBlue,
                       ),
-                      
+
                       _buildDetailItemCard(
                         icon: Icons.payment,
                         title: 'طريقة الدفع',
                         value: request['paymentMethod'],
                         color: primarySkyBlue,
                       ),
-                      
+
                       _buildDetailItemCard(
                         icon: Icons.phone,
                         title: 'رقم/حساب المصدر',
                         value: request['sourcePhone'],
                         color: primarySkyBlue,
                       ),
-                      
+
                       // معلومات المستخدم
-                      if (request['userName'] != null && request['userName'].toString().isNotEmpty ||
-                          request['universityId'] != null && request['universityId'].toString().isNotEmpty) ...[
+                      if (request['userName'] != null &&
+                              request['userName'].toString().isNotEmpty ||
+                          request['universityId'] != null &&
+                              request['universityId']
+                                  .toString()
+                                  .isNotEmpty) ...[
                         const SizedBox(height: 24),
                         _buildDetailsSectionHeader(
                           title: 'معلومات المستخدم',
@@ -919,23 +953,25 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                         ),
                         const SizedBox(height: 16),
                       ],
-                      
-                      if (request['userName'] != null && request['userName'].toString().isNotEmpty)
+
+                      if (request['userName'] != null &&
+                          request['userName'].toString().isNotEmpty)
                         _buildDetailItemCard(
                           icon: Icons.person,
                           title: 'الاسم داخل التطبيق',
                           value: request['userName'],
                           color: primarySkyBlue,
                         ),
-                      
-                      if (request['universityId'] != null && request['universityId'].toString().isNotEmpty)
+
+                      if (request['universityId'] != null &&
+                          request['universityId'].toString().isNotEmpty)
                         _buildDetailItemCard(
                           icon: Icons.badge,
                           title: 'الرقم الجامعي',
                           value: request['universityId'],
                           color: primarySkyBlue,
                         ),
-                      
+
                       // إثبات الدفع
                       const SizedBox(height: 24),
                       _buildDetailsSectionHeader(
@@ -943,17 +979,21 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                         icon: Icons.image,
                       ),
                       const SizedBox(height: 16),
-                      
+
                       if (request['paymentProofUrl'] != null)
                         GestureDetector(
-                          onTap: () => _showFullScreenImage(context, request['paymentProofUrl']),
+                          onTap:
+                              () => _showFullScreenImage(
+                                context,
+                                request['paymentProofUrl'],
+                              ),
                           child: Container(
                             width: double.infinity,
                             height: 200,
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(16),
                               border: Border.all(
-                                color: primarySkyBlue.withOpacity(0.5),
+                                color: primarySkyBlue.withValues(alpha: 0.5),
                                 width: 1.5,
                               ),
                             ),
@@ -965,12 +1005,20 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                                   CachedNetworkImage(
                                     imageUrl: request['paymentProofUrl'],
                                     fit: BoxFit.cover,
-                                    placeholder: (context, url) => const Center(
-                                      child: CircularProgressIndicator(color: primarySkyBlue),
-                                    ),
-                                    errorWidget: (context, url, error) => const Center(
-                                      child: Icon(Icons.error, color: rejectedColor, size: 50),
-                                    ),
+                                    placeholder:
+                                        (context, url) => const Center(
+                                          child: CircularProgressIndicator(
+                                            color: primarySkyBlue,
+                                          ),
+                                        ),
+                                    errorWidget:
+                                        (context, url, error) => const Center(
+                                          child: Icon(
+                                            Icons.error,
+                                            color: rejectedColor,
+                                            size: 50,
+                                          ),
+                                        ),
                                   ),
                                   // View overlay
                                   Positioned(
@@ -982,7 +1030,9 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                                         vertical: 6,
                                       ),
                                       decoration: BoxDecoration(
-                                        color: Colors.black.withOpacity(0.6),
+                                        color: Colors.black.withValues(
+                                          alpha: 0.6,
+                                        ),
                                         borderRadius: BorderRadius.circular(20),
                                       ),
                                       child: Row(
@@ -1015,21 +1065,28 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                           width: double.infinity,
                           height: 150,
                           decoration: BoxDecoration(
-                            color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                            color:
+                                isDarkMode
+                                    ? Colors.grey[800]
+                                    : Colors.grey[200],
                             borderRadius: BorderRadius.circular(16),
                           ),
                           child: const Center(
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.image_not_supported, size: 40, color: Colors.grey),
+                                Icon(
+                                  Icons.image_not_supported,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
                                 SizedBox(height: 8),
                                 Text('لا يوجد إثبات دفع'),
                               ],
                             ),
                           ),
                         ),
-                      
+
                       // معلومات إضافية للطلبات الموافق عليها
                       if (status == 'approved') ...[
                         const SizedBox(height: 24),
@@ -1041,10 +1098,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
-                            color: approvedColor.withOpacity(0.1),
+                            color: approvedColor.withValues(alpha: 0.1),
                             borderRadius: BorderRadius.circular(16),
                             border: Border.all(
-                              color: approvedColor.withOpacity(0.3),
+                              color: approvedColor.withValues(alpha: 0.3),
                               width: 1.5,
                             ),
                           ),
@@ -1055,7 +1112,9 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                                   Container(
                                     padding: const EdgeInsets.all(8),
                                     decoration: BoxDecoration(
-                                      color: approvedColor.withOpacity(0.2),
+                                      color: approvedColor.withValues(
+                                        alpha: 0.2,
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
                                     child: const Icon(
@@ -1082,7 +1141,9 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                                 Container(
                                   padding: const EdgeInsets.all(12),
                                   decoration: BoxDecoration(
-                                    color: approvedColor.withOpacity(0.05),
+                                    color: approvedColor.withValues(
+                                      alpha: 0.05,
+                                    ),
                                     borderRadius: BorderRadius.circular(8),
                                   ),
                                   child: Row(
@@ -1107,7 +1168,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                           ),
                         ),
                       ],
-                      
+
                       const SizedBox(height: 30),
                     ],
                   ),
@@ -1132,11 +1193,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            icon,
-            size: 18,
-            color: color,
-          ),
+          Icon(icon, size: 18, color: color),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -1169,18 +1226,11 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
   }) {
     return Row(
       children: [
-        Icon(
-          icon,
-          size: 20,
-          color: darkTextSecondary,
-        ),
+        Icon(icon, size: 20, color: darkTextSecondary),
         const SizedBox(width: 10),
         Text(
           title,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 16,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
         ),
       ],
     );
@@ -1190,7 +1240,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
   void _showFullScreenImage(BuildContext context, String imageUrl) {
     showDialog(
       context: context,
-      barrierColor: Colors.black.withOpacity(0.9),
+      barrierColor: Colors.black.withValues(alpha: 0.9),
       builder: (context) {
         return Dialog(
           backgroundColor: Colors.transparent,
@@ -1204,21 +1254,27 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                 child: CachedNetworkImage(
                   imageUrl: imageUrl,
                   fit: BoxFit.contain,
-                  placeholder: (context, url) => const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-                  errorWidget: (context, url, error) => Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(Icons.error, color: Colors.white, size: 50),
-                      const SizedBox(height: 10),
-                      Text(
-                        'فشل تحميل الصورة: $error',
-                        style: const TextStyle(color: Colors.white),
-                        textAlign: TextAlign.center,
+                  placeholder:
+                      (context, url) => const Center(
+                        child: CircularProgressIndicator(color: Colors.white),
                       ),
-                    ],
-                  ),
+                  errorWidget:
+                      (context, url, error) => Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error,
+                            color: Colors.white,
+                            size: 50,
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'فشل تحميل الصورة: $error',
+                            style: const TextStyle(color: Colors.white),
+                            textAlign: TextAlign.center,
+                          ),
+                        ],
+                      ),
                 ),
               ),
               Positioned(
@@ -1226,7 +1282,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
                 right: 20,
                 child: Container(
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
@@ -1254,9 +1310,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
         backgroundColor: const Color(0xFF25D366), // لون واتساب الأخضر
         foregroundColor: Colors.white,
         padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
         elevation: 3,
       ),
       child: Row(
@@ -1275,13 +1329,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen> with Sing
           const SizedBox(width: 12),
           const Text(
             'تواصل مع الدعم الفني عبر واتساب',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ],
       ),
     );
   }
-} 
+}

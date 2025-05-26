@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:logging/logging.dart';
 import '../providers/auth_provider.dart';
 import '../providers/navigation_provider.dart'; // Import NavigationProvider
 import 'main_navigation_screen.dart'; // Import MainNavigationScreen
@@ -14,6 +15,7 @@ class SignUpScreen extends StatefulWidget {
 }
 
 class _SignUpScreenState extends State<SignUpScreen> {
+  static final Logger _logger = Logger('SignUpScreen');
   final _formKey = GlobalKey<FormState>();
   final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
@@ -64,15 +66,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
         // Navigate to MainNavigationScreen and select the 'More' tab (index 4)
         // Pop all routes until the root (or a specific point if needed) and push MainNavigationScreen
         navProvider.setIndex(4); // Set the index for the 'More' screen
-        
-        print("تم إنشاء الحساب بنجاح - الانتقال إلى الشاشة الرئيسية");
-        
+
+        _logger.info("تم إنشاء الحساب بنجاح - الانتقال إلى الشاشة الرئيسية");
+
         // Navigate to MainNavigationScreen
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => MainNavigationScreen()),
           (route) => false, // Remove all previous routes
         );
-        
+
         // طلب التحقق من اكتمال الملف الشخصي بعد فترة قصيرة
         Future.delayed(const Duration(milliseconds: 500), () {
           MainNavigationScreen.checkProfileCompletion();
@@ -128,20 +130,22 @@ class _SignUpScreenState extends State<SignUpScreen> {
         // Navigate to MainNavigationScreen
         Navigator.of(context).popUntil((route) => route.isFirst);
         navProvider.setIndex(4);
-        
-        print("تسجيل الدخول بنجاح عبر جوجل - الانتقال إلى الشاشة الرئيسية");
-        
+
+        _logger.info(
+          "تسجيل الدخول بنجاح عبر جوجل - الانتقال إلى الشاشة الرئيسية",
+        );
+
         // Navigate to MainNavigationScreen
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (context) => MainNavigationScreen()),
           (route) => false, // Remove all previous routes
         );
-        
+
         // طلب التحقق من اكتمال الملف الشخصي بعد فترة قصيرة
         Future.delayed(const Duration(milliseconds: 500), () {
           MainNavigationScreen.checkProfileCompletion();
         });
-        
+
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -386,11 +390,15 @@ class _SignUpScreenState extends State<SignUpScreen> {
 
                 // Social Login Buttons
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.center, // Changed from spaceEvenly to center
+                  mainAxisAlignment:
+                      MainAxisAlignment
+                          .center, // Changed from spaceEvenly to center
                   children: [
                     // Google Login Button
                     SizedBox(
-                      width: MediaQuery.of(context).size.width * 0.7, // Adjusted width to be wider since it's the only button now
+                      width:
+                          MediaQuery.of(context).size.width *
+                          0.7, // Adjusted width to be wider since it's the only button now
                       child: ElevatedButton.icon(
                         onPressed: _isGoogleLoading ? null : _signUpWithGoogle,
                         icon: const FaIcon(

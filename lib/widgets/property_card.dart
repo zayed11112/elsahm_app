@@ -12,20 +12,20 @@ class PropertyCard extends StatelessWidget {
   final VoidCallback? onFavoriteToggle;
 
   const PropertyCard({
-    Key? key,
+    super.key,
     required this.apartment,
     required this.onTap,
     this.elevation = 2,
     this.showFavoriteButton = false,
     this.isFavorite = false,
     this.onFavoriteToggle,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     return Material(
       color: Colors.transparent,
       child: InkWell(
@@ -37,9 +37,10 @@ class PropertyCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(16),
             boxShadow: [
               BoxShadow(
-                color: isDarkMode 
-                  ? Colors.black.withOpacity(0.2)
-                  : Colors.black.withOpacity(0.1),
+                color:
+                    isDarkMode
+                        ? Colors.black.withValues(alpha: 0.2)
+                        : Colors.black.withValues(alpha: 0.1),
                 blurRadius: 8,
                 offset: Offset(0, elevation),
                 spreadRadius: 1,
@@ -59,47 +60,55 @@ class PropertyCard extends StatelessWidget {
                       topRight: Radius.circular(16),
                     ),
                     child: AspectRatio(
-                      aspectRatio: 4/3,
-                      child: apartment.imageUrls.isNotEmpty
-                        ? CachedNetworkImage(
-                            imageUrl: apartment.imageUrls[0],
-                            fit: BoxFit.cover,
-                            placeholder: (context, url) => Container(
-                              color: isDarkMode 
-                                ? Colors.grey[850] 
-                                : Colors.grey[200],
-                              child: const Center(
-                                child: CircularProgressIndicator(),
+                      aspectRatio: 4 / 3,
+                      child:
+                          apartment.imageUrls.isNotEmpty
+                              ? CachedNetworkImage(
+                                imageUrl: apartment.imageUrls[0],
+                                fit: BoxFit.cover,
+                                placeholder:
+                                    (context, url) => Container(
+                                      color:
+                                          isDarkMode
+                                              ? Colors.grey[850]
+                                              : Colors.grey[200],
+                                      child: const Center(
+                                        child: CircularProgressIndicator(),
+                                      ),
+                                    ),
+                                errorWidget:
+                                    (context, url, error) => Container(
+                                      color:
+                                          isDarkMode
+                                              ? Colors.grey[850]
+                                              : Colors.grey[200],
+                                      child: Icon(
+                                        Icons.broken_image,
+                                        size: 40,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.grey[700]
+                                                : Colors.grey[400],
+                                      ),
+                                    ),
+                              )
+                              : Container(
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[850]
+                                        : Colors.grey[200],
+                                child: Icon(
+                                  Icons.apartment,
+                                  size: 40,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[700]
+                                          : Colors.grey[400],
+                                ),
                               ),
-                            ),
-                            errorWidget: (context, url, error) => Container(
-                              color: isDarkMode 
-                                ? Colors.grey[850] 
-                                : Colors.grey[200],
-                              child: Icon(
-                                Icons.broken_image,
-                                size: 40,
-                                color: isDarkMode
-                                  ? Colors.grey[700]
-                                  : Colors.grey[400],
-                              ),
-                            ),
-                          )
-                        : Container(
-                            color: isDarkMode 
-                              ? Colors.grey[850] 
-                              : Colors.grey[200],
-                            child: Icon(
-                              Icons.apartment,
-                              size: 40,
-                              color: isDarkMode
-                                ? Colors.grey[700]
-                                : Colors.grey[400],
-                            ),
-                          ),
                     ),
                   ),
-                  
+
                   // Price badge
                   Positioned(
                     bottom: 10,
@@ -114,7 +123,7 @@ class PropertyCard extends StatelessWidget {
                         borderRadius: BorderRadius.circular(8),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.2),
+                            color: Colors.black.withValues(alpha: 0.2),
                             blurRadius: 4,
                             offset: const Offset(0, 2),
                           ),
@@ -129,7 +138,7 @@ class PropertyCard extends StatelessWidget {
                       ),
                     ),
                   ),
-                  
+
                   // Favorite button if enabled
                   if (showFavoriteButton)
                     Positioned(
@@ -137,13 +146,14 @@ class PropertyCard extends StatelessWidget {
                       right: 10,
                       child: Container(
                         decoration: BoxDecoration(
-                          color: isDarkMode 
-                            ? Colors.black.withOpacity(0.4)
-                            : Colors.white.withOpacity(0.8),
+                          color:
+                              isDarkMode
+                                  ? Colors.black.withValues(alpha: 0.4)
+                                  : Colors.white.withValues(alpha: 0.8),
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: Colors.black.withOpacity(0.2),
+                              color: Colors.black.withValues(alpha: 0.2),
                               blurRadius: 4,
                               offset: const Offset(0, 2),
                             ),
@@ -151,14 +161,13 @@ class PropertyCard extends StatelessWidget {
                         ),
                         child: IconButton(
                           icon: Icon(
-                            isFavorite 
-                              ? Icons.favorite
-                              : Icons.favorite_border,
-                            color: isFavorite
-                              ? Colors.red
-                              : isDarkMode
-                                ? Colors.white
-                                : Colors.grey[800],
+                            isFavorite ? Icons.favorite : Icons.favorite_border,
+                            color:
+                                isFavorite
+                                    ? Colors.red
+                                    : isDarkMode
+                                    ? Colors.white
+                                    : Colors.grey[800],
                           ),
                           onPressed: onFavoriteToggle,
                           constraints: const BoxConstraints(
@@ -173,7 +182,7 @@ class PropertyCard extends StatelessWidget {
                     ),
                 ],
               ),
-              
+
               // Property details
               Padding(
                 padding: const EdgeInsets.all(12.0),
@@ -189,9 +198,9 @@ class PropertyCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    
+
                     const SizedBox(height: 4),
-                    
+
                     // Location with icon
                     Row(
                       children: [
@@ -211,30 +220,30 @@ class PropertyCard extends StatelessWidget {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 8),
-                    
+
                     // Property features row (rooms, bathrooms)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
                         _buildFeature(
-                          context, 
-                          Icons.bed, 
+                          context,
+                          Icons.bed,
                           '${apartment.rooms}',
-                          'غرف'
+                          'غرف',
                         ),
                         _buildFeature(
-                          context, 
-                          Icons.bed, 
+                          context,
+                          Icons.bed,
                           '${apartment.bathrooms}',
-                          'سرير'
+                          'سرير',
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 12),
-                    
+
                     // Details button
                     SizedBox(
                       width: double.infinity,
@@ -246,7 +255,9 @@ class PropertyCard extends StatelessWidget {
                             borderRadius: BorderRadius.circular(8),
                           ),
                           elevation: 0,
-                          backgroundColor: theme.colorScheme.primary.withOpacity(0.9),
+                          backgroundColor: theme.colorScheme.primary.withValues(
+                            alpha: 0.9,
+                          ),
                         ),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
@@ -278,17 +289,17 @@ class PropertyCard extends StatelessWidget {
       ),
     );
   }
-  
+
   // Helper method to build feature items
   Widget _buildFeature(
-    BuildContext context, 
-    IconData icon, 
+    BuildContext context,
+    IconData icon,
     String value,
     String label,
   ) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     return Column(
       children: [
         Row(
@@ -318,4 +329,4 @@ class PropertyCard extends StatelessWidget {
       ],
     );
   }
-} 
+}

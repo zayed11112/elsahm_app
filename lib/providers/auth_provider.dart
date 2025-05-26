@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:google_sign_in/google_sign_in.dart';
+import 'package:logging/logging.dart';
 import '../services/firestore_service.dart'; // Import FirestoreService
 import '../services/notification_service.dart'; // Import NotificationService
 import '../main.dart' as main; // Import main.dart for OneSignal functions
@@ -16,7 +17,9 @@ class AuthProvider with ChangeNotifier {
   final FirebaseAuth _auth;
   final FirestoreService _firestoreService =
       FirestoreService(); // Instantiate FirestoreService
-  final NotificationService _notificationService = NotificationService(); // Instantiate NotificationService
+  final NotificationService _notificationService =
+      NotificationService(); // Instantiate NotificationService
+  final Logger _logger = Logger('AuthProvider');
   User? _user;
   AuthStatus _status = AuthStatus.uninitialized;
   bool _isNewUser = false;
@@ -33,7 +36,7 @@ class AuthProvider with ChangeNotifier {
   AuthStatus get status => _status;
   User? get user => _user;
   bool get isAuthenticated => status == AuthStatus.authenticated;
-  
+
   // Get and reset isNewUser flag
   bool getAndResetIsNewUser() {
     final wasNewUser = _isNewUser;
@@ -47,21 +50,21 @@ class AuthProvider with ChangeNotifier {
       if (_user != null) {
         try {
           await _notificationService.deleteToken(_user!.uid);
-          
+
           // إزالة ربط OneSignal للمستخدم
           await main.removeOneSignalExternalUserId();
         } catch (e) {
-          print('Error deleting tokens: $e');
+          _logger.severe('Error deleting tokens: $e');
         }
       }
-      
+
       _user = null;
       _status = AuthStatus.unauthenticated;
-      print('Auth state changed: User signed out');
+      _logger.info('Auth state changed: User signed out');
     } else {
       _user = firebaseUser;
       _status = AuthStatus.authenticated;
-      
+
       // Check provider info
       String authProvider = "email/password";
       if (firebaseUser.providerData.isNotEmpty) {
@@ -70,34 +73,36 @@ class AuthProvider with ChangeNotifier {
           authProvider = 'Google';
         }
       }
-      
-      print('User authenticated with provider: $authProvider');
-      
+
+      _logger.info('User authenticated with provider: $authProvider');
+
       // Check if this is a brand new user in Firestore
       final isCreated = await _firestoreService.createInitialUserProfile(
         _user!.uid,
         _user!.email!,
       );
-      
+
       // If a new profile was created in Firestore, ensure the user is marked as new
       if (isCreated) {
         _isNewUser = true;
       }
-      
+
       // Save FCM token for the user
       try {
-        print('Saving FCM token for user: ${_user!.uid} (Provider: $authProvider)');
+        _logger.info(
+          'Saving FCM token for user: ${_user!.uid} (Provider: $authProvider)',
+        );
         await _notificationService.saveToken(_user!.uid);
-        print('FCM token saved successfully');
-        
+        _logger.info('FCM token saved successfully');
+
         // ربط معرف المستخدم في OneSignal
         await main.setOneSignalExternalUserId(_user!.uid);
-        print('OneSignal user ID set successfully');
+        _logger.info('OneSignal user ID set successfully');
       } catch (e) {
-        print('Error saving tokens: $e');
+        _logger.severe('Error saving tokens: $e');
       }
-      
-      print(
+
+      _logger.info(
         "Auth state changed: User authenticated - UID: ${_user?.uid}, Provider: $authProvider, Is new user: $_isNewUser",
       );
     }
@@ -109,24 +114,27 @@ class AuthProvider with ChangeNotifier {
     _status = AuthStatus.authenticating;
     notifyListeners();
     try {
-      print('Starting sign up for email: $email');
+      _logger.info('Starting sign up for email: $email');
       _isNewUser = true; // Mark as new user before creating account
       await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
-      
-      print('Sign up successful - User is new: $_isNewUser');
+
+      _logger.info('Sign up successful - User is new: $_isNewUser');
       // State change will be handled by the listener (_onAuthStateChanged)
       return true;
     } on FirebaseAuthException catch (e) {
-      print('Sign Up Error: ${e.message}');
+      _logger.severe('Sign Up Error: ${e.message}');
       _status = AuthStatus.unauthenticated; // Reset status on error
       notifyListeners();
-      // TODO: Handle specific errors (e.g., email-already-in-use) and show user feedback
+      //  Implement specific error handling for Firebase Auth exceptions
+      // - email-already-in-use: Show "Email already registered" message
+      // - weak-password: Show "Password too weak" message
+      // - invalid-email: Show "Invalid email format" message
       return false;
     } catch (e) {
-      print('Sign Up Error: $e');
+      _logger.severe('Sign Up Error: $e');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
@@ -142,13 +150,17 @@ class AuthProvider with ChangeNotifier {
       // State change will be handled by the listener (_onAuthStateChanged)
       return true;
     } on FirebaseAuthException catch (e) {
-      print('Sign In Error: ${e.message}');
+      _logger.severe('Sign In Error: ${e.message}');
       _status = AuthStatus.unauthenticated; // Reset status on error
       notifyListeners();
-      // TODO: Handle specific errors (e.g., user-not-found, wrong-password) and show user feedback
+      // Implement specific error handling for Firebase Auth exceptions
+      // - user-not-found: Show "No account found with this email" message
+      // - wrong-password: Show "Incorrect password" message
+      // - invalid-email: Show "Invalid email format" message
+      // - user-disabled: Show "Account has been disabled" message
       return false;
     } catch (e) {
-      print('Sign In Error: $e');
+      _logger.severe('Sign In Error: $e');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
@@ -164,7 +176,7 @@ class AuthProvider with ChangeNotifier {
       await _auth.signOut();
       // State change will be handled by the listener (_onAuthStateChanged)
     } catch (e) {
-      print('Error during sign out: $e');
+      _logger.severe('Error during sign out: $e');
       // تسجيل الخروج من Firebase على أي حال
       await _auth.signOut();
     }
@@ -191,12 +203,12 @@ class AuthProvider with ChangeNotifier {
       // Change password
       await _user!.updatePassword(newPassword);
 
-      print('Password updated successfully');
+      _logger.info('Password updated successfully');
     } on FirebaseAuthException catch (e) {
-      print('Change Password Error: ${e.message}');
+      _logger.severe('Change Password Error: ${e.message}');
       throw e.code;
     } catch (e) {
-      print('Change Password Error: $e');
+      _logger.severe('Change Password Error: $e');
       throw e.toString();
     }
   }
@@ -205,12 +217,12 @@ class AuthProvider with ChangeNotifier {
   Future<void> resetPassword(String email) async {
     try {
       await _auth.sendPasswordResetEmail(email: email);
-      print('Password reset email sent to $email');
+      _logger.info('Password reset email sent to $email');
     } on FirebaseAuthException catch (e) {
-      print('Reset Password Error: ${e.message}');
+      _logger.severe('Reset Password Error: ${e.message}');
       throw e.code;
     } catch (e) {
-      print('Reset Password Error: $e');
+      _logger.severe('Reset Password Error: $e');
       throw e.toString();
     }
   }
@@ -221,9 +233,9 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
-      print('Starting Google sign in');
+      _logger.info('Starting Google sign in');
       _isNewUser = true; // Assume new user before authentication
-      
+
       // Trigger the Google sign-in flow
       final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
 
@@ -231,7 +243,7 @@ class AuthProvider with ChangeNotifier {
       if (googleUser == null) {
         _status = AuthStatus.unauthenticated;
         notifyListeners();
-        print('Google Sign In cancelled by user');
+        _logger.info('Google Sign In cancelled by user');
         return false;
       }
 
@@ -246,21 +258,25 @@ class AuthProvider with ChangeNotifier {
       );
 
       // Sign in to Firebase with the Google credential
-      final UserCredential userCredential = await _auth.signInWithCredential(credential);
-      
-      print('Google sign in successful - User is new: $_isNewUser');
-      print('Google user email: ${userCredential.user?.email}, UID: ${userCredential.user?.uid}');
-      print('FCM token will be saved in _onAuthStateChanged method');
-      
+      final UserCredential userCredential = await _auth.signInWithCredential(
+        credential,
+      );
+
+      _logger.info('Google sign in successful - User is new: $_isNewUser');
+      _logger.info(
+        'Google user email: ${userCredential.user?.email}, UID: ${userCredential.user?.uid}',
+      );
+      _logger.info('FCM token will be saved in _onAuthStateChanged method');
+
       // State change will be handled by the listener (_onAuthStateChanged)
       return true;
     } on FirebaseAuthException catch (e) {
-      print('Google Sign In Error: ${e.message}');
+      _logger.severe('Google Sign In Error: ${e.message}');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
     } catch (e) {
-      print('Google Sign In Error: $e');
+      _logger.severe('Google Sign In Error: $e');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       return false;
@@ -270,7 +286,7 @@ class AuthProvider with ChangeNotifier {
   // تحديث الملف الشخصي للمستخدم
   Future<bool> updateUserProfile(String fullName) async {
     if (_user == null) {
-      print('Cannot update profile: User not authenticated');
+      _logger.warning('Cannot update profile: User not authenticated');
       return false;
     }
 
@@ -280,10 +296,10 @@ class AuthProvider with ChangeNotifier {
         'name': fullName,
       });
 
-      print('User profile updated with name: $fullName');
+      _logger.info('User profile updated with name: $fullName');
       return true;
     } catch (e) {
-      print('Update User Profile Error: $e');
+      _logger.severe('Update User Profile Error: $e');
       return false;
     }
   }

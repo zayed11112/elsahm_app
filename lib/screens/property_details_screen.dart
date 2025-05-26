@@ -11,13 +11,12 @@ import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/services.dart';
 import 'package:webview_flutter/webview_flutter.dart';
-import 'package:lottie/lottie.dart';
+
 import '../providers/auth_provider.dart';
 import '../utils/auth_utils.dart';
 import '../screens/checkout_screen.dart';
-import '../utils/navigation_utils.dart'; // Import NavigationUtils
 
-// TODO: Create a Property model in lib/models/property.dart
+//  Create a Property model in lib/models/property.dart
 
 class PropertyDetailsScreen extends StatefulWidget {
   final dynamic property;
@@ -100,7 +99,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         property is Apartment && property.commission != null
             ? property.commission
             : 0.0;
-            
+
     // استخراج العربون إذا كان متوفرًا
     final double deposit =
         property is Apartment && property.deposit != null
@@ -134,7 +133,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   // Prevent multiple navigation attempts
                   if (_isNavigating) return;
                   _isNavigating = true;
-                  
+
                   // Use the safe navigation method instead of popUntil
                   if (Navigator.canPop(context)) {
                     Navigator.of(context).pop();
@@ -142,7 +141,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                     // Fallback if we can't pop
                     Navigator.of(context).pushReplacementNamed('/');
                   }
-                  
+
                   // Reset the flag after navigation
                   Future.delayed(const Duration(milliseconds: 300), () {
                     if (mounted) {
@@ -185,12 +184,13 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       try {
                         // Store these values before awaiting
                         final String propertyName = property.name;
+                        final scaffoldMessenger = ScaffoldMessenger.of(context);
                         // Call async method
                         final isNowFavorite = await favoritesProvider
                             .toggleFavorite(property);
                         // Check if widget is still mounted after async call
                         if (mounted) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          scaffoldMessenger.showSnackBar(
                             SnackBar(
                               content: Text(
                                 isNowFavorite
@@ -432,9 +432,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               color:
                                   Theme.of(context).brightness ==
                                           Brightness.dark
-                                      ? Colors.blue.withAlpha(
-                                        51,
-                                      ) // 0.2 opacity
+                                      ? Colors.blue.withAlpha(51) // 0.2 opacity
                                       : Colors.blue.withAlpha(
                                         51,
                                       ), // 0.2 opacity
@@ -511,35 +509,42 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             ),
                           ),
                         ),
-                        
+
                         // إضافة ملاحظة الحجز أسفل الزر
                         if (isAvailable && (deposit > 0 || commission > 0))
                           Container(
                             margin: const EdgeInsets.only(top: 12),
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 12,
+                            ),
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                                 colors: [
-                                  Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.blue.withAlpha(40)
-                                    : Colors.blue.withAlpha(20),
-                                  Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.blue.withAlpha(15)
-                                    : Colors.blue.withAlpha(5),
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.blue.withAlpha(40)
+                                      : Colors.blue.withAlpha(20),
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.blue.withAlpha(15)
+                                      : Colors.blue.withAlpha(5),
                                 ],
                               ),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.blue.withAlpha(80)
-                                  : Colors.blue.withAlpha(50),
+                                color:
+                                    Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.blue.withAlpha(80)
+                                        : Colors.blue.withAlpha(50),
                                 width: 1,
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.04),
+                                  color: Colors.black.withValues(alpha: 0.04),
                                   blurRadius: 3,
                                   offset: const Offset(0, 1),
                                 ),
@@ -554,7 +559,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                     Container(
                                       padding: const EdgeInsets.all(6),
                                       decoration: BoxDecoration(
-                                        color: colorScheme.primary.withAlpha(30),
+                                        color: colorScheme.primary.withAlpha(
+                                          30,
+                                        ),
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                       child: Icon(
@@ -568,101 +575,126 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                       'تفاصيل الحجز',
                                       style: textTheme.titleSmall?.copyWith(
                                         fontWeight: FontWeight.bold,
-                                        color: Theme.of(context).brightness == Brightness.dark
-                                          ? Colors.white
-                                          : Colors.black87,
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.white
+                                                : Colors.black87,
                                       ),
                                     ),
                                   ],
                                 ),
-                                
+
                                 const SizedBox(height: 12),
-                                
+
                                 // Payment details
                                 Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
                                   children: [
                                     Expanded(
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: Colors.blue.withAlpha(30),
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Column(
                                           children: [
                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
-                                                Icon(Icons.account_balance_wallet, 
-                                                  size: 16, 
+                                                Icon(
+                                                  Icons.account_balance_wallet,
+                                                  size: 16,
                                                   color: Colors.blue[700],
                                                 ),
                                                 const SizedBox(width: 5),
                                                 Text(
                                                   'العربون',
-                                                  style: textTheme.bodyMedium?.copyWith(
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Colors.blue[800],
-                                                  ),
+                                                  style: textTheme.bodyMedium
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color: Colors.blue[800],
+                                                      ),
                                                 ),
                                               ],
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              '${deposit.toStringAsFixed(0)}',
-                                              style: textTheme.titleMedium?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.blue[900],
-                                              ),
+                                              deposit.toStringAsFixed(0),
+                                              style: textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.blue[900],
+                                                  ),
                                             ),
                                           ],
                                         ),
                                       ),
                                     ),
                                     Container(
-                                      margin: const EdgeInsets.symmetric(horizontal: 8),
+                                      margin: const EdgeInsets.symmetric(
+                                        horizontal: 8,
+                                      ),
                                       child: Icon(
                                         Icons.add,
                                         size: 18,
-                                        color: Theme.of(context).brightness == Brightness.dark
-                                          ? Colors.grey[400]
-                                          : Colors.grey[600],
+                                        color:
+                                            Theme.of(context).brightness ==
+                                                    Brightness.dark
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
                                       ),
                                     ),
                                     Expanded(
                                       child: Container(
-                                        padding: const EdgeInsets.symmetric(vertical: 8),
+                                        padding: const EdgeInsets.symmetric(
+                                          vertical: 8,
+                                        ),
                                         decoration: BoxDecoration(
                                           color: Colors.amber.withAlpha(30),
-                                          borderRadius: BorderRadius.circular(8),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
                                         ),
                                         child: Column(
                                           children: [
                                             Row(
-                                              mainAxisAlignment: MainAxisAlignment.center,
+                                              mainAxisAlignment:
+                                                  MainAxisAlignment.center,
                                               children: [
-                                                Icon(Icons.monetization_on, 
-                                                  size: 16, 
+                                                Icon(
+                                                  Icons.monetization_on,
+                                                  size: 16,
                                                   color: Colors.amber[700],
                                                 ),
                                                 const SizedBox(width: 5),
                                                 Text(
                                                   'العمولة',
-                                                  style: textTheme.bodyMedium?.copyWith(
-                                                    fontWeight: FontWeight.w500,
-                                                    color: Colors.amber[800],
-                                                  ),
+                                                  style: textTheme.bodyMedium
+                                                      ?.copyWith(
+                                                        fontWeight:
+                                                            FontWeight.w500,
+                                                        color:
+                                                            Colors.amber[800],
+                                                      ),
                                                 ),
                                               ],
                                             ),
                                             const SizedBox(height: 4),
                                             Text(
-                                              '${commission.toStringAsFixed(0)}',
-                                              style: textTheme.titleMedium?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.amber[900],
-                                              ),
+                                              commission.toStringAsFixed(0),
+                                              style: textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    fontWeight: FontWeight.bold,
+                                                    color: Colors.amber[900],
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -670,13 +702,16 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                     ),
                                   ],
                                 ),
-                                
+
                                 const SizedBox(height: 10),
-                                
+
                                 // Total
                                 Container(
                                   width: double.infinity,
-                                  padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 8,
+                                    horizontal: 16,
+                                  ),
                                   decoration: BoxDecoration(
                                     color: colorScheme.primary.withAlpha(30),
                                     borderRadius: BorderRadius.circular(8),
@@ -686,7 +721,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                     ),
                                   ),
                                   child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
                                         'الإجمالي',
@@ -695,7 +731,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                         ),
                                       ),
                                       Text(
-                                        '${(deposit + commission).toStringAsFixed(0)}',
+                                        (deposit + commission).toStringAsFixed(
+                                          0,
+                                        ),
                                         style: textTheme.titleMedium?.copyWith(
                                           fontWeight: FontWeight.bold,
                                           color: colorScheme.primary,
@@ -874,8 +912,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         BoxShadow(
                           color:
                               Theme.of(context).brightness == Brightness.dark
-                                  ? Colors.black.withOpacity(0.2)
-                                  : Colors.black.withOpacity(0.07),
+                                  ? Colors.black.withValues(alpha: 0.2)
+                                  : Colors.black.withValues(alpha: 0.07),
                           blurRadius: 15,
                           offset: const Offset(0, 5),
                         ),
@@ -911,7 +949,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               decoration: BoxDecoration(
                                 color: Theme.of(
                                   context,
-                                ).primaryColor.withOpacity(0.08),
+                                ).primaryColor.withValues(alpha: 0.08),
                                 borderRadius: BorderRadius.circular(14),
                               ),
                               child: Icon(
@@ -960,8 +998,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 color:
                                     Theme.of(context).brightness ==
                                             Brightness.dark
-                                        ? Colors.black.withOpacity(0.2)
-                                        : Colors.black.withOpacity(0.03),
+                                        ? Colors.black.withValues(alpha: 0.2)
+                                        : Colors.black.withValues(alpha: 0.03),
                                 blurRadius: 6,
                                 offset: const Offset(0, 2),
                               ),
@@ -1126,7 +1164,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 ),
                           ),
                         ),
-                        
+
                         // إضافة اللوجو بشفافية 100% (مرئي بالكامل)
                         Positioned(
                           bottom: 45, // أعلى قليلاً من نقاط التنقل
@@ -1699,15 +1737,15 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
 
   Widget _buildVideoThumbnail(String videoId, int index) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final isSupabaseUrl = videoId.startsWith('http');
-    
+
     // الحصول على صور العقار
     List<String> imageUrls = property.imageUrls ?? [];
     // اختيار الصورة المناسبة للفيديو، إذا لم تكن متوفرة استخدم الصورة الأولى
-    String backgroundImageUrl = imageUrls.isEmpty 
-        ? '' 
-        : imageUrls.length > index 
-            ? imageUrls[index] 
+    String backgroundImageUrl =
+        imageUrls.isEmpty
+            ? ''
+            : imageUrls.length > index
+            ? imageUrls[index]
             : imageUrls[0];
 
     return Container(
@@ -1747,57 +1785,72 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
               Stack(
                 children: [
                   // خلفية من صورة العقار
-                  Container(
+                  SizedBox(
                     height: 124,
                     width: double.infinity,
-                    child: backgroundImageUrl.isNotEmpty
-                      ? CachedNetworkImage(
-                          imageUrl: backgroundImageUrl,
-                          fit: BoxFit.cover,
-                          placeholder: (context, url) => Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Theme.of(context).primaryColor.withAlpha(25),
-                                  Theme.of(context).primaryColor.withAlpha(76),
-                                ],
+                    child:
+                        backgroundImageUrl.isNotEmpty
+                            ? CachedNetworkImage(
+                              imageUrl: backgroundImageUrl,
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (context, url) => Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Theme.of(
+                                            context,
+                                          ).primaryColor.withAlpha(25),
+                                          Theme.of(
+                                            context,
+                                          ).primaryColor.withAlpha(76),
+                                        ],
+                                      ),
+                                    ),
+                                    child: Center(
+                                      child: Icon(
+                                        Icons.image,
+                                        size: 42,
+                                        color: Colors.white.withAlpha(178),
+                                      ),
+                                    ),
+                                  ),
+                              errorWidget:
+                                  (context, url, error) => Container(
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        begin: Alignment.topCenter,
+                                        end: Alignment.bottomCenter,
+                                        colors: [
+                                          Theme.of(
+                                            context,
+                                          ).primaryColor.withAlpha(25),
+                                          Theme.of(
+                                            context,
+                                          ).primaryColor.withAlpha(76),
+                                        ],
+                                      ),
+                                    ),
+                                  ),
+                            )
+                            : Container(
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                  colors: [
+                                    Theme.of(
+                                      context,
+                                    ).primaryColor.withAlpha(25),
+                                    Theme.of(
+                                      context,
+                                    ).primaryColor.withAlpha(76),
+                                  ],
+                                ),
                               ),
                             ),
-                            child: Center(
-                              child: Icon(
-                                Icons.image,
-                                size: 42,
-                                color: Colors.white.withAlpha(178),
-                              ),
-                            ),
-                          ),
-                          errorWidget: (context, url, error) => Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Theme.of(context).primaryColor.withAlpha(25),
-                                  Theme.of(context).primaryColor.withAlpha(76),
-                                ],
-                              ),
-                            ),
-                          ),
-                        )
-                      : Container(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                Theme.of(context).primaryColor.withAlpha(25),
-                                Theme.of(context).primaryColor.withAlpha(76),
-                              ],
-                            ),
-                          ),
-                        ),
                   ),
 
                   // طبقة شفافة داكنة للتباين
@@ -1814,7 +1867,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       ),
                     ),
                   ),
-                  
+
                   // أيقونة الفيديو كعلامة مائية
                   Positioned.fill(
                     child: Opacity(
@@ -1837,9 +1890,10 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         width: 54,
                         height: 54,
                         decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? const Color(0xFF2A2A2A).withAlpha(200)
-                              : Colors.white.withAlpha(229), // 0.9 opacity
+                          color:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? const Color(0xFF2A2A2A).withAlpha(200)
+                                  : Colors.white.withAlpha(229), // 0.9 opacity
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
@@ -1902,7 +1956,10 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
               SizedBox(
                 height: 52, // ارتفاع ثابت للجزء السفلي
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
@@ -1910,9 +1967,12 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color: Theme.of(context).brightness == Brightness.dark
-                              ? Theme.of(context).primaryColor.withAlpha(38)
-                              : Theme.of(context).primaryColor.withAlpha(25),
+                          color:
+                              Theme.of(context).brightness == Brightness.dark
+                                  ? Theme.of(context).primaryColor.withAlpha(38)
+                                  : Theme.of(
+                                    context,
+                                  ).primaryColor.withAlpha(25),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -1940,9 +2000,11 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             Text(
                               'اضغط للمشاهدة',
                               style: TextStyle(
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.grey[400]
-                                    : Colors.grey[600],
+                                color:
+                                    Theme.of(context).brightness ==
+                                            Brightness.dark
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                 fontSize: 11,
                               ),
                               maxLines: 1,
@@ -2015,7 +2077,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       color: isDarkMode ? Colors.blue[900] : Colors.blue[50],
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: theme.colorScheme.primary.withOpacity(0.3),
+                        color: theme.colorScheme.primary.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -2053,7 +2115,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       color: isDarkMode ? Colors.green[900] : Colors.green[50],
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(
-                        color: Colors.green.withOpacity(0.3),
+                        color: Colors.green.withValues(alpha: 0.3),
                         width: 1,
                       ),
                     ),
@@ -2162,7 +2224,11 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                             (context, url, error) => Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Icon(Icons.error, color: Colors.red[300], size: 50),
+                                Icon(
+                                  Icons.error,
+                                  color: Colors.red[300],
+                                  size: 50,
+                                ),
                                 const SizedBox(height: 10),
                                 Container(
                                   padding: const EdgeInsets.symmetric(
@@ -2170,7 +2236,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                                     vertical: 8,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.red.withOpacity(0.1),
+                                    color: Colors.red.withValues(alpha: 0.1),
                                     borderRadius: BorderRadius.circular(20),
                                   ),
                                   child: const Text(
@@ -2185,7 +2251,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                             ),
                       ),
                     ),
-                    
+
                     // إضافة اللوجو بشفافية 20% (شفاف قليلاً)
                     Positioned(
                       bottom: size.height / 3, // وضعه في الثلث السفلي من الشاشة
@@ -2226,7 +2292,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.6),
+                    color: Colors.black.withValues(alpha: 0.6),
                     borderRadius: BorderRadius.circular(6),
                   ),
                   child: const Text(
@@ -2248,7 +2314,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
             left: 10,
             child: Container(
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 borderRadius: BorderRadius.circular(30),
               ),
               child: IconButton(
@@ -2257,7 +2323,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                   // Prevent multiple navigation attempts
                   if (_isNavigating) return;
                   _isNavigating = true;
-                  
+
                   // Use safe pop
                   if (Navigator.canPop(context)) {
                     Navigator.of(context).pop();
@@ -2265,7 +2331,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                     // Fallback if we can't pop
                     Navigator.of(context).pushReplacementNamed('/');
                   }
-                  
+
                   // Reset the flag after navigation
                   Future.delayed(const Duration(milliseconds: 300), () {
                     if (mounted) {
@@ -2286,10 +2352,10 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -2327,10 +2393,10 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                 width: 50,
                 height: 50,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.3),
+                  color: Colors.black.withValues(alpha: 0.3),
                   shape: BoxShape.circle,
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     width: 1,
                   ),
                 ),
@@ -2371,10 +2437,10 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                   vertical: 10,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.6),
+                  color: Colors.black.withValues(alpha: 0.6),
                   borderRadius: BorderRadius.circular(30),
                   border: Border.all(
-                    color: Colors.white.withOpacity(0.15),
+                    color: Colors.white.withValues(alpha: 0.15),
                     width: 1,
                   ),
                 ),
@@ -2422,7 +2488,6 @@ class _FullScreenVideoPlayer extends StatefulWidget {
 
 class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
   final Logger _logger = Logger('VideoPlayer');
-  bool _isNavigating = false; // Add navigation tracking
   VideoPlayerController? _videoPlayerController;
   ChewieController? _chewieController;
   WebViewController? _webViewController;
@@ -2446,10 +2511,11 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
 
     try {
       // Check if the videoId is a Supabase URL
-      final String videoUrl = widget.videoId.startsWith('http') 
-          ? widget.videoId
-          : _getLegacyVideoUrl(widget.videoId);
-          
+      final String videoUrl =
+          widget.videoId.startsWith('http')
+              ? widget.videoId
+              : _getLegacyVideoUrl(widget.videoId);
+
       _logger.info('محاولة تشغيل الفيديو: $videoUrl');
 
       // التخلص من المشغل السابق إذا كان موجوداً
@@ -2484,7 +2550,11 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
         looping: true,
         aspectRatio: _videoPlayerController!.value.aspectRatio,
         deviceOrientationsAfterFullScreen: [DeviceOrientation.portraitUp],
-        deviceOrientationsOnEnterFullScreen: [DeviceOrientation.portraitUp, DeviceOrientation.landscapeLeft, DeviceOrientation.landscapeRight],
+        deviceOrientationsOnEnterFullScreen: [
+          DeviceOrientation.portraitUp,
+          DeviceOrientation.landscapeLeft,
+          DeviceOrientation.landscapeRight,
+        ],
         allowMuting: true,
         allowFullScreen: true,
         showControls: true,
@@ -2598,7 +2668,7 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
                           vertical: 12,
                         ),
                         decoration: BoxDecoration(
-                          color: Colors.black.withOpacity(0.5),
+                          color: Colors.black.withValues(alpha: 0.5),
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: Column(
@@ -2651,10 +2721,11 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
 
   Widget _buildErrorWidget() {
     final isSupabaseUrl = widget.videoId.startsWith('http');
-    final displayErrorMessage = isSupabaseUrl 
-        ? 'فشل تشغيل الفيديو من Supabase: $_errorMessage'
-        : _errorMessage;
-    
+    final displayErrorMessage =
+        isSupabaseUrl
+            ? 'فشل تشغيل الفيديو من Supabase: $_errorMessage'
+            : _errorMessage;
+
     return Center(
       child: SingleChildScrollView(
         child: Column(
@@ -2721,9 +2792,11 @@ class _FullScreenVideoPlayerState extends State<_FullScreenVideoPlayer> {
             // زر لفتح الفيديو في المتصفح
             OutlinedButton.icon(
               onPressed: () {
-                final url = Uri.parse(widget.videoId.startsWith('http')
-                    ? widget.videoId
-                    : 'https://iframe.mediadelivery.net/embed/420087/${widget.videoId}');
+                final url = Uri.parse(
+                  widget.videoId.startsWith('http')
+                      ? widget.videoId
+                      : 'https://iframe.mediadelivery.net/embed/420087/${widget.videoId}',
+                );
                 launchUrl(url, mode: LaunchMode.externalApplication);
               },
               icon: const Icon(Icons.open_in_browser),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart'; // Import Lottie
 import 'package:provider/provider.dart';
 import 'dart:async'; // لإدارة عمليات التحميل المتأخر
+import 'dart:developer' as developer; // DIAGNOSTIC: Added proper logging
 import '../providers/theme_provider.dart';
 import '../providers/navigation_provider.dart';
 import '../providers/auth_provider.dart'; // Import AuthProvider
@@ -13,7 +14,7 @@ import 'favorites_screen.dart';
 import 'search_screen.dart';
 import 'categories_screen.dart';
 import 'more_screen.dart'; // Import the new MoreScreen
-import 'dart:math';
+// DIAGNOSTIC: Removed unused dart:math import
 import 'wallet_screen.dart'; // Import wallet screen for navigation
 import 'login_screen.dart'; // Import LoginScreen
 import 'edit_profile_screen.dart'; // Import EditProfileScreen
@@ -26,14 +27,14 @@ import 'edit_profile_screen.dart'; // Import EditProfileScreen
 // Removed the placeholder AccountScreen class definition
 
 class MainNavigationScreen extends StatefulWidget {
-  // Create a static key that can be accessed from anywhere to improve stability
-  static final GlobalKey<_MainNavigationScreenState> navigatorKey = GlobalKey<_MainNavigationScreenState>();
+  // DIAGNOSTIC: Made navigatorKey public to fix library_private_types_in_public_api
+  static final GlobalKey<MainNavigationScreenState> navigatorKey = GlobalKey<MainNavigationScreenState>();
   
   // Use the static key when creating a new instance
   MainNavigationScreen({Key? key}) : super(key: navigatorKey);
 
   @override
-  State<MainNavigationScreen> createState() => _MainNavigationScreenState();
+  State<MainNavigationScreen> createState() => MainNavigationScreenState();
   
   // Static method to check profile completion from anywhere
   static void checkProfileCompletion() {
@@ -41,10 +42,10 @@ class MainNavigationScreen extends StatefulWidget {
   }
 }
 
-class _MainNavigationScreenState extends State<MainNavigationScreen> {
+class MainNavigationScreenState extends State<MainNavigationScreen> {
   // حالة تحميل البيانات
   bool _isDataLoading = false;
-  bool _isProfileChecked = false;
+  // DIAGNOSTIC: Removed unused _isProfileChecked field
 
   // قائمة الشاشات الرئيسية - تم حذف static لمنع المشاكل
   final List<Widget> _widgetOptions = <Widget>[
@@ -58,52 +59,52 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
   @override
   void initState() {
     super.initState();
-    print("==== MainNavigationScreen initState ====");
+    developer.log("==== MainNavigationScreen initState ====", name: 'MainNavigation');
     
     // تأخير تحميل البيانات لتسريع ظهور الواجهة
     _delayDataLoading();
     
-    // قم بالتحقق من اكتمال الملف الشخصي بعد عدة تأخيرات متتالية 
+    // قم بالتحقق من اكتمال الملف الشخصي بعد عدة تأخيرات متتالية
     // لضمان رؤية الرسالة حتى لو تأخر تحميل البيانات
     
     // محاولة فورية
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      print("تحقق فوري من اكتمال الملف الشخصي");
+      developer.log("تحقق فوري من اكتمال الملف الشخصي", name: 'ProfileCheck');
       if (mounted) checkProfileCompletion();
     });
     
     // محاولة بعد ثانيتين
     Future.delayed(const Duration(seconds: 2), () {
-      print("تحقق من اكتمال الملف الشخصي بعد ثانيتين");
+      developer.log("تحقق من اكتمال الملف الشخصي بعد ثانيتين", name: 'ProfileCheck');
       if (mounted) checkProfileCompletion();
     });
     
     // محاولة بعد خمس ثوان للتأكد
     Future.delayed(const Duration(seconds: 5), () {
-      print("تحقق من اكتمال الملف الشخصي بعد خمس ثوان");
+      developer.log("تحقق من اكتمال الملف الشخصي بعد خمس ثوان", name: 'ProfileCheck');
       if (mounted) checkProfileCompletion();
     });
   }
 
   // دالة للتحقق من اكتمال الملف الشخصي
   Future<void> checkProfileCompletion() async {
-    print("====== بدء التحقق من اكتمال الملف الشخصي ======");
+    developer.log("====== بدء التحقق من اكتمال الملف الشخصي ======", name: 'ProfileCheck');
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     
-    print("تحقق من اكتمال الملف الشخصي - مستخدم مسجل دخول: ${authProvider.isAuthenticated}");
-    print("معرف المستخدم: ${authProvider.user?.uid}");
+    developer.log("تحقق من اكتمال الملف الشخصي - مستخدم مسجل دخول: ${authProvider.isAuthenticated}", name: 'ProfileCheck');
+    developer.log("معرف المستخدم: ${authProvider.user?.uid}", name: 'ProfileCheck');
     
     // التحقق فقط إذا كان المستخدم مسجل دخول
     if (authProvider.isAuthenticated) {
       final firestoreService = FirestoreService();
       final userProfile = await firestoreService.getUserProfile(authProvider.user!.uid);
       
-      print("تم الحصول على الملف الشخصي: ${userProfile != null}");
+      developer.log("تم الحصول على الملف الشخصي: ${userProfile != null}", name: 'ProfileCheck');
       
       if (userProfile != null) {
         // التحقق مما إذا كان المستخدم جديدًا
         final isNewUser = authProvider.getAndResetIsNewUser();
-        print("هل المستخدم جديد: $isNewUser");
+        developer.log("هل المستخدم جديد: $isNewUser", name: 'ProfileCheck');
         
         // قائمة بالبيانات المفقودة
         final List<String> missingFields = [];
@@ -122,26 +123,26 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
           missingFields.add("الرقم الجامعي");
         }
         
-        print("البيانات المفقودة: $missingFields، مستخدم جديد: $isNewUser");
+        developer.log("البيانات المفقودة: $missingFields، مستخدم جديد: $isNewUser", name: 'ProfileCheck');
         
         // عرض رسالة فقط في حالة وجود بيانات مفقودة
         if (missingFields.isNotEmpty) {
           if (mounted) {
-            print("عرض رسالة استكمال الملف الشخصي");
+            developer.log("عرض رسالة استكمال الملف الشخصي", name: 'ProfileCheck');
             _showProfileCompletionDialog(userProfile, missingFields);
           } else {
-            print("Widget غير مثبت، لا يمكن عرض الرسالة");
+            developer.log("Widget غير مثبت، لا يمكن عرض الرسالة", name: 'ProfileCheck');
           }
         } else {
-          print("الملف الشخصي مكتمل، لا داعي لعرض رسالة");
+          developer.log("الملف الشخصي مكتمل، لا داعي لعرض رسالة", name: 'ProfileCheck');
         }
       } else {
-        print("لم يتم العثور على ملف شخصي للمستخدم");
+        developer.log("لم يتم العثور على ملف شخصي للمستخدم", name: 'ProfileCheck');
       }
     } else {
-      print("المستخدم غير مسجل دخول، لا يمكن التحقق من الملف الشخصي");
+      developer.log("المستخدم غير مسجل دخول، لا يمكن التحقق من الملف الشخصي", name: 'ProfileCheck');
     }
-    print("====== انتهاء التحقق من اكتمال الملف الشخصي ======");
+    developer.log("====== انتهاء التحقق من اكتمال الملف الشخصي ======", name: 'ProfileCheck');
   }
 
   // دالة لعرض رسالة استكمال الملف الشخصي
@@ -153,8 +154,8 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
       context: context,
       barrierDismissible: false, // منع إغلاق الرسالة بالنقر خارجها
       builder: (BuildContext context) {
-        return WillPopScope(
-          onWillPop: () async => false, // منع إغلاق الرسالة بزر العودة
+        return PopScope(
+          canPop: false, // DIAGNOSTIC: Updated from deprecated WillPopScope
           child: Dialog(
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
@@ -173,7 +174,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1), // DIAGNOSTIC: Updated from deprecated withOpacity
                     blurRadius: 10,
                     spreadRadius: 1,
                   ),
@@ -308,42 +309,36 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ? 'assets/images/logo_dark.png'
             : 'assets/images/logo_white.png';
 
-    // Always show the AppBar for now - we can adjust this later if needed
-    final bool showAppBar =
-        true; // Changed from navigationProvider.selectedIndex != 4
-
-    print(
+    developer.log(
       "Building MainNavigationScreen - Selected index: ${navigationProvider.selectedIndex}",
+      name: 'MainNavigation'
     );
-    print("Logo asset: $logoAsset");
-    print("Dark mode: $isDarkMode");
+    developer.log("Logo asset: $logoAsset", name: 'MainNavigation');
+    developer.log("Dark mode: $isDarkMode", name: 'MainNavigation');
 
     return Scaffold(
-      appBar:
-          showAppBar
-              ? AppBar(
-                // Conditionally show AppBar
-                title: Image.asset(
-                  logoAsset,
-                  height: 40, // Increased height slightly
-                  errorBuilder: (context, error, stackTrace) {
-                    print("Error loading logo: $error");
-                    return const Text('Elsahm'); // Fallback text
-                  },
-                ),
-                centerTitle: true, // Center the logo
-                leading: Builder(
-                  builder:
-                      (context) =>
-                          _buildMenuButton(context, isDarkMode),
-                ),
-                actions: [
-                  // User balance display with wallet animation
-                  if (_isDataLoading) // عرض الرصيد فقط بعد تحميل البيانات
-                    _buildBalanceWidget(context, isDarkMode),
-                ],
-              )
-              : null, // Set AppBar to null if showAppBar is false
+      appBar: AppBar(
+        // DIAGNOSTIC: Removed dead code by always showing AppBar
+        title: Image.asset(
+          logoAsset,
+          height: 40, // Increased height slightly
+          errorBuilder: (context, error, stackTrace) {
+            developer.log("Error loading logo: $error", name: 'MainNavigation');
+            return const Text('Elsahm'); // Fallback text
+          },
+        ),
+        centerTitle: true, // Center the logo
+        leading: Builder(
+          builder:
+              (context) =>
+                  _buildMenuButton(context, isDarkMode),
+        ),
+        actions: [
+          // User balance display with wallet animation
+          if (_isDataLoading) // عرض الرصيد فقط بعد تحميل البيانات
+            _buildBalanceWidget(context, isDarkMode),
+        ],
+      ),
       drawer: const AppDrawer(),
       body: IndexedStack(
         index: navigationProvider.selectedIndex, // Use index from provider
@@ -530,7 +525,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
             ),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.1),
+                color: Colors.black.withValues(alpha: 0.1), // DIAGNOSTIC: Updated from deprecated withOpacity
                 blurRadius: 10,
                 spreadRadius: 1,
               ),
@@ -637,7 +632,7 @@ class _MainNavigationScreenState extends State<MainNavigationScreen> {
         color: Colors.transparent,
         child: InkWell(
           customBorder: const CircleBorder(),
-          splashColor: Colors.white.withOpacity(0.2),
+          splashColor: Colors.white.withValues(alpha: 0.2), // DIAGNOSTIC: Updated from deprecated withOpacity
           onTap: () {
             Scaffold.of(context).openDrawer();
           },

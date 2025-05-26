@@ -1,13 +1,15 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:logging/logging.dart';
 import '../models/property.dart';
 import '../utils/constants.dart';
 
 class PropertyService {
+  static final Logger _logger = Logger('PropertyService');
   final String baseUrl = ApiConstants.baseUrl;
 
   // البيانات الافتراضية للعقارات المميزة
-  List<Property> _mockFeaturedProperties = [
+  final List<Property> _mockFeaturedProperties = [
     Property(
       id: 'fp1',
       title: 'شقة مميزة بحي الجامعة',
@@ -47,7 +49,7 @@ class PropertyService {
   ];
 
   // البيانات الافتراضية للعقارات الحديثة
-  List<Property> _mockRecentProperties = [
+  final List<Property> _mockRecentProperties = [
     Property(
       id: 'rp1',
       title: 'استوديو حديث التجهيز',
@@ -106,119 +108,154 @@ class PropertyService {
 
   Future<List<Property>> getFeaturedProperties() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/properties/featured'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/properties/featured'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((json) => Property.fromJson(json)).toList();
       } else {
         // إرجاع البيانات الافتراضية في حال فشل الاتصال بالخادم
-        print('استخدام البيانات الافتراضية للعقارات المميزة بسبب: ${response.statusCode}');
+        _logger.warning(
+          'استخدام البيانات الافتراضية للعقارات المميزة بسبب: ${response.statusCode}',
+        );
         return _mockFeaturedProperties;
       }
     } catch (e) {
       // إرجاع البيانات الافتراضية في حال حدوث أي خطأ
-      print('استخدام البيانات الافتراضية للعقارات المميزة بسبب: $e');
+      _logger.severe('استخدام البيانات الافتراضية للعقارات المميزة بسبب: $e');
       return _mockFeaturedProperties;
     }
   }
 
   Future<List<Property>> getRecentProperties() async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/properties/recent'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/properties/recent'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((json) => Property.fromJson(json)).toList();
       } else {
         // إرجاع البيانات الافتراضية في حال فشل الاتصال بالخادم
-        print('استخدام البيانات الافتراضية للعقارات الحديثة بسبب: ${response.statusCode}');
+        _logger.warning(
+          'استخدام البيانات الافتراضية للعقارات الحديثة بسبب: ${response.statusCode}',
+        );
         return _mockRecentProperties;
       }
     } catch (e) {
       // إرجاع البيانات الافتراضية في حال حدوث أي خطأ
-      print('استخدام البيانات الافتراضية للعقارات الحديثة بسبب: $e');
+      _logger.severe('استخدام البيانات الافتراضية للعقارات الحديثة بسبب: $e');
       return _mockRecentProperties;
     }
   }
 
   Future<List<Property>> getPropertiesByCategory(String category) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/properties/category/$category'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/properties/category/$category'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((json) => Property.fromJson(json)).toList();
       } else {
         // إرجاع مزيج من البيانات الافتراضية
-        print('استخدام البيانات الافتراضية للتصنيف بسبب: ${response.statusCode}');
+        _logger.warning(
+          'استخدام البيانات الافتراضية للتصنيف بسبب: ${response.statusCode}',
+        );
         return [..._mockFeaturedProperties, ..._mockRecentProperties]
-            .where((p) => p.category.toLowerCase().contains(category.toLowerCase()))
+            .where(
+              (p) => p.category.toLowerCase().contains(category.toLowerCase()),
+            )
             .toList();
       }
     } catch (e) {
       // إرجاع مزيج من البيانات الافتراضية
-      print('استخدام البيانات الافتراضية للتصنيف بسبب: $e');
+      _logger.severe('استخدام البيانات الافتراضية للتصنيف بسبب: $e');
       return [..._mockFeaturedProperties, ..._mockRecentProperties]
-            .where((p) => p.category.toLowerCase().contains(category.toLowerCase()))
-            .toList();
+          .where(
+            (p) => p.category.toLowerCase().contains(category.toLowerCase()),
+          )
+          .toList();
     }
   }
 
   Future<List<Property>> searchProperties(String query) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/properties/search?q=$query'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/properties/search?q=$query'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
         return data.map((json) => Property.fromJson(json)).toList();
       } else {
         // بحث في البيانات الافتراضية
-        final allMockProperties = [..._mockFeaturedProperties, ..._mockRecentProperties];
-        return allMockProperties.where((p) => 
-          p.title.toLowerCase().contains(query.toLowerCase()) ||
-          p.description.toLowerCase().contains(query.toLowerCase()) ||
-          p.location.toLowerCase().contains(query.toLowerCase()) ||
-          p.category.toLowerCase().contains(query.toLowerCase())
-        ).toList();
+        final allMockProperties = [
+          ..._mockFeaturedProperties,
+          ..._mockRecentProperties,
+        ];
+        return allMockProperties
+            .where(
+              (p) =>
+                  p.title.toLowerCase().contains(query.toLowerCase()) ||
+                  p.description.toLowerCase().contains(query.toLowerCase()) ||
+                  p.location.toLowerCase().contains(query.toLowerCase()) ||
+                  p.category.toLowerCase().contains(query.toLowerCase()),
+            )
+            .toList();
       }
     } catch (e) {
       // بحث في البيانات الافتراضية
-      final allMockProperties = [..._mockFeaturedProperties, ..._mockRecentProperties];
-      return allMockProperties.where((p) => 
-        p.title.toLowerCase().contains(query.toLowerCase()) ||
-        p.description.toLowerCase().contains(query.toLowerCase()) ||
-        p.location.toLowerCase().contains(query.toLowerCase()) ||
-        p.category.toLowerCase().contains(query.toLowerCase())
-      ).toList();
+      final allMockProperties = [
+        ..._mockFeaturedProperties,
+        ..._mockRecentProperties,
+      ];
+      return allMockProperties
+          .where(
+            (p) =>
+                p.title.toLowerCase().contains(query.toLowerCase()) ||
+                p.description.toLowerCase().contains(query.toLowerCase()) ||
+                p.location.toLowerCase().contains(query.toLowerCase()) ||
+                p.category.toLowerCase().contains(query.toLowerCase()),
+          )
+          .toList();
     }
   }
 
   Future<Property> getPropertyById(String id) async {
     try {
-      final response = await http.get(
-        Uri.parse('$baseUrl/properties/$id'),
-        headers: {'Content-Type': 'application/json'},
-      ).timeout(Duration(seconds: 10));
+      final response = await http
+          .get(
+            Uri.parse('$baseUrl/properties/$id'),
+            headers: {'Content-Type': 'application/json'},
+          )
+          .timeout(Duration(seconds: 10));
 
       if (response.statusCode == 200) {
         final dynamic data = json.decode(response.body);
         return Property.fromJson(data);
       } else {
         // البحث في البيانات الافتراضية
-        final allMockProperties = [..._mockFeaturedProperties, ..._mockRecentProperties];
+        final allMockProperties = [
+          ..._mockFeaturedProperties,
+          ..._mockRecentProperties,
+        ];
         final property = allMockProperties.firstWhere(
           (p) => p.id == id,
           orElse: () => throw Exception('العقار غير موجود'),
@@ -227,7 +264,10 @@ class PropertyService {
       }
     } catch (e) {
       // البحث في البيانات الافتراضية
-      final allMockProperties = [..._mockFeaturedProperties, ..._mockRecentProperties];
+      final allMockProperties = [
+        ..._mockFeaturedProperties,
+        ..._mockRecentProperties,
+      ];
       final property = allMockProperties.firstWhere(
         (p) => p.id == id,
         orElse: () => throw Exception('العقار غير موجود'),
@@ -235,4 +275,4 @@ class PropertyService {
       return property;
     }
   }
-} 
+}

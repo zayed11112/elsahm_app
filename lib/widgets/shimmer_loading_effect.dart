@@ -8,12 +8,12 @@ class ShimmerLoadingEffect extends StatefulWidget {
   final Duration duration;
 
   const ShimmerLoadingEffect({
-    Key? key,
+    super.key,
     required this.height,
     required this.width,
     this.borderRadius,
     this.duration = const Duration(milliseconds: 1500),
-  }) : super(key: key);
+  });
 
   @override
   State<ShimmerLoadingEffect> createState() => _ShimmerLoadingEffectState();
@@ -27,16 +27,10 @@ class _ShimmerLoadingEffectState extends State<ShimmerLoadingEffect>
   @override
   void initState() {
     super.initState();
-    _controller = AnimationController(
-      vsync: this,
-      duration: widget.duration,
-    );
+    _controller = AnimationController(vsync: this, duration: widget.duration);
 
     _animation = Tween<double>(begin: -2.0, end: 2.0).animate(
-      CurvedAnimation(
-        parent: _controller,
-        curve: Curves.easeInOutSine,
-      ),
+      CurvedAnimation(parent: _controller, curve: Curves.easeInOutSine),
     );
 
     _controller.repeat();
@@ -51,7 +45,7 @@ class _ShimmerLoadingEffectState extends State<ShimmerLoadingEffect>
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return ClipRRect(
       borderRadius: widget.borderRadius ?? BorderRadius.circular(8),
       child: Container(
@@ -68,17 +62,18 @@ class _ShimmerLoadingEffectState extends State<ShimmerLoadingEffect>
                 return LinearGradient(
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
-                  colors: isDarkMode
-                      ? [
-                          Colors.grey[800]!,
-                          Colors.grey[700]!,
-                          Colors.grey[800]!,
-                        ]
-                      : [
-                          Colors.grey[300]!,
-                          Colors.grey[100]!,
-                          Colors.grey[300]!,
-                        ],
+                  colors:
+                      isDarkMode
+                          ? [
+                            Colors.grey[800]!,
+                            Colors.grey[700]!,
+                            Colors.grey[800]!,
+                          ]
+                          : [
+                            Colors.grey[300]!,
+                            Colors.grey[100]!,
+                            Colors.grey[300]!,
+                          ],
                   stops: const [0.1, 0.5, 0.9],
                   transform: SlidingGradientTransform(_animation.value),
                 ).createShader(bounds);
@@ -106,4 +101,4 @@ class SlidingGradientTransform extends GradientTransform {
   Matrix4? transform(Rect bounds, {TextDirection? textDirection}) {
     return Matrix4.translationValues(bounds.width * slidePercent, 0, 0);
   }
-} 
+}

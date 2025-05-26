@@ -10,20 +10,20 @@ class TypewriterAnimatedText extends StatefulWidget {
   final TextAlign textAlign;
 
   const TypewriterAnimatedText({
-    Key? key,
+    super.key,
     required this.texts,
     this.textStyle,
     this.typingSpeed = const Duration(milliseconds: 70),
     this.pauseDuration = const Duration(seconds: 1),
     this.deletingSpeed = const Duration(milliseconds: 15),
     this.textAlign = TextAlign.center,
-  }) : super(key: key);
+  });
 
   @override
-  _TypewriterAnimatedTextState createState() => _TypewriterAnimatedTextState();
+  TypewriterAnimatedTextState createState() => TypewriterAnimatedTextState();
 }
 
-class _TypewriterAnimatedTextState extends State<TypewriterAnimatedText> {
+class TypewriterAnimatedTextState extends State<TypewriterAnimatedText> {
   late String _currentText;
   late int _currentIndex;
   late int _currentPosition;
@@ -80,7 +80,10 @@ class _TypewriterAnimatedTextState extends State<TypewriterAnimatedText> {
         if (_isDeleting) {
           if (_currentPosition > 0) {
             _currentPosition--;
-            _currentText = widget.texts[_currentIndex].substring(0, _currentPosition);
+            _currentText = widget.texts[_currentIndex].substring(
+              0,
+              _currentPosition,
+            );
           } else {
             // تم مسح النص - الانتقال إلى النص التالي
             _isDeleting = false;
@@ -104,4 +107,4 @@ class _TypewriterAnimatedTextState extends State<TypewriterAnimatedText> {
       ),
     );
   }
-} 
+}

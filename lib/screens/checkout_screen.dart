@@ -1,16 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:logging/logging.dart';
 import '../services/checkout_service.dart';
-import '../models/checkout_request.dart';
-import '../services/firestore_service.dart';
-import '../models/user_profile.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import 'package:elsahm_app/screens/wallet_screen.dart';
-import 'package:lottie/lottie.dart';
-import '../services/booking_service.dart';
 import 'booking_requests_screen.dart';
 
 class CheckoutScreen extends StatefulWidget {
@@ -20,12 +14,12 @@ class CheckoutScreen extends StatefulWidget {
   final String? imageUrl;
 
   const CheckoutScreen({
-    Key? key,
+    super.key,
     required this.propertyId,
     required this.propertyName,
     required this.propertyPrice,
     this.imageUrl,
-  }) : super(key: key);
+  });
 
   @override
   State<CheckoutScreen> createState() => _CheckoutScreenState();
@@ -35,7 +29,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final _formKey = GlobalKey<FormState>();
   final Logger _logger = Logger('CheckoutScreen');
   final CheckoutService _checkoutService = CheckoutService();
-  final FirestoreService _firestoreService = FirestoreService();
   final firebase_auth.FirebaseAuth _firebaseAuth = firebase_auth.FirebaseAuth.instance;
 
   // حقول النموذج
@@ -46,7 +39,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
   final TextEditingController _depositController = TextEditingController();
   final TextEditingController _commissionController = TextEditingController();
 
-  String _status = 'جاري المعالجة';
+  final String _status = 'جاري المعالجة';
   bool _isLoading = false;
   
   // معلومات العقار من قاعدة البيانات
@@ -56,7 +49,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   // معلومات المستخدم الحالي
   String? _userId;
-  String? _userEmail;
 
   @override
   void initState() {
@@ -75,7 +67,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         
         setState(() {
           _userId = firebaseUser.uid;
-          _userEmail = firebaseUser.email;
         });
 
         // جلب بيانات المستخدم من Firestore
@@ -215,9 +206,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       }
     }
   }
-
-  // التحقق من التوقيع على الشروط
-  bool _agreedToTerms = false;
 
   @override
   void dispose() {
@@ -768,66 +756,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
-  // إرسال طلب الحجز
-  Future<bool> _submitRequest() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-      
-      _logger.info('بدء إرسال طلب الحجز للعقار: ${widget.propertyName}');
-      
-      // تحضير بيانات الطلب
-      final Map<String, dynamic> requestData = {
-        'property_id': widget.propertyId,
-        'property_name': widget.propertyName,
-        'property_price': widget.propertyPrice,
-        'customer_name': _nameController.text,
-        'customer_phone': _phoneController.text,
-        'university_id': _universityIdController.text,
-        'college': _collegeController.text,
-        'deposit': _propertyDeposit > 0 ? _propertyDeposit : double.tryParse(_depositController.text) ?? 0.0,
-        'commission': _propertyCommission > 0 ? _propertyCommission : double.tryParse(_commissionController.text) ?? 0.0,
-        'status': _status,
-        'user_id': _userId ?? '',
-        'user_email': _userEmail ?? '',
-        'created_at': DateTime.now().toIso8601String(),
-      };
-      
-      _logger.info('بيانات طلب الحجز: $requestData');
-      
-      // إرسال الطلب إلى Supabase
-      await _checkoutService.addCheckoutRequest(requestData);
-      
-      // إنشاء حجز في Firestore
-      final bookingService = BookingService();
-      final bookingId = await bookingService.createBooking(
-        apartmentId: widget.propertyId,
-        apartmentName: widget.propertyName,
-        totalPrice: widget.propertyPrice,
-        startDate: DateTime.now(), // يمكن تعديل هذه القيم حسب احتياجات التطبيق
-        endDate: DateTime.now().add(const Duration(days: 365)), // سنة كاملة كافتراضي
-        notes: 'تم الحجز من خلال صفحة الحجز',
-        imageUrl: widget.imageUrl,
-      );
-      
-      _logger.info('تم إنشاء الحجز في Firestore بنجاح، المعرف: $bookingId');
-      
-      return true;
-    } catch (e) {
-      _logger.severe('خطأ في إرسال طلب الحجز: $e');
-      return false;
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
 
     // التحقق من المستخدم الحالي في Firebase بدلاً من Supabase
@@ -841,7 +772,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       // تأكد من أن معرف المستخدم محدث في الحالة
       if (_userId != firebaseUser.uid) {
         _userId = firebaseUser.uid;
-        _userEmail = firebaseUser.email;
       }
     } else {
       _logger.warning('لا يوجد مستخدم مسجل دخوله في Firebase');
@@ -1153,24 +1083,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               
                               // إظهار إجمالي المبلغ المطلوب بطريقة احترافية
                               Container(
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      colorScheme.primary.withOpacity(0.7),
-                                      colorScheme.primary.withOpacity(0.4),
-                                    ],
-                                    begin: Alignment.topRight,
-                                    end: Alignment.bottomLeft,
+                                  color: Color.fromRGBO(
+                                    colorScheme.primary.r.toInt(),
+                                    colorScheme.primary.g.toInt(),
+                                    colorScheme.primary.b.toInt(),
+                                    0.1
                                   ),
-                                  borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withOpacity(0.1),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 3),
-                                    ),
-                                  ],
+                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Column(
                                   children: [
@@ -1200,7 +1121,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                         Text(
                                           'العربون:',
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(0.9),
+                                            color: Color.fromRGBO(255, 255, 255, 0.9),
                                             fontSize: 14,
                                           ),
                                         ),
@@ -1221,7 +1142,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                         Text(
                                           'العمولة:',
                                           style: TextStyle(
-                                            color: Colors.white.withOpacity(0.9),
+                                            color: Color.fromRGBO(255, 255, 255, 0.9),
                                             fontSize: 14,
                                           ),
                                         ),
@@ -1448,11 +1369,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   // بناء قسم رصيد المحفظة
   Widget _buildWalletBalance(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final walletCardBg = isDarkMode ? const Color(0xFF2C3E50) : Colors.white;
-    final walletTextColor = isDarkMode ? Colors.white70 : Colors.black87;
-    final primarySkyBlue = const Color(0xFF4FC3F7);
-
     // التحقق من المستخدم الحالي مباشرة من Firebase
     final firebaseUser = _firebaseAuth.currentUser;
     final String? currentUserId = firebaseUser?.uid;
@@ -1466,7 +1382,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     _logger.info('جلب رصيد المحفظة للمستخدم: $currentUserId');
 
     // دالة للانتقال إلى صفحة شحن الرصيد
-    void _navigateToTopUpScreen() {
+    void navigateToTopUpScreen() {
       _logger.info('الانتقال إلى صفحة شحن الرصيد');
       Navigator.push(
         context,
@@ -1530,7 +1446,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(12),
             side: BorderSide(
-              color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+              color: Color.fromRGBO(
+                Theme.of(context).colorScheme.primary.r.toInt(),
+                Theme.of(context).colorScheme.primary.g.toInt(),
+                Theme.of(context).colorScheme.primary.b.toInt(),
+                0.3
+              ),
               width: 1,
             ),
           ),
@@ -1575,7 +1496,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               )
                             else
                               Text(
-                                '$currentBalance',
+                                currentBalance,
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 24,
@@ -1587,7 +1508,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               'جنيه',
                               style: TextStyle(
                                 fontSize: 14,
-                                color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                                color: Color.fromRGBO(
+                                  Theme.of(context).colorScheme.onSurface.r.toInt(),
+                                  Theme.of(context).colorScheme.onSurface.g.toInt(),
+                                  Theme.of(context).colorScheme.onSurface.b.toInt(),
+                                  0.7
+                                ),
                               ),
                             ),
                           ],
@@ -1597,7 +1523,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                     const Spacer(),
                     // زر شحن الرصيد
                     ElevatedButton.icon(
-                      onPressed: _navigateToTopUpScreen,
+                      onPressed: navigateToTopUpScreen,
                       icon: const Icon(Icons.add_circle_outline, size: 18),
                       label: const Text('شحن الرصيد'),
                       style: ElevatedButton.styleFrom(
@@ -1621,7 +1547,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   // بناء قسم رسالة توضيحية للحجز
   Widget _buildBookingInfoMessage(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     
@@ -1633,7 +1558,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: colorScheme.primary.withOpacity(0.3),
+          color: Color.fromRGBO(
+            Theme.of(context).colorScheme.primary.r.toInt(),
+            Theme.of(context).colorScheme.primary.g.toInt(),
+            Theme.of(context).colorScheme.primary.b.toInt(),
+            0.3
+          ),
           width: 1,
         ),
       ),
@@ -1697,7 +1627,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: colorScheme.primary.withOpacity(0.1),
+                color: Color.fromRGBO(
+                  colorScheme.primary.r.toInt(),
+                  colorScheme.primary.g.toInt(),
+                  colorScheme.primary.b.toInt(),
+                  0.1
+                ),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(

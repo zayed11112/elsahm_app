@@ -11,15 +11,19 @@ class ContactUsScreen extends StatelessWidget {
   static const String companyEmail = 'elsahm.arish@gmail.com';
   static const String companyPhoneNumber = '01093130120';
   static const String companyWhatsappNumber = '+201093130120';
-  static const String companyFacebookUrl = 'https://www.facebook.com/elsahm.arish';
+  static const String companyFacebookUrl =
+      'https://www.facebook.com/elsahm.arish';
 
   // Designer information
   static const String designerName = 'م. اسلام زايد';
-  static const String designerImageUrl = 'https://i.ibb.co/cKkXF2rF/1000165177.jpg';
+  static const String designerImageUrl =
+      'https://i.ibb.co/cKkXF2rF/1000165177.jpg';
   static const String designerPhoneNumber = '01003193622';
   static const String designerWhatsappNumber = '+201003193622';
-  static const String designerFacebookUrl = 'https://www.facebook.com/eslammosalah';
-  static const String designerInstagramUrl = 'https://www.instagram.com/eslamz11/';
+  static const String designerFacebookUrl =
+      'https://www.facebook.com/eslammosalah';
+  static const String designerInstagramUrl =
+      'https://www.instagram.com/eslamz11/';
 
   // Launch URL helper functions
   Future<void> _launchURL(String urlString) async {
@@ -48,7 +52,7 @@ class ContactUsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('تواصل معنا'),
@@ -79,9 +83,16 @@ class ContactUsScreen extends StatelessWidget {
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: isDark
-              ? [theme.colorScheme.primary, theme.colorScheme.primary.withOpacity(0.7)]
-              : [theme.colorScheme.primary, theme.colorScheme.primary.withOpacity(0.8)],
+          colors:
+              isDark
+                  ? [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withValues(alpha: 0.7),
+                  ]
+                  : [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withValues(alpha: 0.8),
+                  ],
         ),
         borderRadius: const BorderRadius.only(
           bottomLeft: Radius.circular(30),
@@ -89,7 +100,7 @@ class ContactUsScreen extends StatelessWidget {
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.2),
+            color: Colors.black.withValues(alpha: 0.2),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -108,7 +119,7 @@ class ContactUsScreen extends StatelessWidget {
           Text(
             'نوفر أفضل خيارات السكن للطلاب والعائلات في العريش',
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               height: 1.5,
             ),
             textAlign: TextAlign.center,
@@ -117,7 +128,7 @@ class ContactUsScreen extends StatelessWidget {
           Text(
             'فريقنا جاهز لمساعدتك!',
             style: theme.textTheme.bodyLarge?.copyWith(
-              color: Colors.white.withOpacity(0.9),
+              color: Colors.white.withValues(alpha: 0.9),
               fontWeight: FontWeight.w500,
             ),
             textAlign: TextAlign.center,
@@ -127,7 +138,11 @@ class ContactUsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildContactMethodsSection(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildContactMethodsSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Container(
       padding: const EdgeInsets.all(20),
       child: Column(
@@ -195,10 +210,8 @@ class ContactUsScreen extends StatelessWidget {
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
       elevation: 2,
-      shadowColor: Colors.black.withOpacity(0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shadowColor: Colors.black.withValues(alpha: 0.1),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       color: isDark ? theme.cardColor : Colors.white,
       child: InkWell(
         onTap: onTap,
@@ -210,14 +223,10 @@ class ContactUsScreen extends StatelessWidget {
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: iconColor.withOpacity(0.1),
+                  color: iconColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 24,
-                ),
+                child: Icon(icon, color: iconColor, size: 24),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -252,7 +261,11 @@ class ContactUsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildDesignerSection(BuildContext context, ThemeData theme, bool isDark) {
+  Widget _buildDesignerSection(
+    BuildContext context,
+    ThemeData theme,
+    bool isDark,
+  ) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
       padding: const EdgeInsets.all(20),
@@ -261,7 +274,7 @@ class ContactUsScreen extends StatelessWidget {
         color: isDark ? theme.colorScheme.surface : Colors.grey[100],
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             offset: const Offset(0, 5),
           ),
@@ -284,14 +297,15 @@ class ContactUsScreen extends StatelessWidget {
               height: 120,
               fit: BoxFit.cover,
               placeholder: (context, url) => CircularProgressIndicator(),
-              errorWidget: (context, url, error) => Container(
-                color: theme.colorScheme.primary.withOpacity(0.2),
-                child: Icon(
-                  Icons.person,
-                  size: 60,
-                  color: theme.colorScheme.primary.withOpacity(0.6),
-                ),
-              ),
+              errorWidget:
+                  (context, url, error) => Container(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    child: Icon(
+                      Icons.person,
+                      size: 60,
+                      color: theme.colorScheme.primary.withValues(alpha: 0.6),
+                    ),
+                  ),
             ),
           ),
           const SizedBox(height: 12),
@@ -346,18 +360,11 @@ class ContactUsScreen extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: color.withOpacity(0.1),
+          color: color.withValues(alpha: 0.1),
           borderRadius: BorderRadius.circular(30),
-          border: Border.all(
-            color: color.withOpacity(0.3),
-            width: 1,
-          ),
+          border: Border.all(color: color.withValues(alpha: 0.3), width: 1),
         ),
-        child: Icon(
-          icon,
-          color: color,
-          size: 20,
-        ),
+        child: Icon(icon, color: color, size: 20),
       ),
     );
   }

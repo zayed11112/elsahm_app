@@ -9,7 +9,7 @@ import '../utils/auth_utils.dart';
 import 'property_details_screen.dart';
 
 class FeaturedPropertiesScreen extends StatefulWidget {
-  const FeaturedPropertiesScreen({Key? key}) : super(key: key);
+  const FeaturedPropertiesScreen({super.key});
 
   @override
   State<FeaturedPropertiesScreen> createState() => _FeaturedPropertiesScreenState();
@@ -55,7 +55,6 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
     
     return Scaffold(
       appBar: AppBar(
@@ -77,7 +76,7 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
             gradient: LinearGradient(
               colors: [
                 theme.primaryColor,
-                theme.primaryColor.withOpacity(0.8),
+                theme.primaryColor.withValues(alpha: 204), // 0.8 ≈ 204/255
               ],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
@@ -108,20 +107,20 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
           Icon(
             Icons.home_work_outlined,
             size: 80,
-            color: theme.colorScheme.primary.withOpacity(0.5),
+            color: theme.colorScheme.primary.withValues(alpha: 128), // 0.5 ≈ 128/255
           ),
           const SizedBox(height: 16),
           Text(
             'لا توجد عقارات مميزة متاحة حالياً',
             style: theme.textTheme.titleLarge?.copyWith(
-              color: theme.colorScheme.onBackground.withOpacity(0.7),
+              color: theme.colorScheme.onSurface.withValues(alpha: 179), // 0.7 ≈ 179/255
             ),
           ),
           const SizedBox(height: 8),
           Text(
             'قد تتوفر عقارات مميزة جديدة قريباً',
             style: theme.textTheme.bodyMedium?.copyWith(
-              color: theme.colorScheme.onBackground.withOpacity(0.5),
+              color: theme.colorScheme.onSurface.withValues(alpha: 128), // 0.5 ≈ 128/255
             ),
           ),
           const SizedBox(height: 24),
@@ -148,7 +147,7 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
           Icon(
             Icons.error_outline,
             size: 80,
-            color: Colors.red.withOpacity(0.7),
+            color: Colors.red.withValues(alpha: 179), // 0.7 ≈ 179/255
           ),
           const SizedBox(height: 16),
           Text(
@@ -199,7 +198,7 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
     
     return Card(
       elevation: 5,
-      shadowColor: Colors.black.withOpacity(0.2),
+      shadowColor: Colors.black.withValues(alpha: 51), // 0.2 ≈ 51/255
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -257,7 +256,7 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
                         end: Alignment.bottomCenter,
                         colors: [
                           Colors.transparent,
-                          Colors.black.withOpacity(0.7),
+                          Colors.black.withValues(alpha: 179), // 0.7 ≈ 179/255
                         ],
                         stops: const [0.6, 1.0],
                       ),
@@ -276,7 +275,7 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
                       borderRadius: BorderRadius.circular(20),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 77), // 0.3 ≈ 77/255
                           spreadRadius: 1,
                           blurRadius: 3,
                           offset: const Offset(0, 2),
@@ -316,7 +315,7 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.3),
+                          color: Colors.black.withValues(alpha: 77), // 0.3 ≈ 77/255
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -365,11 +364,13 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
                   left: 12,
                   child: Container(
                     decoration: BoxDecoration(
-                      color: isDark ? Colors.black.withOpacity(0.5) : Colors.white.withOpacity(0.8),
+                      color: isDark 
+                          ? Colors.black.withValues(alpha: 128) // 0.5 ≈ 128/255
+                          : Colors.white.withValues(alpha: 204), // 0.8 ≈ 204/255
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.2),
+                          color: Colors.black.withValues(alpha: 51), // 0.2 ≈ 51/255
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),

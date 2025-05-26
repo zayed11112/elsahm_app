@@ -13,10 +13,7 @@ import 'package:intl/intl.dart';
 class ComplaintDetailScreen extends StatefulWidget {
   final String complaintId;
 
-  const ComplaintDetailScreen({
-    super.key,
-    required this.complaintId,
-  });
+  const ComplaintDetailScreen({super.key, required this.complaintId});
 
   @override
   State<ComplaintDetailScreen> createState() => _ComplaintDetailScreenState();
@@ -28,7 +25,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
   final TextEditingController _responseController = TextEditingController();
   final _formKey = GlobalKey<FormState>();
   final ScrollController _scrollController = ScrollController();
-  
+
   bool _isSubmitting = false;
   bool _isUploadingImage = false;
   File? _selectedImage;
@@ -55,13 +52,13 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
     try {
       final ImagePicker picker = ImagePicker();
       final XFile? image = await picker.pickImage(source: ImageSource.gallery);
-      
+
       if (image != null) {
         setState(() {
           _selectedImage = File(image.path);
-          _uploadedImageUrl = null;  // Reset previous upload URL
+          _uploadedImageUrl = null; // Reset previous upload URL
         });
-        
+
         // Upload image immediately
         await _uploadImage();
       }
@@ -79,14 +76,14 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
 
   Future<void> _uploadImage() async {
     if (_selectedImage == null) return;
-    
+
     setState(() {
       _isUploadingImage = true;
     });
-    
+
     try {
       final imageUrl = await ImageUploadService.uploadImage(_selectedImage!);
-      
+
       if (imageUrl != null) {
         setState(() {
           _uploadedImageUrl = imageUrl;
@@ -140,7 +137,8 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
 
       try {
         // Only proceed if text is entered or image is uploaded
-        if (_responseController.text.trim().isNotEmpty || _uploadedImageUrl != null) {
+        if (_responseController.text.trim().isNotEmpty ||
+            _uploadedImageUrl != null) {
           await _complaintService.addResponse(
             complaintId: complaintId,
             responseText: _responseController.text.trim(),
@@ -154,12 +152,12 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
             _responseController.clear();
             // Clear the image after sending
             _clearSelectedImage();
-            
+
             // Slight delay to ensure the new response is loaded in the stream before scrolling
             Future.delayed(const Duration(milliseconds: 300), () {
               _scrollToBottom();
             });
-            
+
             HapticFeedback.lightImpact();
           }
         } else {
@@ -203,7 +201,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
 
   Future<void> _refreshComplaintDetails() async {
     await Future.delayed(const Duration(milliseconds: 800));
-    
+
     if (mounted) {
       setState(() {
         // إعادة بناء واجهة المستخدم فقط
@@ -220,38 +218,46 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
 
     if (userId == null) {
       return const Scaffold(
-        body: Center(
-          child: Text('يرجى تسجيل الدخول لعرض الشكاوى'),
-        ),
+        body: Center(child: Text('يرجى تسجيل الدخول لعرض الشكاوى')),
       );
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('تفاصيل الشكوى', style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'تفاصيل الشكوى',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
         elevation: 0,
         actions: [
           PopupMenuButton<String>(
             onSelected: (value) async {
-              if (value == 'close' || value == 'reopen' || value == 'inprogress') {
+              if (value == 'close' ||
+                  value == 'reopen' ||
+                  value == 'inprogress') {
                 String newStatus = 'open';
                 if (value == 'close') newStatus = 'closed';
                 if (value == 'inprogress') newStatus = 'in-progress';
-                
+
+                // Store ScaffoldMessenger before async operation
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+
                 try {
                   await _complaintService.updateComplaintStatus(
                     widget.complaintId,
                     newStatus,
                   );
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    scaffoldMessenger.showSnackBar(
                       SnackBar(
                         content: Row(
                           children: [
                             Icon(Icons.check_circle, color: Colors.white),
                             SizedBox(width: 10),
-                            Text('تم تحديث حالة الشكوى إلى ${_getStatusText(newStatus)}'),
+                            Text(
+                              'تم تحديث حالة الشكوى إلى ${_getStatusText(newStatus)}',
+                            ),
                           ],
                         ),
                         backgroundColor: Colors.green,
@@ -264,7 +270,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                   }
                 } catch (e) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
+                    scaffoldMessenger.showSnackBar(
                       SnackBar(
                         content: Row(
                           children: [
@@ -291,42 +297,43 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                 shape: BoxShape.circle,
               ),
               child: Icon(
-                Icons.more_vert, 
+                Icons.more_vert,
                 color: isDarkMode ? Colors.white : Colors.grey[800],
               ),
             ),
-            itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-              const PopupMenuItem<String>(
-                value: 'inprogress',
-                child: Row(
-                  children: [
-                    Icon(Icons.pending_actions, color: Colors.orange),
-                    SizedBox(width: 12),
-                    Text('تحديث إلى قيد المعالجة'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'close',
-                child: Row(
-                  children: [
-                    Icon(Icons.check_circle, color: Colors.green),
-                    SizedBox(width: 12),
-                    Text('إغلاق الشكوى'),
-                  ],
-                ),
-              ),
-              const PopupMenuItem<String>(
-                value: 'reopen',
-                child: Row(
-                  children: [
-                    Icon(Icons.refresh, color: Colors.blue),
-                    SizedBox(width: 12),
-                    Text('إعادة فتح الشكوى'),
-                  ],
-                ),
-              ),
-            ],
+            itemBuilder:
+                (BuildContext context) => <PopupMenuEntry<String>>[
+                  const PopupMenuItem<String>(
+                    value: 'inprogress',
+                    child: Row(
+                      children: [
+                        Icon(Icons.pending_actions, color: Colors.orange),
+                        SizedBox(width: 12),
+                        Text('تحديث إلى قيد المعالجة'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'close',
+                    child: Row(
+                      children: [
+                        Icon(Icons.check_circle, color: Colors.green),
+                        SizedBox(width: 12),
+                        Text('إغلاق الشكوى'),
+                      ],
+                    ),
+                  ),
+                  const PopupMenuItem<String>(
+                    value: 'reopen',
+                    child: Row(
+                      children: [
+                        Icon(Icons.refresh, color: Colors.blue),
+                        SizedBox(width: 12),
+                        Text('إعادة فتح الشكوى'),
+                      ],
+                    ),
+                  ),
+                ],
           ),
           const SizedBox(width: 8),
         ],
@@ -335,15 +342,11 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
         future: _firestoreService.getUserProfile(userId),
         builder: (context, userSnapshot) {
           if (userSnapshot.connectionState == ConnectionState.waiting) {
-            return const Center(
-              child: CircularProgressIndicator(),
-            );
+            return const Center(child: CircularProgressIndicator());
           }
 
           if (userSnapshot.hasError || !userSnapshot.hasData) {
-            return Center(
-              child: Text('حدث خطأ: ${userSnapshot.error}'),
-            );
+            return Center(child: Text('حدث خطأ: ${userSnapshot.error}'));
           }
 
           final userName = userSnapshot.data!.name;
@@ -352,26 +355,20 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
             stream: _complaintService.getComplaintById(widget.complaintId),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const Center(
-                  child: CircularProgressIndicator(),
-                );
+                return const Center(child: CircularProgressIndicator());
               }
 
               if (snapshot.hasError) {
-                return Center(
-                  child: Text('حدث خطأ: ${snapshot.error}'),
-                );
+                return Center(child: Text('حدث خطأ: ${snapshot.error}'));
               }
 
               if (!snapshot.hasData || snapshot.data == null) {
-                return const Center(
-                  child: Text('لم يتم العثور على الشكوى'),
-                );
+                return const Center(child: Text('لم يتم العثور على الشكوى'));
               }
 
               final complaint = snapshot.data!;
               final statusColor = _getStatusColor(complaint.status);
-              
+
               // After the data is loaded, scroll to bottom if there are responses
               if (complaint.responses.isNotEmpty) {
                 WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -383,12 +380,15 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                 children: [
                   // Complaint header
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     decoration: BoxDecoration(
                       color: isDarkMode ? Colors.grey[900] : Colors.white,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.05),
+                          color: Colors.black.withValues(alpha: 0.05),
                           blurRadius: 5,
                           offset: const Offset(0, 1),
                         ),
@@ -418,10 +418,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                                 vertical: 6,
                               ),
                               decoration: BoxDecoration(
-                                color: statusColor.withOpacity(0.1),
+                                color: statusColor.withValues(alpha: 0.1),
                                 borderRadius: BorderRadius.circular(12),
                                 border: Border.all(
-                                  color: statusColor.withOpacity(0.5),
+                                  color: statusColor.withValues(alpha: 0.5),
                                 ),
                               ),
                               child: Row(
@@ -449,29 +449,41 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                         Row(
                           children: [
                             Icon(
-                              Icons.person_outline, 
-                              size: 16, 
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              Icons.person_outline,
+                              size: 16,
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                             ),
                             const SizedBox(width: 4),
                             Text(
                               complaint.userName,
                               style: TextStyle(
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                 fontSize: 13,
                               ),
                             ),
                             const SizedBox(width: 12),
                             Icon(
-                              Icons.calendar_today_outlined, 
-                              size: 14, 
-                              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              Icons.calendar_today_outlined,
+                              size: 14,
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                             ),
                             const SizedBox(width: 4),
                             Text(
                               _formatDateDetailed(complaint.createdAt),
                               style: TextStyle(
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
                                 fontSize: 13,
                               ),
                             ),
@@ -480,16 +492,20 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                       ],
                     ),
                   ),
-                  
+
                   // Responses section label
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
                     child: Row(
                       children: [
                         Icon(
                           Icons.forum_outlined,
                           size: 18,
-                          color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                          color:
+                              isDarkMode ? Colors.grey[400] : Colors.grey[700],
                         ),
                         const SizedBox(width: 8),
                         Text(
@@ -497,140 +513,176 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 15,
-                            color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
+                            color:
+                                isDarkMode
+                                    ? Colors.grey[300]
+                                    : Colors.grey[800],
                           ),
                         ),
                       ],
                     ),
                   ),
-                  
+
                   // Messages/Responses section
                   Expanded(
                     child: RefreshIndicator(
                       onRefresh: _refreshComplaintDetails,
                       color: Theme.of(context).primaryColor,
-                      child: complaint.responses.isEmpty
-                          ? ListView(
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              children: [
-                                Container(
-                                  height: 200,
-                                  alignment: Alignment.center,
-                                  child: Column(
-                                    mainAxisAlignment: MainAxisAlignment.center,
-                                    children: [
-                                      Icon(
-                                        Icons.chat_bubble_outline,
-                                        size: 60,
-                                        color: Colors.grey[400],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Text(
-                                        'لا توجد ردود بعد',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          color: Colors.grey[600],
+                      child:
+                          complaint.responses.isEmpty
+                              ? ListView(
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                children: [
+                                  Container(
+                                    height: 200,
+                                    alignment: Alignment.center,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.chat_bubble_outline,
+                                          size: 60,
+                                          color: Colors.grey[400],
                                         ),
-                                      ),
-                                      if (complaint.status != 'closed') ...[
-                                        const SizedBox(height: 12),
+                                        const SizedBox(height: 16),
                                         Text(
-                                          'أضف أول رد على هذه الشكوى',
+                                          'لا توجد ردود بعد',
                                           style: TextStyle(
-                                            fontSize: 14,
-                                            color: Theme.of(context).primaryColor,
+                                            fontSize: 16,
+                                            color: Colors.grey[600],
                                           ),
                                         ),
+                                        if (complaint.status != 'closed') ...[
+                                          const SizedBox(height: 12),
+                                          Text(
+                                            'أضف أول رد على هذه الشكوى',
+                                            style: TextStyle(
+                                              fontSize: 14,
+                                              color:
+                                                  Theme.of(
+                                                    context,
+                                                  ).primaryColor,
+                                            ),
+                                          ),
+                                        ],
                                       ],
-                                    ],
+                                    ),
                                   ),
+                                ],
+                              )
+                              : ListView.builder(
+                                controller: _scrollController,
+                                physics: const AlwaysScrollableScrollPhysics(),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 16,
                                 ),
-                              ],
-                            )
-                          : ListView.builder(
-                              controller: _scrollController,
-                              physics: const AlwaysScrollableScrollPhysics(),
-                              padding: const EdgeInsets.symmetric(horizontal: 16),
-                              itemCount: complaint.responses.length + 1, // +1 for complaint description
-                              itemBuilder: (context, index) {
-                                if (index == 0) {
-                                  // First message is the complaint itself
-                                  return _buildComplaintMessage(context, complaint);
-                                } else {
-                                  // Subsequent messages are responses
-                                  final response = complaint.responses[index - 1];
-                                  
-                                  // Group consecutive messages by the same person
-                                  bool showAvatar = true;
-                                  bool showTime = true;
-                                  
-                                  if (index > 1) {
-                                    final previousResponse = complaint.responses[index - 2];
-                                    if (previousResponse.responderId == response.responderId) {
-                                      // Same sender, check time difference
-                                      final timeDiff = response.createdAt.difference(previousResponse.createdAt).inMinutes;
-                                      if (timeDiff < 5) {
-                                        showAvatar = false;
-                                        showTime = false;
+                                itemCount:
+                                    complaint.responses.length +
+                                    1, // +1 for complaint description
+                                itemBuilder: (context, index) {
+                                  if (index == 0) {
+                                    // First message is the complaint itself
+                                    return _buildComplaintMessage(
+                                      context,
+                                      complaint,
+                                    );
+                                  } else {
+                                    // Subsequent messages are responses
+                                    final response =
+                                        complaint.responses[index - 1];
+
+                                    // Group consecutive messages by the same person
+                                    bool showAvatar = true;
+                                    bool showTime = true;
+
+                                    if (index > 1) {
+                                      final previousResponse =
+                                          complaint.responses[index - 2];
+                                      if (previousResponse.responderId ==
+                                          response.responderId) {
+                                        // Same sender, check time difference
+                                        final timeDiff =
+                                            response.createdAt
+                                                .difference(
+                                                  previousResponse.createdAt,
+                                                )
+                                                .inMinutes;
+                                        if (timeDiff < 5) {
+                                          showAvatar = false;
+                                          showTime = false;
+                                        }
                                       }
                                     }
+
+                                    return _buildResponseItem(
+                                      context,
+                                      response,
+                                      userId == response.responderId,
+                                      showAvatar: showAvatar,
+                                      showTime: showTime,
+                                    );
                                   }
-                                  
-                                  return _buildResponseItem(
-                                    context, 
-                                    response, 
-                                    userId == response.responderId,
-                                    showAvatar: showAvatar,
-                                    showTime: showTime,
-                                  );
-                                }
-                              },
-                            ),
+                                },
+                              ),
                     ),
                   ),
-                  
+
                   // Selected image preview (if any)
                   if (_selectedImage != null)
                     Container(
                       color: isDarkMode ? Colors.grey[900] : Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 16,
+                        vertical: 8,
+                      ),
                       child: Stack(
                         children: [
                           Container(
                             height: 100,
                             width: double.infinity,
                             decoration: BoxDecoration(
-                              color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[800]
+                                      : Colors.grey[200],
                               borderRadius: BorderRadius.circular(12),
                               border: Border.all(
-                                color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[700]!
+                                        : Colors.grey[300]!,
                               ),
                             ),
-                            child: _isUploadingImage
-                                ? Center(
-                                    child: Column(
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        const CircularProgressIndicator(),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'جاري تحميل الصورة...',
-                                          style: TextStyle(
-                                            color: isDarkMode ? Colors.white : Colors.black87,
+                            child:
+                                _isUploadingImage
+                                    ? Center(
+                                      child: Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          const CircularProgressIndicator(),
+                                          const SizedBox(height: 8),
+                                          Text(
+                                            'جاري تحميل الصورة...',
+                                            style: TextStyle(
+                                              color:
+                                                  isDarkMode
+                                                      ? Colors.white
+                                                      : Colors.black87,
+                                            ),
                                           ),
-                                        ),
-                                      ],
+                                        ],
+                                      ),
+                                    )
+                                    : ClipRRect(
+                                      borderRadius: BorderRadius.circular(12),
+                                      child: Image.file(
+                                        _selectedImage!,
+                                        height: 100,
+                                        width: double.infinity,
+                                        fit: BoxFit.cover,
+                                      ),
                                     ),
-                                  )
-                                : ClipRRect(
-                                    borderRadius: BorderRadius.circular(12),
-                                    child: Image.file(
-                                      _selectedImage!,
-                                      height: 100,
-                                      width: double.infinity,
-                                      fit: BoxFit.cover,
-                                    ),
-                                  ),
                           ),
                           Positioned(
                             top: 8,
@@ -640,7 +692,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: BoxDecoration(
-                                  color: Colors.black.withOpacity(0.5),
+                                  color: Colors.black.withValues(alpha: 0.5),
                                   shape: BoxShape.circle,
                                 ),
                                 child: const Icon(
@@ -654,7 +706,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                         ],
                       ),
                     ),
-                  
+
                   // Input section
                   if (complaint.status != 'closed')
                     Container(
@@ -663,7 +715,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                         color: isDarkMode ? Colors.grey[900] : Colors.white,
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.05),
+                            color: Colors.black.withValues(alpha: 0.05),
                             blurRadius: 5,
                             offset: const Offset(0, -3),
                           ),
@@ -677,10 +729,16 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                             Expanded(
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[800]
+                                          : Colors.grey[100],
                                   borderRadius: BorderRadius.circular(24),
                                   border: Border.all(
-                                    color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+                                    color:
+                                        isDarkMode
+                                            ? Colors.grey[700]!
+                                            : Colors.grey[300]!,
                                     width: 1,
                                   ),
                                 ),
@@ -696,14 +754,19 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                                     suffixIcon: IconButton(
                                       icon: Icon(
                                         Icons.attach_file,
-                                        color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                        color:
+                                            isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
                                       ),
                                       onPressed: _selectImage,
                                     ),
                                   ),
                                   validator: (value) {
                                     // Allow empty text if image is selected
-                                    if ((value == null || value.trim().isEmpty) && _uploadedImageUrl == null) {
+                                    if ((value == null ||
+                                            value.trim().isEmpty) &&
+                                        _uploadedImageUrl == null) {
                                       return 'الرجاء إدخال رد أو إرفاق صورة';
                                     }
                                     return null;
@@ -720,8 +783,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                                   colors: [
                                     Theme.of(context).primaryColor,
                                     Theme.of(context).primaryColor.withBlue(
-                                          (Theme.of(context).primaryColor.blue + 40).clamp(0, 255),
-                                        ),
+                                      (Theme.of(context).primaryColor.b + 40)
+                                          .clamp(0, 255)
+                                          .toInt(),
+                                    ),
                                   ],
                                   begin: Alignment.topLeft,
                                   end: Alignment.bottomRight,
@@ -729,7 +794,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                                 borderRadius: BorderRadius.circular(50),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Theme.of(context).primaryColor.withOpacity(0.4),
+                                    color: Theme.of(
+                                      context,
+                                    ).primaryColor.withValues(alpha: 0.4),
                                     blurRadius: 8,
                                     offset: const Offset(0, 4),
                                   ),
@@ -738,9 +805,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                               child: Material(
                                 color: Colors.transparent,
                                 child: InkWell(
-                                  onTap: (_isSubmitting || _isUploadingImage)
-                                      ? null
-                                      : () => _addResponse(
+                                  onTap:
+                                      (_isSubmitting || _isUploadingImage)
+                                          ? null
+                                          : () => _addResponse(
                                             widget.complaintId,
                                             userId,
                                             userName,
@@ -750,19 +818,23 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                                     width: 50,
                                     height: 50,
                                     alignment: Alignment.center,
-                                    child: (_isSubmitting || _isUploadingImage)
-                                        ? const SizedBox(
-                                            height: 24,
-                                            width: 24,
-                                            child: CircularProgressIndicator(
-                                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                              strokeWidth: 2,
+                                    child:
+                                        (_isSubmitting || _isUploadingImage)
+                                            ? const SizedBox(
+                                              height: 24,
+                                              width: 24,
+                                              child: CircularProgressIndicator(
+                                                valueColor:
+                                                    AlwaysStoppedAnimation<
+                                                      Color
+                                                    >(Colors.white),
+                                                strokeWidth: 2,
+                                              ),
+                                            )
+                                            : const Icon(
+                                              Icons.send,
+                                              color: Colors.white,
                                             ),
-                                          )
-                                        : const Icon(
-                                            Icons.send,
-                                            color: Colors.white,
-                                          ),
                                   ),
                                 ),
                               ),
@@ -782,7 +854,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
 
   Widget _buildComplaintMessage(BuildContext context, Complaint complaint) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 8, top: 8),
       child: Row(
@@ -796,15 +868,11 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
               shape: BoxShape.circle,
             ),
             child: Center(
-              child: Icon(
-                Icons.description,
-                color: Colors.white,
-                size: 20,
-              ),
+              child: Icon(Icons.description, color: Colors.white, size: 20),
             ),
           ),
           const SizedBox(width: 12),
-          
+
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -829,14 +897,14 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                   ],
                 ),
                 const SizedBox(height: 6),
-                
+
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.blueGrey.withOpacity(0.1),
+                    color: Colors.blueGrey.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(16),
                     border: Border.all(
-                      color: Colors.blueGrey.withOpacity(0.3),
+                      color: Colors.blueGrey.withValues(alpha: 0.3),
                     ),
                   ),
                   child: Column(
@@ -855,7 +923,8 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                         complaint.description,
                         style: TextStyle(
                           height: 1.4,
-                          color: isDarkMode ? Colors.grey[300] : Colors.grey[800],
+                          color:
+                              isDarkMode ? Colors.grey[300] : Colors.grey[800],
                         ),
                       ),
                     ],
@@ -870,29 +939,35 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
   }
 
   Widget _buildResponseItem(
-    BuildContext context, 
-    ComplaintResponse response, 
-    bool isCurrentUser, 
-    {bool showAvatar = true, bool showTime = true}
-  ) {
+    BuildContext context,
+    ComplaintResponse response,
+    bool isCurrentUser, {
+    bool showAvatar = true,
+    bool showTime = true,
+  }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final isAdmin = response.isAdmin;
-    final bubbleColor = isCurrentUser 
-        ? Theme.of(context).primaryColor 
-        : (isAdmin ? Colors.purple : (isDarkMode ? Colors.grey[800] : Colors.grey[200]));
-    final textColor = isCurrentUser || isAdmin 
-        ? Colors.white 
-        : (isDarkMode ? Colors.white : Colors.black87);
-    
+    final bubbleColor =
+        isCurrentUser
+            ? Theme.of(context).primaryColor
+            : (isAdmin
+                ? Colors.purple
+                : (isDarkMode ? Colors.grey[800] : Colors.grey[200]));
+    final textColor =
+        isCurrentUser || isAdmin
+            ? Colors.white
+            : (isDarkMode ? Colors.white : Colors.black87);
+
     return Container(
       margin: EdgeInsets.only(
-        bottom: 8, 
+        bottom: 8,
         top: showAvatar ? 16 : 4,
         left: isCurrentUser ? 40 : 0,
         right: isCurrentUser ? 0 : 40,
       ),
       child: Row(
-        mainAxisAlignment: isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment:
+            isCurrentUser ? MainAxisAlignment.end : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isCurrentUser && showAvatar)
@@ -911,16 +986,17 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                 ),
               ),
             ),
-          
-          if (!isCurrentUser && !showAvatar)
-            SizedBox(width: 36),
-            
-          if (!isCurrentUser)
-            const SizedBox(width: 8),
-            
+
+          if (!isCurrentUser && !showAvatar) SizedBox(width: 36),
+
+          if (!isCurrentUser) const SizedBox(width: 8),
+
           Expanded(
             child: Column(
-              crossAxisAlignment: isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment:
+                  isCurrentUser
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
               children: [
                 // Show name and admin badge if needed
                 if (showAvatar)
@@ -941,10 +1017,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                               vertical: 2,
                             ),
                             decoration: BoxDecoration(
-                              color: Colors.purple.withOpacity(0.1),
+                              color: Colors.purple.withValues(alpha: 0.1),
                               borderRadius: BorderRadius.circular(8),
                               border: Border.all(
-                                color: Colors.purple.withOpacity(0.5),
+                                color: Colors.purple.withValues(alpha: 0.5),
                               ),
                             ),
                             child: const Text(
@@ -956,35 +1032,53 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                               ),
                             ),
                           ),
-                          
+
                         Text(
                           isCurrentUser ? 'أنت' : response.responderName,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
-                            color: isCurrentUser 
-                                ? Theme.of(context).primaryColor 
-                                : (isAdmin ? Colors.purple : Colors.grey[700]),
+                            color:
+                                isCurrentUser
+                                    ? Theme.of(context).primaryColor
+                                    : (isAdmin
+                                        ? Colors.purple
+                                        : Colors.grey[700]),
                           ),
                         ),
                       ],
                     ),
                   ),
-                
+
                 // Message bubble
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: bubbleColor,
                     borderRadius: BorderRadius.only(
-                      topLeft: Radius.circular(isCurrentUser ? 16 : showAvatar ? 16 : 4),
-                      topRight: Radius.circular(isCurrentUser ? showAvatar ? 16 : 4 : 16),
+                      topLeft: Radius.circular(
+                        isCurrentUser
+                            ? 16
+                            : showAvatar
+                            ? 16
+                            : 4,
+                      ),
+                      topRight: Radius.circular(
+                        isCurrentUser
+                            ? showAvatar
+                                ? 16
+                                : 4
+                            : 16,
+                      ),
                       bottomLeft: const Radius.circular(16),
                       bottomRight: const Radius.circular(16),
                     ),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.05),
+                        color: Colors.black.withValues(alpha: 0.05),
                         blurRadius: 2,
                         offset: const Offset(0, 1),
                       ),
@@ -996,12 +1090,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                       if (response.responseText.isNotEmpty)
                         Text(
                           response.responseText,
-                          style: TextStyle(
-                            color: textColor,
-                            height: 1.4,
-                          ),
+                          style: TextStyle(color: textColor, height: 1.4),
                         ),
-                      
+
                       // Display image if there is one
                       if (response.imageUrl != null) ...[
                         if (response.responseText.isNotEmpty)
@@ -1019,10 +1110,13 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                                 width: 200,
                                 alignment: Alignment.center,
                                 child: CircularProgressIndicator(
-                                  value: loadingProgress.expectedTotalBytes != null
-                                      ? loadingProgress.cumulativeBytesLoaded / 
-                                          loadingProgress.expectedTotalBytes!
-                                      : null,
+                                  value:
+                                      loadingProgress.expectedTotalBytes != null
+                                          ? loadingProgress
+                                                  .cumulativeBytesLoaded /
+                                              loadingProgress
+                                                  .expectedTotalBytes!
+                                          : null,
                                 ),
                               );
                             },
@@ -1041,7 +1135,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                           ),
                         ),
                       ],
-                      
+
                       if (showTime) ...[
                         const SizedBox(height: 4),
                         Align(
@@ -1050,9 +1144,12 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                             _formatTime(response.createdAt),
                             style: TextStyle(
                               fontSize: 10,
-                              color: isCurrentUser || isAdmin 
-                                  ? Colors.white.withOpacity(0.7) 
-                                  : isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              color:
+                                  isCurrentUser || isAdmin
+                                      ? Colors.white.withValues(alpha: 0.7)
+                                      : isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                             ),
                           ),
                         ),
@@ -1063,10 +1160,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
               ],
             ),
           ),
-          
-          if (isCurrentUser && !showAvatar)
-            SizedBox(width: 36),
-            
+
+          if (isCurrentUser && !showAvatar) SizedBox(width: 36),
+
           if (isCurrentUser && showAvatar) ...[
             const SizedBox(width: 8),
             Container(
@@ -1077,11 +1173,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
                 shape: BoxShape.circle,
               ),
               child: const Center(
-                child: Icon(
-                  Icons.person,
-                  color: Colors.white,
-                  size: 18,
-                ),
+                child: Icon(Icons.person, color: Colors.white, size: 18),
               ),
             ),
           ],
@@ -1136,4 +1228,4 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> {
         return Colors.grey;
     }
   }
-} 
+}

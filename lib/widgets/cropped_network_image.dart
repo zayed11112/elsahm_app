@@ -12,7 +12,7 @@ class CroppedNetworkImage extends StatelessWidget {
   final double? width;
 
   const CroppedNetworkImage({
-    Key? key,
+    super.key,
     required this.imageUrl,
     this.fit = BoxFit.cover,
     this.bottomCropPercentage = 0.08, // قطع 8% من أسفل الصورة افتراضياً
@@ -20,7 +20,7 @@ class CroppedNetworkImage extends StatelessWidget {
     this.errorWidget,
     this.height,
     this.width,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -32,16 +32,20 @@ class CroppedNetworkImage extends StatelessWidget {
         fit: fit,
         height: height,
         width: width,
-        placeholder: (context, url) => placeholder ?? 
-          Container(
-            color: Colors.grey[200],
-            child: const Center(child: CircularProgressIndicator()),
-          ),
-        errorWidget: (context, url, error) => errorWidget ?? 
-          Container(
-            color: Colors.grey[300],
-            child: const Icon(Icons.error),
-          ),
+        placeholder:
+            (context, url) =>
+                placeholder ??
+                Container(
+                  color: Colors.grey[200],
+                  child: const Center(child: CircularProgressIndicator()),
+                ),
+        errorWidget:
+            (context, url, error) =>
+                errorWidget ??
+                Container(
+                  color: Colors.grey[300],
+                  child: const Icon(Icons.error),
+                ),
       ),
     );
   }
@@ -57,13 +61,13 @@ class BottomCropClipper extends CustomClipper<Rect> {
   Rect getClip(Size size) {
     // إنشاء مستطيل يقطع الجزء السفلي من الصورة
     return Rect.fromLTRB(
-      0, 
-      0, 
-      size.width, 
-      size.height * (1 - bottomCropPercentage)
+      0,
+      0,
+      size.width,
+      size.height * (1 - bottomCropPercentage),
     );
   }
 
   @override
   bool shouldReclip(CustomClipper<Rect> oldClipper) => true;
-} 
+}

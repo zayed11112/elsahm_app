@@ -151,9 +151,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         'تم النقر على زر الحجز للعقار: ${apartment.id}',
                       );
 
-                      // استخدام خدمة الحجز
-                      final bookingService = BookingServiceSupabase();
-
                       // عرض رسالة للمستخدم
                       ScaffoldMessenger.of(context).showSnackBar(
                         const SnackBar(

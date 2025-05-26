@@ -23,7 +23,7 @@ class BookingRequest {
     required this.apartmentPrice,
     this.status = 'pending',
     DateTime? createdAt,
-  }) : this.createdAt = createdAt ?? DateTime.now();
+  }) : createdAt = createdAt ?? DateTime.now();
 
   Map<String, dynamic> toJson() {
     return {
@@ -53,9 +53,8 @@ class BookingRequest {
       userId: json['userId'],
       apartmentPrice: json['apartmentPrice'].toDouble(),
       status: json['status'] ?? 'pending',
-      createdAt: json['createdAt'] != null
-          ? DateTime.parse(json['createdAt'])
-          : null,
+      createdAt:
+          json['createdAt'] != null ? DateTime.parse(json['createdAt']) : null,
     );
   }
-} 
+}

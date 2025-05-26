@@ -1,11 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:lottie/lottie.dart';
 
 class GroupsScreen extends StatefulWidget {
-  const GroupsScreen({Key? key}) : super(key: key);
+  const GroupsScreen({super.key});
 
   @override
   State<GroupsScreen> createState() => _GroupsScreenState();
@@ -109,7 +107,7 @@ class _GroupsScreenState extends State<GroupsScreen>
           ),
           if (_isLoading)
             Container(
-              color: Colors.black.withOpacity(0.5),
+              color: Colors.black.withValues(alpha: 128), // 0.5 ≈ 128/255
               child: const Center(child: CircularProgressIndicator()),
             ),
         ],
@@ -267,9 +265,9 @@ class _GroupsScreenState extends State<GroupsScreen>
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
       decoration: BoxDecoration(
-        color: color.withOpacity(0.1),
+        color: color.withValues(alpha: 26), // 0.1 ≈ 26/255
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: color.withOpacity(0.3), width: 1),
+        border: Border.all(color: color.withValues(alpha: 77), width: 1), // 0.3 ≈ 77/255
       ),
       child: Row(
         children: [
@@ -300,12 +298,12 @@ class _GroupsScreenState extends State<GroupsScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: facebookColor.withOpacity(0.1),
+            color: facebookColor.withValues(alpha: 26), // 0.1 ≈ 26/255
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: facebookColor.withOpacity(0.2)),
+        border: Border.all(color: facebookColor.withValues(alpha: 51)), // 0.2 ≈ 51/255
       ),
       child: Material(
         color: Colors.transparent,
@@ -389,6 +387,8 @@ class _GroupsScreenState extends State<GroupsScreen>
                               Clipboard.setData(ClipboardData(text: url)).then((
                                 _,
                               ) {
+                                if (!mounted) return;
+                                
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('تم نسخ الرابط'),
@@ -451,12 +451,12 @@ class _GroupsScreenState extends State<GroupsScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: whatsappColor.withOpacity(0.1),
+            color: whatsappColor.withValues(alpha: 26), // 0.1 ≈ 26/255
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: whatsappColor.withOpacity(0.2)),
+        border: Border.all(color: whatsappColor.withValues(alpha: 51)), // 0.2 ≈ 51/255
       ),
       child: Material(
         color: Colors.transparent,
@@ -471,7 +471,7 @@ class _GroupsScreenState extends State<GroupsScreen>
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    color: whatsappColor.withOpacity(0.1),
+                    color: whatsappColor.withValues(alpha: 26), // 0.1 ≈ 26/255
                     shape: BoxShape.circle,
                   ),
                   child: Center(
@@ -533,6 +533,8 @@ class _GroupsScreenState extends State<GroupsScreen>
                               Clipboard.setData(ClipboardData(text: url)).then((
                                 _,
                               ) {
+                                if (!mounted) return;
+                                
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('تم نسخ الرابط'),
@@ -595,12 +597,12 @@ class _GroupsScreenState extends State<GroupsScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: telegramColor.withOpacity(0.1),
+            color: telegramColor.withValues(alpha: 26), // 0.1 ≈ 26/255
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
         ],
-        border: Border.all(color: telegramColor.withOpacity(0.2)),
+        border: Border.all(color: telegramColor.withValues(alpha: 51)), // 0.2 ≈ 51/255
       ),
       child: Material(
         color: Colors.transparent,
@@ -675,6 +677,8 @@ class _GroupsScreenState extends State<GroupsScreen>
                               Clipboard.setData(ClipboardData(text: url)).then((
                                 _,
                               ) {
+                                if (!mounted) return;
+                                
                                 ScaffoldMessenger.of(context).showSnackBar(
                                   const SnackBar(
                                     content: Text('تم نسخ الرابط'),

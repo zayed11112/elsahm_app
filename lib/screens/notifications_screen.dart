@@ -13,7 +13,8 @@ class NotificationsScreen extends StatefulWidget {
   State<NotificationsScreen> createState() => _NotificationsScreenState();
 }
 
-class _NotificationsScreenState extends State<NotificationsScreen> with SingleTickerProviderStateMixin {
+class _NotificationsScreenState extends State<NotificationsScreen>
+    with SingleTickerProviderStateMixin {
   final NotificationService _notificationService = NotificationService();
   bool isLoading = true;
   List<NotificationModel> notifications = [];
@@ -42,10 +43,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
     setState(() {
       isLoading = true;
     });
-    
+
     try {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      
+
       if (authProvider.user != null) {
         setState(() {
           userId = authProvider.user!.uid;
@@ -84,66 +85,73 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         });
         return;
       }
-      
+
       // إلغاء الاشتراك السابق إن وجد
       _notificationsSubscription?.cancel();
-      
+
       try {
         // استخدام استعلام بسيط بدون ترتيب
-        final snapshot = await FirebaseFirestore.instance
-            .collection('notifications')
-            .where('userId', isEqualTo: userId!.trim())
-            .get();
-        
+        final snapshot =
+            await FirebaseFirestore.instance
+                .collection('notifications')
+                .where('userId', isEqualTo: userId!.trim())
+                .get();
+
         // معالجة النتائج
-        final List<NotificationModel> fetchedNotifications = snapshot.docs.map((doc) {
-          final data = doc.data();
-          return NotificationModel(
-            id: doc.id,
-            title: data['title'] ?? '',
-            body: data['body'] ?? '',
-            type: data['type'] ?? 'general',
-            timestamp: (data['timestamp'] as Timestamp?)?.toDate() ?? DateTime.now(),
-            isRead: data['isRead'] ?? false,
-            targetScreen: data['targetScreen'],
-            additionalData: data['additionalData'],
-          );
-        }).toList();
-        
+        final List<NotificationModel> fetchedNotifications =
+            snapshot.docs.map((doc) {
+              final data = doc.data();
+              return NotificationModel(
+                id: doc.id,
+                title: data['title'] ?? '',
+                body: data['body'] ?? '',
+                type: data['type'] ?? 'general',
+                timestamp:
+                    (data['timestamp'] as Timestamp?)?.toDate() ??
+                    DateTime.now(),
+                isRead: data['isRead'] ?? false,
+                targetScreen: data['targetScreen'],
+                additionalData: data['additionalData'],
+              );
+            }).toList();
+
         // فرز البيانات في الذاكرة
         fetchedNotifications.sort((a, b) => b.timestamp.compareTo(a.timestamp));
-        
+
         if (mounted) {
           setState(() {
             notifications = fetchedNotifications;
-            hasUnreadNotifications = notifications.any((notification) => !notification.isRead);
+            hasUnreadNotifications = notifications.any(
+              (notification) => !notification.isRead,
+            );
             isLoading = false;
           });
         }
-        
+
         // تعيين مؤقت لتحديث البيانات كل دقيقة
-        _notificationsSubscription = Stream.periodic(const Duration(minutes: 1)).listen((_) {
+        _notificationsSubscription = Stream.periodic(
+          const Duration(minutes: 1),
+        ).listen((_) {
           if (mounted) {
             _loadNotifications();
           }
         });
-        
       } catch (e) {
         if (mounted) {
           setState(() {
             isLoading = false;
           });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('حدث خطأ أثناء تحميل الإشعارات'),
+              backgroundColor: Colors.red,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
-        
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('حدث خطأ أثناء تحميل الإشعارات'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
       }
-      
+
       // تعيين مؤقت لإيقاف التحميل في حالة عدم استجابة Firestore
       Future.delayed(const Duration(seconds: 5), () {
         if (mounted && isLoading) {
@@ -163,7 +171,9 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
 
   Future<void> _markAsRead(String notificationId) async {
     setState(() {
-      final index = notifications.indexWhere((notification) => notification.id == notificationId);
+      final index = notifications.indexWhere(
+        (notification) => notification.id == notificationId,
+      );
       if (index != -1) {
         notifications[index] = notifications[index].copyWith(isRead: true);
       }
@@ -180,7 +190,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
 
   Future<void> _markAllAsRead() async {
     setState(() {
-      notifications = notifications.map((notification) => notification.copyWith(isRead: true)).toList();
+      notifications =
+          notifications
+              .map((notification) => notification.copyWith(isRead: true))
+              .toList();
       hasUnreadNotifications = false;
     });
 
@@ -188,17 +201,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
       if (userId != null) {
         await _notificationService.markAllNotificationsAsRead(userId!);
       }
-      
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('تم تحديث جميع الإشعارات كمقروءة'),
-          backgroundColor: Colors.green,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('تم تحديث جميع الإشعارات كمقروءة'),
+            backgroundColor: Colors.green,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
-        ),
-      );
+        );
+      }
     } catch (error) {
       // Silent error handling
     }
@@ -209,29 +224,33 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
       if (userId != null) {
         await _notificationService.deleteNotification(notificationId);
       }
-      
+
       setState(() {
         notifications.removeWhere((item) => item.id == notificationId);
-        hasUnreadNotifications = notifications.any((notification) => !notification.isRead);
+        hasUnreadNotifications = notifications.any(
+          (notification) => !notification.isRead,
+        );
       });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('تم حذف الإشعار'),
-          backgroundColor: Colors.grey[700],
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('تم حذف الإشعار'),
+            backgroundColor: Colors.grey[700],
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
+            action: SnackBarAction(
+              label: 'تراجع',
+              textColor: Colors.white,
+              onPressed: () {
+                _loadNotifications();
+              },
+            ),
           ),
-          action: SnackBarAction(
-            label: 'تراجع',
-            textColor: Colors.white,
-            onPressed: () {
-              _loadNotifications();
-            },
-          ),
-        ),
-      );
+        );
+      }
     } catch (error) {
       // Silent error handling
     }
@@ -241,7 +260,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final emptyMessage = 'لا توجد إشعارات حتى الآن';
-    
+
     return Scaffold(
       appBar: AppBar(
         title: Text('الإشعارات'),
@@ -263,23 +282,25 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         children: [
           // محتوى الشاشة الرئيسي
           Expanded(
-            child: isLoading
-                ? Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 16),
-                        Text(
-                          'جاري تحميل الإشعارات...',
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white70 : Colors.black54,
+            child:
+                isLoading
+                    ? Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const CircularProgressIndicator(),
+                          const SizedBox(height: 16),
+                          Text(
+                            'جاري تحميل الإشعارات...',
+                            style: TextStyle(
+                              color:
+                                  isDarkMode ? Colors.white70 : Colors.black54,
+                            ),
                           ),
-                        ),
-                      ],
-                    ),
-                  )
-                : notifications.isEmpty
+                        ],
+                      ),
+                    )
+                    : notifications.isEmpty
                     ? _buildEmptyState(emptyMessage, isDarkMode)
                     : _buildNotificationsList(isDarkMode),
           ),
@@ -300,7 +321,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
               Icon(
                 Icons.notifications_off_outlined,
                 size: 80,
-                color: isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700],
+                color:
+                    isDarkMode
+                        ? Colors.lightBlueAccent
+                        : Colors.lightBlueAccent[700],
               ),
               const SizedBox(height: 24),
               Text(
@@ -318,7 +342,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                 icon: const Icon(Icons.refresh),
                 label: const Text('تحديث'),
                 style: ElevatedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                 ),
               ),
             ],
@@ -339,15 +366,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           separatorBuilder: (context, index) => const SizedBox(height: 8.0),
           itemBuilder: (context, index) {
             final notification = notifications[index];
-            
+
             final Color cardColor = _getCardColor(notification, isDarkMode);
             final Color textColor = isDarkMode ? Colors.white : Colors.black87;
-            
+
             return _buildNotificationCard(
-              context, 
-              notification, 
-              cardColor, 
-              textColor, 
+              context,
+              notification,
+              cardColor,
+              textColor,
               isDarkMode,
             );
           },
@@ -357,10 +384,10 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
   }
 
   Widget _buildNotificationCard(
-    BuildContext context, 
-    NotificationModel notification, 
-    Color cardColor, 
-    Color textColor, 
+    BuildContext context,
+    NotificationModel notification,
+    Color cardColor,
+    Color textColor,
     bool isDarkMode,
   ) {
     return Dismissible(
@@ -373,10 +400,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           color: Colors.red,
           borderRadius: BorderRadius.circular(12.0),
         ),
-        child: const Icon(
-          Icons.delete_outline,
-          color: Colors.white,
-        ),
+        child: const Icon(Icons.delete_outline, color: Colors.white),
       ),
       confirmDismiss: (direction) async {
         return await showDialog(
@@ -407,7 +431,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
           if (!notification.isRead) {
             _markAsRead(notification.id);
           }
-          
+
           if (notification.targetScreen != null) {
             // التنقل إلى الشاشة المستهدفة (يمكن تنفيذها في المستقبل)
           }
@@ -420,15 +444,19 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
             boxShadow: [
               if (!isDarkMode)
                 BoxShadow(
-                  color: Colors.black.withOpacity(0.05),
+                  color: Colors.black.withValues(alpha: 0.05),
                   blurRadius: 8,
                   offset: const Offset(0, 2),
                 ),
             ],
             border: Border.all(
-              color: !notification.isRead 
-                  ? (isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700])!.withOpacity(0.5)
-                  : Colors.transparent,
+              color:
+                  !notification.isRead
+                      ? (isDarkMode
+                              ? Colors.lightBlueAccent
+                              : Colors.lightBlueAccent[700])!
+                          .withValues(alpha: 0.5)
+                      : Colors.transparent,
               width: 1.5,
             ),
           ),
@@ -439,14 +467,17 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                   width: 4,
                   constraints: const BoxConstraints(minHeight: 10),
                   decoration: BoxDecoration(
-                    color: isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700],
+                    color:
+                        isDarkMode
+                            ? Colors.lightBlueAccent
+                            : Colors.lightBlueAccent[700],
                     borderRadius: const BorderRadius.only(
                       topRight: Radius.circular(12.0),
                       bottomRight: Radius.circular(12.0),
                     ),
                   ),
                 ),
-              
+
               Padding(
                 padding: const EdgeInsets.only(
                   right: 12.0,
@@ -456,10 +487,13 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                 ),
                 child: _getNotificationIcon(notification.type, isDarkMode),
               ),
-              
+
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 16.0, horizontal: 8.0),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 16.0,
+                    horizontal: 8.0,
+                  ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -470,31 +504,38 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
                               notification.title,
                               style: TextStyle(
                                 fontSize: 16,
-                                fontWeight: notification.isRead ? FontWeight.w500 : FontWeight.bold,
+                                fontWeight:
+                                    notification.isRead
+                                        ? FontWeight.w500
+                                        : FontWeight.bold,
                                 color: textColor,
                               ),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ),
-                          
+
                           Text(
                             _formatTime(notification.timestamp),
                             style: TextStyle(
                               fontSize: 12,
-                              color: isDarkMode ? Colors.white60 : Colors.black54,
+                              color:
+                                  isDarkMode ? Colors.white60 : Colors.black54,
                             ),
                           ),
                         ],
                       ),
-                      
+
                       const SizedBox(height: 8),
-                      
+
                       Text(
                         notification.body,
                         style: TextStyle(
                           fontSize: 14,
-                          color: isDarkMode ? Colors.white70 : Colors.black87.withOpacity(0.7),
+                          color:
+                              isDarkMode
+                                  ? Colors.white70
+                                  : Colors.black87.withValues(alpha: 0.7),
                         ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
@@ -511,14 +552,15 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
   }
 
   Widget _getNotificationIcon(String type, bool isDarkMode) {
-    final Color iconColor = isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700]!;
-    
+    final Color iconColor =
+        isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700]!;
+
     switch (type) {
       case 'payment':
         return Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.payment, color: iconColor),
@@ -527,7 +569,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         return Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.calendar_today, color: iconColor),
@@ -536,7 +578,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         return Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.account_balance_wallet, color: iconColor),
@@ -545,7 +587,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         return Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.info_outline, color: iconColor),
@@ -554,7 +596,7 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
         return Container(
           padding: const EdgeInsets.all(10),
           decoration: BoxDecoration(
-            color: iconColor.withOpacity(0.1),
+            color: iconColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
           child: Icon(Icons.notifications, color: iconColor),
@@ -564,20 +606,20 @@ class _NotificationsScreenState extends State<NotificationsScreen> with SingleTi
 
   Color _getCardColor(NotificationModel notification, bool isDarkMode) {
     if (isDarkMode) {
-      return notification.isRead 
-          ? const Color(0xFF2C3E50).withOpacity(0.7) 
+      return notification.isRead
+          ? const Color(0xFF2C3E50).withValues(alpha: 0.7)
           : const Color(0xFF2C3E50);
     } else {
-      return notification.isRead 
-          ? Colors.white 
-          : Colors.lightBlue.withOpacity(0.05);
+      return notification.isRead
+          ? Colors.white
+          : Colors.lightBlue.withValues(alpha: 0.05);
     }
   }
 
   String _formatTime(DateTime time) {
     final now = DateTime.now();
     final difference = now.difference(time);
-    
+
     if (difference.inDays > 7) {
       return DateFormat('dd/MM/yyyy').format(time);
     } else if (difference.inDays > 0) {
@@ -634,4 +676,4 @@ class NotificationModel {
       additionalData: additionalData ?? this.additionalData,
     );
   }
-} 
+}

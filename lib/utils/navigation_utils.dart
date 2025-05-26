@@ -26,18 +26,23 @@ class NavigationUtils {
     try {
       _isNavigating = true;
 
+      // Capture Navigator before any async operations
+      final navigator = Navigator.of(context);
+      final scaffoldBackgroundColor = Theme.of(context).scaffoldBackgroundColor;
+
       final route = LoadingRoute<T>(
         page: page,
         lottieAsset: lottieAsset,
         minimumLoadingTime: minimumLoadingTime,
-        backgroundColor: backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: backgroundColor ?? scaffoldBackgroundColor,
         lottieSize: lottieSize,
       );
 
-      final result = replaceCurrent 
-          ? await Navigator.pushReplacement(context, route)
-          : await Navigator.push(context, route);
-          
+      final result =
+          replaceCurrent
+              ? await navigator.pushReplacement(route)
+              : await navigator.push(route);
+
       return result;
     } catch (e) {
       debugPrint("❌ خطأ في الانتقال: $e");
@@ -71,19 +76,24 @@ class NavigationUtils {
     try {
       _isNavigating = true;
 
+      // Capture Navigator before any async operations
+      final navigator = Navigator.of(context);
+      final scaffoldBackgroundColor = Theme.of(context).scaffoldBackgroundColor;
+
       final route = DataLoadingRoute<T, D>(
         dataLoader: dataLoader,
         buildPageWithData: pageBuilder,
         lottieAsset: lottieAsset,
         minimumLoadingTime: minimumLoadingTime,
-        backgroundColor: backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+        backgroundColor: backgroundColor ?? scaffoldBackgroundColor,
         lottieSize: lottieSize,
       );
 
-      final result = replaceCurrent 
-          ? await Navigator.pushReplacement(context, route)
-          : await Navigator.push(context, route);
-          
+      final result =
+          replaceCurrent
+              ? await navigator.pushReplacement(route)
+              : await navigator.push(route);
+
       return result;
     } catch (e) {
       debugPrint("❌ خطأ في الانتقال: $e");
@@ -95,7 +105,7 @@ class NavigationUtils {
       });
     }
   }
-  
+
   /// Navigate back safely, preventing crashes and freezes
   static bool navigateBack(BuildContext context, {dynamic result}) {
     if (!_isNavigating && Navigator.canPop(context)) {
@@ -108,4 +118,4 @@ class NavigationUtils {
     }
     return false;
   }
-} 
+}

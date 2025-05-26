@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:intl/intl.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:lottie/lottie.dart';
 import 'package:logging/logging.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
@@ -11,7 +8,7 @@ import 'booking_details_screen.dart';
 import 'apartments_list_screen.dart';
 
 class BookingRequestsScreen extends StatefulWidget {
-  const BookingRequestsScreen({Key? key}) : super(key: key);
+  const BookingRequestsScreen({super.key});
 
   @override
   State<BookingRequestsScreen> createState() => _BookingRequestsScreenState();
@@ -21,16 +18,15 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
   final BookingService _bookingService = BookingService();
   final Logger _logger = Logger('BookingRequestsScreen');
   bool _isRefreshing = false;
-  bool _isDateFormattingInitialized = false;
-  
+
   @override
   void initState() {
     super.initState();
     _logger.info('BookingRequestsScreen initialized');
     initializeDateFormatting('ar', null).then((_) {
-      setState(() {
-        _isDateFormattingInitialized = true;
-      });
+      // setState(() {
+      //   _isDateFormattingInitialized = true; // This line was causing an error after the field was removed
+      // });
     });
   }
 
@@ -38,12 +34,12 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
   List<Booking> _filterBookings(List<Booking> bookings) {
     // بعد إزالة القائمة المنسدلة، نعيد جميع الحجوزات دائماً
     return bookings;
-    
+
     // كان الكود السابق:
     // if (_selectedStatusFilter == 'الكل') {
     //   return bookings;
     // }
-    // 
+    //
     // BookingStatus statusFilter;
     // switch (_selectedStatusFilter) {
     //   case 'قيد الانتظار':
@@ -58,7 +54,7 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
     //   default:
     //     return bookings;
     // }
-    // 
+    //
     // return bookings.where((booking) => booking.status == statusFilter).toList();
   }
 
@@ -81,8 +77,6 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
         return Colors.green;
       case BookingStatus.cancelled:
         return Colors.red;
-      default:
-        return Colors.grey;
     }
   }
 
@@ -95,8 +89,6 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
         return Icons.check_circle;
       case BookingStatus.cancelled:
         return Icons.cancel;
-      default:
-        return Icons.info_outline;
     }
   }
 
@@ -104,13 +96,13 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
   Future<void> _refreshData() async {
     _logger.info('Manual refresh requested');
     if (_isRefreshing) return;
-    
+
     setState(() {
       _isRefreshing = true;
     });
-    
+
     await Future.delayed(const Duration(milliseconds: 500));
-    
+
     setState(() {
       _isRefreshing = false;
     });
@@ -121,15 +113,17 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
     _logger.info('Building BookingRequestsScreen');
     return Scaffold(
       appBar: AppBar(
-        title: const Text('طلبات الحجز',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'طلبات الحجز',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
           // الانتقال إلى شاشة العقارات المتاحة بدلاً من الشاشة الرئيسية
           Navigator.push(
-            context, 
+            context,
             MaterialPageRoute(
               builder: (context) => const ApartmentsListScreen(),
             ),
@@ -149,22 +143,24 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                 stream: _bookingService.getUserBookingsStream(),
                 builder: (context, snapshot) {
                   // Log the current state of the stream
-                  _logger.info('Stream state: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, hasError: ${snapshot.hasError}');
+                  _logger.info(
+                    'Stream state: ${snapshot.connectionState}, hasData: ${snapshot.hasData}, hasError: ${snapshot.hasError}',
+                  );
                   if (snapshot.hasError) {
                     _logger.severe('Stream error: ${snapshot.error}');
                   }
                   if (snapshot.hasData) {
                     _logger.info('Stream data count: ${snapshot.data!.length}');
                   }
-                  
+
                   if (_isRefreshing) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  
+
                   if (snapshot.connectionState == ConnectionState.waiting) {
                     return const Center(child: CircularProgressIndicator());
                   }
-                  
+
                   if (!snapshot.hasData) {
                     _logger.warning('No data in snapshot');
                     return Center(
@@ -195,10 +191,7 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                           const SizedBox(height: 8),
                           const Text(
                             'يرجى المحاولة مرة أخرى',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                           const SizedBox(height: 24),
                           ElevatedButton.icon(
@@ -210,7 +203,7 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                       ),
                     );
                   }
-                  
+
                   final bookings = snapshot.data!;
                   if (bookings.isEmpty) {
                     return Center(
@@ -241,16 +234,13 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                           const SizedBox(height: 8),
                           const Text(
                             'ستظهر طلبات الحجز الخاصة بك هنا',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
                     );
                   }
-                  
+
                   if (snapshot.hasError) {
                     return Center(
                       child: Column(
@@ -272,12 +262,12 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                           ),
                           const SizedBox(height: 8),
                           Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 32.0),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 32.0,
+                            ),
                             child: Text(
                               'يرجى التحقق من اتصالك بالإنترنت والمحاولة مرة أخرى',
-                              style: TextStyle(
-                                color: Colors.grey[600],
-                              ),
+                              style: TextStyle(color: Colors.grey[600]),
                               textAlign: TextAlign.center,
                             ),
                           ),
@@ -291,16 +281,22 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                       ),
                     );
                   }
-                  
+
                   final filteredBookings = _filterBookings(bookings);
-                  _logger.info('Filtered bookings count: ${filteredBookings.length}');
-                  
+                  _logger.info(
+                    'Filtered bookings count: ${filteredBookings.length}',
+                  );
+
                   if (filteredBookings.isEmpty) {
                     return Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Icon(Icons.search_off_rounded, size: 70, color: Colors.grey[400]),
+                          Icon(
+                            Icons.search_off_rounded,
+                            size: 70,
+                            color: Colors.grey[400],
+                          ),
                           const SizedBox(height: 16),
                           const Text(
                             'لا توجد طلبات حجز',
@@ -313,23 +309,22 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                           const SizedBox(height: 8),
                           const Text(
                             'قم بإنشاء حجز جديد للبدء',
-                            style: TextStyle(
-                              fontSize: 14,
-                              color: Colors.grey,
-                            ),
+                            style: TextStyle(fontSize: 14, color: Colors.grey),
                           ),
                         ],
                       ),
                     );
                   }
-                  
+
                   return ListView.builder(
                     padding: const EdgeInsets.all(16),
                     itemCount: filteredBookings.length,
                     itemBuilder: (context, index) {
                       final booking = filteredBookings[index];
-                      _logger.info('Rendering booking: ${booking.id}, name: ${booking.apartmentName}');
-                      
+                      _logger.info(
+                        'Rendering booking: ${booking.id}, name: ${booking.apartmentName}',
+                      );
+
                       return Card(
                         margin: const EdgeInsets.only(bottom: 16),
                         shape: RoundedRectangleBorder(
@@ -358,13 +353,14 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                                     ),
                                   ),
                                 ),
-                                
+
                                 // Property details
                                 Expanded(
                                   child: Padding(
                                     padding: const EdgeInsets.all(12),
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
                                         Text(
                                           booking.apartmentName,
@@ -396,10 +392,10 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                                 ),
                               ],
                             ),
-                            
+
                             // Divider
                             const Divider(height: 1),
-                            
+
                             // Status section
                             Container(
                               padding: const EdgeInsets.symmetric(
@@ -407,14 +403,17 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                                 horizontal: 16,
                               ),
                               decoration: BoxDecoration(
-                                color: _getStatusColor(booking.status).withOpacity(0.1),
+                                color: _getStatusColor(
+                                  booking.status,
+                                ).withAlpha(26),
                                 borderRadius: const BorderRadius.only(
                                   bottomLeft: Radius.circular(16),
                                   bottomRight: Radius.circular(16),
                                 ),
                               ),
                               child: Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
                                 children: [
                                   Row(
                                     children: [
@@ -428,54 +427,68 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                                         'الحالة: ${Booking.bookingStatusToString(booking.status)}',
                                         style: TextStyle(
                                           fontWeight: FontWeight.bold,
-                                          color: _getStatusColor(booking.status),
+                                          color: _getStatusColor(
+                                            booking.status,
+                                          ),
                                         ),
                                       ),
                                     ],
                                   ),
                                   booking.status == BookingStatus.pending
                                       ? TextButton(
-                                          onPressed: () {
-                                            _showCancelConfirmationDialog(context, booking.id);
-                                          },
-                                          style: TextButton.styleFrom(
-                                            foregroundColor: Colors.red,
-                                            backgroundColor: Colors.red.withOpacity(0.1),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8,
+                                        onPressed: () {
+                                          _showCancelConfirmationDialog(
+                                            context,
+                                            booking.id,
+                                          );
+                                        },
+                                        style: TextButton.styleFrom(
+                                          foregroundColor: Colors.red,
+                                          backgroundColor: Colors.red.withAlpha(
+                                            26,
+                                          ),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
                                             ),
                                           ),
-                                          child: const Text('إلغاء الحجز'),
-                                        )
-                                      : ElevatedButton(
-                                          onPressed: () {
-                                            // Navigate to booking details
-                                            Navigator.push(
-                                              context,
-                                              MaterialPageRoute(
-                                                builder: (context) => BookingDetailsScreen(
-                                                  bookingId: booking.id,
-                                                ),
-                                              ),
-                                            );
-                                          },
-                                          style: ElevatedButton.styleFrom(
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(20),
-                                            ),
-                                            padding: const EdgeInsets.symmetric(
-                                              horizontal: 16,
-                                              vertical: 8,
-                                            ),
-                                            backgroundColor: Theme.of(context).primaryColor,
-                                            foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 8,
                                           ),
-                                          child: const Text('التفاصيل'),
                                         ),
+                                        child: const Text('إلغاء الحجز'),
+                                      )
+                                      : ElevatedButton(
+                                        onPressed: () {
+                                          // Navigate to booking details
+                                          Navigator.push(
+                                            context,
+                                            MaterialPageRoute(
+                                              builder:
+                                                  (context) =>
+                                                      BookingDetailsScreen(
+                                                        bookingId: booking.id,
+                                                      ),
+                                            ),
+                                          );
+                                        },
+                                        style: ElevatedButton.styleFrom(
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
+                                            ),
+                                          ),
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 8,
+                                          ),
+                                          backgroundColor:
+                                              Theme.of(context).primaryColor,
+                                          foregroundColor: Colors.white,
+                                        ),
+                                        child: const Text('التفاصيل'),
+                                      ),
                                 ],
                               ),
                             ),
@@ -511,21 +524,30 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
             TextButton(
               onPressed: () async {
                 Navigator.of(dialogContext).pop(); // Close the dialog
-                
+
+                // Store context before async operation
+                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                final navigator = Navigator.of(context);
+
                 // Show loading indicator
                 _showLoadingDialog(context);
-                
+
                 // Cancel the booking
                 final success = await _bookingService.cancelBooking(bookingId);
-                
+
+                // Check if widget is still mounted before using context
+                if (!mounted) return;
+
                 // Hide loading indicator
-                Navigator.of(context).pop();
-                
+                navigator.pop();
+
                 // Show result
-                ScaffoldMessenger.of(context).showSnackBar(
+                scaffoldMessenger.showSnackBar(
                   SnackBar(
                     content: Text(
-                      success ? 'تم إلغاء الحجز بنجاح' : 'حدث خطأ أثناء إلغاء الحجز',
+                      success
+                          ? 'تم إلغاء الحجز بنجاح'
+                          : 'حدث خطأ أثناء إلغاء الحجز',
                     ),
                     backgroundColor: success ? Colors.green : Colors.red,
                   ),
@@ -558,4 +580,4 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
       },
     );
   }
-} 
+}

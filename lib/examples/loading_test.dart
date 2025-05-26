@@ -11,11 +11,9 @@ class LoadingTest extends StatelessWidget {
   Widget build(BuildContext context) {
     // تفعيل وضع التصحيح
     LoadingService.debugMode = true;
-    
+
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('اختبار التحميل'),
-      ),
+      appBar: AppBar(title: const Text('اختبار التحميل')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -23,7 +21,10 @@ class LoadingTest extends StatelessWidget {
             // اختبار باستخدام NavigationProvider
             ElevatedButton(
               onPressed: () {
-                final provider = Provider.of<NavigationProvider>(context, listen: false);
+                final provider = Provider.of<NavigationProvider>(
+                  context,
+                  listen: false,
+                );
                 provider.navigateWithLoading(
                   context: context,
                   page: const TestDestination(title: 'النمط القديم'),
@@ -32,9 +33,9 @@ class LoadingTest extends StatelessWidget {
               },
               child: const Text('طريقة NavigationProvider'),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // اختبار باستخدام NavigationUtils مباشرة
             ElevatedButton(
               onPressed: () {
@@ -42,14 +43,16 @@ class LoadingTest extends StatelessWidget {
                   context: context,
                   page: const TestDestination(title: 'طريقة NavigationUtils'),
                   lottieAsset: 'assets/animations/loading.json',
-                  minimumLoadingTime: const Duration(seconds: 2), // زيادة وقت التحميل للاختبار
+                  minimumLoadingTime: const Duration(
+                    seconds: 2,
+                  ), // زيادة وقت التحميل للاختبار
                 );
               },
               child: const Text('طريقة NavigationUtils'),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // استخدام الخدمة المركزية الجديدة
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -63,11 +66,14 @@ class LoadingTest extends StatelessWidget {
                   minimumLoadingTime: const Duration(seconds: 2),
                 );
               },
-              child: const Text('LoadingService - محسّن', style: TextStyle(fontSize: 16)),
+              child: const Text(
+                'LoadingService - محسّن',
+                style: TextStyle(fontSize: 16),
+              ),
             ),
-            
+
             const SizedBox(height: 20),
-            
+
             // اختبار تحميل البيانات
             ElevatedButton(
               style: ElevatedButton.styleFrom(
@@ -77,14 +83,24 @@ class LoadingTest extends StatelessWidget {
               onPressed: () {
                 LoadingService.navigateWithDataLoading<void, List<String>>(
                   context: context,
-                  dataLoader: () => Future.delayed(
-                    const Duration(seconds: 3),
-                    () => ['بيانات 1', 'بيانات 2', 'بيانات 3', 'بيانات 4', 'بيانات 5'],
-                  ),
+                  dataLoader:
+                      () => Future.delayed(
+                        const Duration(seconds: 3),
+                        () => [
+                          'بيانات 1',
+                          'بيانات 2',
+                          'بيانات 3',
+                          'بيانات 4',
+                          'بيانات 5',
+                        ],
+                      ),
                   pageBuilder: (context, data) => DataPage(items: data),
                 );
               },
-              child: const Text('تحميل مع بيانات خارجية', style: TextStyle(fontSize: 16)),
+              child: const Text(
+                'تحميل مع بيانات خارجية',
+                style: TextStyle(fontSize: 16),
+              ),
             ),
           ],
         ),
@@ -102,9 +118,7 @@ class TestDestination extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -131,14 +145,12 @@ class DataPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('صفحة البيانات'),
-      ),
+      appBar: AppBar(title: const Text('صفحة البيانات')),
       body: Column(
         children: [
           Container(
             padding: const EdgeInsets.all(16),
-            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            color: Theme.of(context).colorScheme.primary.withValues(alpha: 0.1),
             child: const Text(
               'تم تحميل البيانات قبل عرض الصفحة',
               style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
@@ -162,4 +174,4 @@ class DataPage extends StatelessWidget {
       ),
     );
   }
-} 
+}

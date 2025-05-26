@@ -10,14 +10,14 @@ class EmptyStateWidget extends StatelessWidget {
   final double iconSize;
 
   const EmptyStateWidget({
-    Key? key,
+    super.key,
     required this.icon,
     required this.title,
     required this.message,
     required this.buttonText,
     required this.onPressed,
     this.iconSize = 80,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -38,22 +38,23 @@ class EmptyStateWidget extends StatelessWidget {
                 width: iconSize * 1.5,
                 height: iconSize * 1.5,
                 decoration: BoxDecoration(
-                  color: isDarkMode
-                      ? theme.colorScheme.primary.withOpacity(0.05)
-                      : theme.colorScheme.primary.withOpacity(0.08),
+                  color:
+                      isDarkMode
+                          ? theme.colorScheme.primary.withValues(alpha: 0.05)
+                          : theme.colorScheme.primary.withValues(alpha: 0.08),
                   shape: BoxShape.circle,
                 ),
                 child: Center(
                   child: Icon(
                     icon,
                     size: iconSize,
-                    color: theme.colorScheme.primary.withOpacity(0.7),
+                    color: theme.colorScheme.primary.withValues(alpha: 0.7),
                   ),
                 ),
               ),
-              
+
               const SizedBox(height: 24),
-              
+
               // Title text
               Text(
                 title,
@@ -63,9 +64,9 @@ class EmptyStateWidget extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 12),
-              
+
               // Message text
               Text(
                 message,
@@ -74,9 +75,9 @@ class EmptyStateWidget extends StatelessWidget {
                 ),
                 textAlign: TextAlign.center,
               ),
-              
+
               const SizedBox(height: 32),
-              
+
               // Action button
               ElevatedButton(
                 onPressed: onPressed,
@@ -107,4 +108,4 @@ class EmptyStateWidget extends StatelessWidget {
       ),
     );
   }
-} 
+}
