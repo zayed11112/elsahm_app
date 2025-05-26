@@ -2543,7 +2543,7 @@ class _HomeScreenState extends State<HomeScreen> {
           
           // Profile information with reduced spacing
           SizedBox(
-            height: 110, // Reduced overall height
+            height: 100, // Reduced from 110 to fix overflow
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.center,

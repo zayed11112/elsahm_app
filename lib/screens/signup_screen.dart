@@ -1,11 +1,50 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+// ignore: unused_import
 import 'package:logging/logging.dart';
+import 'package:flutter/services.dart';
+import 'dart:async';
 import '../providers/auth_provider.dart';
-import '../providers/navigation_provider.dart'; // Import NavigationProvider
-import 'main_navigation_screen.dart'; // Import MainNavigationScreen
-// No need to import LoginScreen here if we just pop
+import '../providers/navigation_provider.dart';
+import 'main_navigation_screen.dart';
+import 'privacy_policy_screen.dart';
+import 'login_screen.dart';
+
+// Import custom page route
+class CustomPageRoute<T> extends PageRouteBuilder<T> {
+  final Widget child;
+  final RouteSettings settings;
+  final bool rightToLeft;
+
+  CustomPageRoute({
+    required this.child,
+    required this.settings,
+    this.rightToLeft = true,
+  }) : super(
+          settings: settings,
+          pageBuilder: (context, animation, secondaryAnimation) => child,
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            final begin = rightToLeft ? const Offset(1.0, 0.0) : const Offset(-1.0, 0.0);
+            const end = Offset.zero;
+            const curve = Curves.easeInOutCubic;
+            
+            var tween = Tween(begin: begin, end: end).chain(
+              CurveTween(curve: curve),
+            );
+            
+            var offsetAnimation = animation.drive(tween);
+            
+            return SlideTransition(
+              position: offsetAnimation,
+              child: FadeTransition(
+                opacity: animation,
+                child: child,
+              ),
+            );
+          },
+          transitionDuration: const Duration(milliseconds: 500),
+        );
+}
 
 class SignUpScreen extends StatefulWidget {
   const SignUpScreen({super.key});
@@ -14,168 +53,178 @@ class SignUpScreen extends StatefulWidget {
   State<SignUpScreen> createState() => _SignUpScreenState();
 }
 
-class _SignUpScreenState extends State<SignUpScreen> {
+class _SignUpScreenState extends State<SignUpScreen> with SingleTickerProviderStateMixin {
   static final Logger _logger = Logger('SignUpScreen');
   final _formKey = GlobalKey<FormState>();
-  final _fullNameController = TextEditingController();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
   bool _isPasswordVisible = false;
   bool _isConfirmPasswordVisible = false;
   bool _isLoading = false;
-  bool _isGoogleLoading = false;
+  bool _agreeToTerms = false;
+  
+  // Animation controller
+  late AnimationController _animationController;
+  late Animation<double> _fadeAnimation;
+  late Animation<Offset> _slideAnimation;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+
+    _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeInOut,
+      ),
+    );
+
+    _slideAnimation = Tween<Offset>(
+      begin: const Offset(0, 0.1),
+      end: Offset.zero,
+    ).animate(
+      CurvedAnimation(
+        parent: _animationController,
+        curve: Curves.easeOut,
+      ),
+    );
+
+    // Start the animation
+    _animationController.forward();
+  }
 
   @override
   void dispose() {
-    _fullNameController.dispose();
     _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
+    _animationController.dispose();
     super.dispose();
   }
 
   Future<void> _signUp() async {
     if (_formKey.currentState?.validate() ?? false) {
-      setState(() => _isLoading = true); // Show loading indicator
+      // Add haptic feedback when submitting
+      HapticFeedback.mediumImpact();
+      
+      setState(() => _isLoading = true);
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final navProvider = Provider.of<NavigationProvider>(
-        context,
-        listen: false,
-      ); // Get NavigationProvider
-      final fullName = _fullNameController.text.trim();
+      final navProvider = Provider.of<NavigationProvider>(context, listen: false);
       final email = _emailController.text.trim();
       final password = _passwordController.text.trim();
 
       bool success = false;
       try {
         success = await authProvider.signUp(email, password);
-
-        // إذا نجح التسجيل، قم بتحديث الملف الشخصي بالاسم الكامل
-        if (success && mounted) {
-          // تحديث الملف الشخصي بالاسم الكامل
-          await authProvider.updateUserProfile(fullName);
-        }
+        // No need to update profile with name since we removed that field
       } finally {
         if (mounted) {
-          setState(() => _isLoading = false); // Hide loading indicator
+          setState(() => _isLoading = false);
         }
       }
 
       if (success && mounted) {
-        // Navigate to MainNavigationScreen and select the 'More' tab (index 4)
-        // Pop all routes until the root (or a specific point if needed) and push MainNavigationScreen
-        navProvider.setIndex(4); // Set the index for the 'More' screen
-
+        navProvider.setIndex(4);
         _logger.info("تم إنشاء الحساب بنجاح - الانتقال إلى الشاشة الرئيسية");
 
-        // Navigate to MainNavigationScreen
         Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
           (route) => false, // Remove all previous routes
         );
 
-        // طلب التحقق من اكتمال الملف الشخصي بعد فترة قصيرة
         Future.delayed(const Duration(milliseconds: 500), () {
           MainNavigationScreen.checkProfileCompletion();
         });
 
-        // عرض رسالة نجاح
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
-              'تم إنشاء الحساب بنجاح! تم حفظ اسمك في قاعدة البيانات.',
+          SnackBar(
+            content: const Text(
+              'تم إنشاء الحساب بنجاح!',
             ),
-            backgroundColor: Colors.green,
+            backgroundColor: Theme.of(context).colorScheme.tertiary,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       } else if (!success && mounted) {
-        // Show error message
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text(
+          SnackBar(
+            content: const Text(
               'فشل إنشاء الحساب. قد يكون البريد الإلكتروني مستخدماً بالفعل.',
-            ), // Sign up failed. Email might be in use.
-            backgroundColor: Colors.red,
+            ),
+            backgroundColor: Theme.of(context).colorScheme.error,
+            behavior: SnackBarBehavior.floating,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(10),
+            ),
           ),
         );
       }
+    } else {
+      // Add haptic feedback for invalid form
+      HapticFeedback.lightImpact();
     }
   }
 
-  // دالة تسجيل الدخول عبر جوجل
-  Future<void> _signUpWithGoogle() async {
-    setState(() => _isGoogleLoading = true);
-
-    try {
-      final authProvider = Provider.of<AuthProvider>(context, listen: false);
-      final navProvider = Provider.of<NavigationProvider>(
-        context,
-        listen: false,
-      );
-
-      final success = await authProvider.signInWithGoogle();
-
-      if (!mounted) return;
-
-      if (success) {
-        // إذا كان هناك اسم كامل مدخل، قم بتحديث الملف الشخصي
-        final fullName = _fullNameController.text.trim();
-        if (fullName.isNotEmpty) {
-          await authProvider.updateUserProfile(fullName);
-        }
-
-        if (!mounted) return;
-
-        // Navigate to MainNavigationScreen
-        Navigator.of(context).popUntil((route) => route.isFirst);
-        navProvider.setIndex(4);
-
-        _logger.info(
-          "تسجيل الدخول بنجاح عبر جوجل - الانتقال إلى الشاشة الرئيسية",
-        );
-
-        // Navigate to MainNavigationScreen
-        Navigator.of(context).pushAndRemoveUntil(
-          MaterialPageRoute(builder: (context) => MainNavigationScreen()),
-          (route) => false, // Remove all previous routes
-        );
-
-        // طلب التحقق من اكتمال الملف الشخصي بعد فترة قصيرة
-        Future.delayed(const Duration(milliseconds: 500), () {
-          MainNavigationScreen.checkProfileCompletion();
-        });
-
-        // Show success message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم تسجيل الدخول بنجاح عبر جوجل'),
-            backgroundColor: Colors.green,
-          ),
-        );
-      } else {
-        // Show error message
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('فشل تسجيل الدخول عبر جوجل'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('حدث خطأ: ${e.toString()}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
-    } finally {
-      if (mounted) {
-        setState(() => _isGoogleLoading = false);
-      }
-    }
+  // Custom input decoration
+  InputDecoration _getInputDecoration({
+    required String labelText,
+    required String hintText,
+    required IconData prefixIcon,
+    Widget? suffixIcon,
+    String? errorText,
+  }) {
+    return InputDecoration(
+      labelText: labelText,
+      hintText: hintText,
+      prefixIcon: Icon(prefixIcon),
+      suffixIcon: suffixIcon,
+      errorText: errorText,
+      filled: true,
+      fillColor: Theme.of(context).brightness == Brightness.dark 
+          ? Colors.grey[800] 
+          : Colors.grey[100],
+      border: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      enabledBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide.none,
+      ),
+      focusedBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.primary,
+          width: 2,
+        ),
+      ),
+      errorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.error,
+          width: 2,
+        ),
+      ),
+      focusedErrorBorder: OutlineInputBorder(
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(
+          color: Theme.of(context).colorScheme.error,
+          width: 2,
+        ),
+      ),
+      contentPadding: const EdgeInsets.symmetric(
+        horizontal: 16,
+        vertical: 16,
+      ),
+    );
   }
 
   @override
@@ -183,289 +232,336 @@ class _SignUpScreenState extends State<SignUpScreen> {
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      // Add AppBar with close button
+      backgroundColor: isDarkMode ? colorScheme.background : Colors.white,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
+        systemOverlayStyle: SystemUiOverlayStyle(
+          statusBarColor: Colors.transparent,
+          statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+        ),
         leading: IconButton(
-          icon: const Icon(Icons.close, color: Colors.grey),
+          icon: Icon(Icons.close, color: isDarkMode ? Colors.white70 : Colors.grey),
           onPressed: () {
+            // Add haptic feedback
+            HapticFeedback.lightImpact();
             Navigator.of(context).pop();
           },
         ),
-        title: const Text(
+        title: Text(
           'إنشاء حساب جديد',
-          style: TextStyle(color: Colors.black87),
+          style: TextStyle(
+            color: isDarkMode ? Colors.white : Colors.black87,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
       ),
-      body: Center(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24.0),
-          child: Form(
-            key: _formKey,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-                // Icon Placeholder (as seen in the mockup)
-                Icon(
-                  Icons.person_add_alt_1,
-                  size: 60,
-                  color: colorScheme.primary,
-                ),
-                const SizedBox(height: 16.0),
-
-                // Name Field
-                TextFormField(
-                  controller: _fullNameController,
-                  decoration: const InputDecoration(
-                    labelText: 'الاسم', // Name
-                    hintText: 'أدخل اسمك', // Enter your name
-                    prefixIcon: Icon(Icons.person_outline),
-                  ),
-                  keyboardType: TextInputType.name,
-                  textCapitalization: TextCapitalization.words,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال الاسم'; // Please enter name
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16.0),
-
-                // Email Field
-                TextFormField(
-                  controller: _emailController,
-                  decoration: const InputDecoration(
-                    labelText: 'البريد الإلكتروني', // Email
-                    hintText: 'أدخل بريدك الإلكتروني', // Enter your email
-                    prefixIcon: Icon(Icons.email_outlined),
-                  ),
-                  keyboardType: TextInputType.emailAddress,
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال البريد الإلكتروني'; // Please enter email
-                    }
-                    if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                      return 'الرجاء إدخال بريد إلكتروني صالح'; // Please enter a valid email
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16.0),
-
-                // Password Field
-                TextFormField(
-                  controller: _passwordController,
-                  obscureText: !_isPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'كلمة المرور', // Password
-                    hintText: 'أدخل كلمة المرور', // Enter your password
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isPasswordVisible
-                            ? Icons.visibility_off
-                            : Icons.visibility,
+      body: FadeTransition(
+        opacity: _fadeAnimation,
+        child: SlideTransition(
+          position: _slideAnimation,
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    // Icon with container
+                    Container(
+                      height: 100,
+                      width: 100,
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? colorScheme.primary.withOpacity(0.2) : colorScheme.primary.withOpacity(0.1),
+                        shape: BoxShape.circle,
                       ),
-                      onPressed: () {
-                        setState(() {
-                          _isPasswordVisible = !_isPasswordVisible;
-                        });
+                      child: Icon(
+                        Icons.person_add_alt_1,
+                        size: 50,
+                        color: colorScheme.primary,
+                      ),
+                    ),
+                    const SizedBox(height: 24.0),
+                    
+                    // Email Field
+                    TextFormField(
+                      controller: _emailController,
+                      decoration: _getInputDecoration(
+                        labelText: 'البريد الإلكتروني',
+                        hintText: 'أدخل بريدك الإلكتروني',
+                        prefixIcon: Icons.email_outlined,
+                      ),
+                      maxLength: 50,
+                      buildCounter: (BuildContext context, {required int currentLength, required bool isFocused, required int? maxLength}) {
+                        return null;
+                      },
+                      keyboardType: TextInputType.emailAddress,
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء إدخال البريد الإلكتروني';
+                        }
+                        if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                          return 'الرجاء إدخال بريد إلكتروني صالح';
+                        }
+                        if (value.length > 50) {
+                          return 'البريد الإلكتروني لا يمكن أن يتجاوز 50 حرف';
+                        }
+                        return null;
                       },
                     ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'الرجاء إدخال كلمة المرور'; // Please enter password
-                    }
-                    if (value.length < 6) {
-                      return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل'; // Password must be at least 6 characters
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 16.0),
+                    const SizedBox(height: 16.0),
 
-                // Confirm Password Field
-                TextFormField(
-                  controller: _confirmPasswordController,
-                  obscureText: !_isConfirmPasswordVisible,
-                  decoration: InputDecoration(
-                    labelText: 'تأكيد كلمة المرور', // Confirm Password
-                    hintText: 'أعد إدخال كلمة المرور', // Re-enter your password
-                    prefixIcon: const Icon(Icons.lock_outline),
-                    suffixIcon: IconButton(
-                      icon: Icon(
-                        _isConfirmPasswordVisible
-                            ? Icons.visibility_off
-                            : Icons.visibility,
-                      ),
-                      onPressed: () {
-                        setState(() {
-                          _isConfirmPasswordVisible =
-                              !_isConfirmPasswordVisible;
-                        });
+                    // Password Field
+                    TextFormField(
+                      controller: _passwordController,
+                      obscureText: !_isPasswordVisible,
+                      maxLength: 50,
+                      buildCounter: (BuildContext context, {required int currentLength, required bool isFocused, required int? maxLength}) {
+                        return null;
                       },
-                    ),
-                  ),
-                  validator: (value) {
-                    if (value == null || value.isEmpty) {
-                      return 'الرجاء تأكيد كلمة المرور'; // Please confirm password
-                    }
-                    if (value != _passwordController.text) {
-                      return 'كلمتا المرور غير متطابقتين'; // Passwords do not match
-                    }
-                    return null;
-                  },
-                ),
-                const SizedBox(height: 24.0),
-
-                // Sign Up Button
-                ElevatedButton(
-                  onPressed:
-                      _isLoading
-                          ? null
-                          : _signUp, // Disable button when loading
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    elevation: 2,
-                  ),
-                  child:
-                      _isLoading
-                          ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                          : const Text(
-                            'إنشاء حساب',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ), // Create Account
-                ),
-                const SizedBox(height: 20.0),
-
-                // OR Divider
-                Row(
-                  children: [
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 12.0),
-                        height: 1.0,
-                        color: Colors.grey.withAlpha(77), // ~0.3 opacity
-                      ),
-                    ),
-                    Text(
-                      'أو',
-                      style: TextStyle(
-                        color: Colors.grey.shade600,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    Expanded(
-                      child: Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 12.0),
-                        height: 1.0,
-                        color: Colors.grey.withAlpha(77), // ~0.3 opacity
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20.0),
-
-                // Social Login Buttons
-                Row(
-                  mainAxisAlignment:
-                      MainAxisAlignment
-                          .center, // Changed from spaceEvenly to center
-                  children: [
-                    // Google Login Button
-                    SizedBox(
-                      width:
-                          MediaQuery.of(context).size.width *
-                          0.7, // Adjusted width to be wider since it's the only button now
-                      child: ElevatedButton.icon(
-                        onPressed: _isGoogleLoading ? null : _signUpWithGoogle,
-                        icon: const FaIcon(
-                          FontAwesomeIcons.google,
-                          color: Colors.red,
-                          size: 20,
+                      decoration: _getInputDecoration(
+                        labelText: 'كلمة المرور',
+                        hintText: 'أدخل كلمة المرور',
+                        prefixIcon: Icons.lock_outline,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isPasswordVisible
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: isDarkMode ? Colors.white70 : Colors.grey,
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isPasswordVisible = !_isPasswordVisible;
+                            });
+                          },
                         ),
-                        label:
-                            _isGoogleLoading
-                                ? const SizedBox(
-                                  height: 20,
-                                  width: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2.0,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.black54,
-                                    ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء إدخال كلمة المرور';
+                        }
+                        if (value.length < 6) {
+                          return 'كلمة المرور يجب أن تكون 6 أحرف على الأقل';
+                        }
+                        if (value.length > 50) {
+                          return 'كلمة المرور لا يمكن أن تتجاوز 50 حرف';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 16.0),
+
+                    // Confirm Password Field
+                    TextFormField(
+                      controller: _confirmPasswordController,
+                      obscureText: !_isConfirmPasswordVisible,
+                      maxLength: 50,
+                      buildCounter: (BuildContext context, {required int currentLength, required bool isFocused, required int? maxLength}) {
+                        return null;
+                      },
+                      decoration: _getInputDecoration(
+                        labelText: 'تأكيد كلمة المرور',
+                        hintText: 'أعد إدخال كلمة المرور',
+                        prefixIcon: Icons.lock_outline,
+                        suffixIcon: IconButton(
+                          icon: Icon(
+                            _isConfirmPasswordVisible
+                                ? Icons.visibility_off
+                                : Icons.visibility,
+                            color: isDarkMode ? Colors.white70 : Colors.grey,  
+                          ),
+                          onPressed: () {
+                            setState(() {
+                              _isConfirmPasswordVisible = !_isConfirmPasswordVisible;
+                            });
+                          },
+                        ),
+                      ),
+                      validator: (value) {
+                        if (value == null || value.isEmpty) {
+                          return 'الرجاء تأكيد كلمة المرور';
+                        }
+                        if (value != _passwordController.text) {
+                          return 'كلمتا المرور غير متطابقتين';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 20.0),
+
+                    // Terms and Conditions Checkbox with Card
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? Colors.grey[800] : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(12),
+                      ),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8.0,
+                        vertical: 4.0,
+                      ),
+                      child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Transform.scale(
+                            scale: 1.1,
+                            child: Checkbox(
+                              value: _agreeToTerms,
+                              activeColor: colorScheme.primary,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              onChanged: (value) {
+                                setState(() {
+                                  _agreeToTerms = value ?? false;
+                                });
+                                // Add haptic feedback
+                                HapticFeedback.selectionClick();
+                              },
+                            ),
+                          ),
+                          Expanded(
+                            child: GestureDetector(
+                              onTap: () {
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const PrivacyPolicyScreen(),
                                   ),
-                                )
-                                : const Text('جوجل'),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white,
-                          foregroundColor: Colors.black87,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
-                            side: BorderSide(color: Colors.grey.shade300),
+                                );
+                              },
+                              child: RichText(
+                                text: TextSpan(
+                                  style: textTheme.bodyMedium?.copyWith(
+                                    color: isDarkMode ? Colors.white70 : Colors.black87,
+                                  ),
+                                  children: <TextSpan>[
+                                    const TextSpan(
+                                      text: 'أوافق على ',
+                                    ),
+                                    TextSpan(
+                                      text: 'شروط الاستخدام  ',
+                                      style: TextStyle(
+                                        color: colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                        decoration: TextDecoration.underline,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 24.0),
+
+                    // Sign Up Button with elevated design
+                    AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: 56,
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(16),
+                        boxShadow: _agreeToTerms && !_isLoading 
+                          ? [
+                              BoxShadow(
+                                color: colorScheme.primary.withOpacity(0.3),
+                                blurRadius: 8,
+                                offset: const Offset(0, 4),
+                              ),
+                            ]
+                          : [],
+                      ),
+                      child: ElevatedButton(
+                        onPressed: (_isLoading || !_agreeToTerms)
+                            ? null
+                            : _signUp, 
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          disabledBackgroundColor: isDarkMode 
+                              ? Colors.grey[700] 
+                              : Colors.grey[300],
+                          disabledForegroundColor: isDarkMode 
+                              ? Colors.grey[500] 
+                              : Colors.grey[500],
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(16),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: _isLoading
+                            ? SizedBox(
+                                height: 24,
+                                width: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: isDarkMode ? colorScheme.primary : Colors.white,
+                                ),
+                              )
+                            : const Text(
+                                'إنشاء حساب',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                      ),
+                    ),
+                    const SizedBox(height: 24.0),
+
+                    // Link to Login Screen with improved design
+                    TextButton(
+                      onPressed: () {
+                        // Add haptic feedback
+                        HapticFeedback.selectionClick();
+                        if (Navigator.canPop(context)) {
+                          Navigator.pop(context);
+                        } else {
+                          // Use custom transition when replacing the route
+                          Navigator.of(context).pushReplacement(
+                            CustomPageRoute(
+                              child: const LoginScreen(),
+                              settings: const RouteSettings(name: '/login'),
+                              rightToLeft: false, // Right to left for going back to login
+                            ),
+                          );
+                        }
+                      },
+                      style: TextButton.styleFrom(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                      ),
+                      child: RichText(
+                        text: TextSpan(
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: isDarkMode ? Colors.white70 : Colors.black87,
+                          ),
+                          children: <TextSpan>[
+                            const TextSpan(
+                              text: 'لديك حساب بالفعل؟ ',
+                            ),
+                            TextSpan(
+                              text: 'تسجيل الدخول',
+                              style: TextStyle(
+                                color: colorScheme.secondary,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 20.0),
-
-                // Link to Login Screen
-                TextButton(
-                  onPressed: () {
-                    // Navigate back to LoginScreen
-                    if (Navigator.canPop(context)) {
-                      Navigator.pop(context);
-                    } else {
-                      // Fallback if it cannot pop (e.g., pushed directly)
-                      // في حالة عدم القدرة على العودة، يمكن إضافة منطق بديل هنا
-                      // مثل التنقل إلى شاشة تسجيل الدخول باستخدام pushReplacement
-                      Navigator.of(context).pushReplacementNamed('/login');
-                    }
-                  },
-                  child: RichText(
-                    text: TextSpan(
-                      style: textTheme.bodyMedium,
-                      children: <TextSpan>[
-                        const TextSpan(
-                          text: 'لديك حساب بالفعل؟ ',
-                        ), // Already have an account?
-                        TextSpan(
-                          text: 'تسجيل الدخول', // Login
-                          style: TextStyle(
-                            color: colorScheme.primary,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
+              ),
             ),
           ),
         ),

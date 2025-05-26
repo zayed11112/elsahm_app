@@ -5,9 +5,15 @@ import '../models/complaint.dart';
 import '../services/complaint_service.dart';
 import '../services/firestore_service.dart';
 import 'complaint_detail_screen.dart';
+import '../models/booking.dart';
 
 class ComplaintsScreen extends StatefulWidget {
-  const ComplaintsScreen({super.key});
+  final Booking? bookingToCancel;
+  
+  const ComplaintsScreen({
+    super.key,
+    this.bookingToCancel,
+  });
 
   @override
   State<ComplaintsScreen> createState() => _ComplaintsScreenState();
@@ -30,6 +36,17 @@ class _ComplaintsScreenState extends State<ComplaintsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
+    
+    // Pre-fill complaint form if there's a booking to cancel
+    if (widget.bookingToCancel != null) {
+      final booking = widget.bookingToCancel!;
+      _titleController.text = 'طلب إلغاء الحجز: ${booking.apartmentName}';
+      _descriptionController.text = 'أرغب في إلغاء الحجز الخاص بي\n'
+          'اسم الوحدة: ${booking.apartmentName}\n'
+          'رقم الحجز: ${booking.id}\n'
+          'تاريخ الحجز: ${booking.startDate.toString().substring(0, 10)}\n'
+          'سبب الإلغاء: ';
+    }
   }
 
   @override
@@ -405,6 +422,13 @@ class _ComplaintsScreenState extends State<ComplaintsScreen>
         }
 
         final userName = snapshot.data!.name;
+        
+        // Show the complaint form automatically if we have a booking to cancel
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (widget.bookingToCancel != null) {
+            _showAddComplaintBottomSheet(context, userId, userName);
+          }
+        });
 
         return Scaffold(
           appBar: AppBar(

@@ -299,7 +299,7 @@ class _SplashScreenState extends State<SplashScreen>
     _stopAnimations();
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => MainNavigationScreen()),
+      MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
     );
 
     // التحقق من اكتمال الملف الشخصي بعد فترة قصيرة من دخول المستخدم

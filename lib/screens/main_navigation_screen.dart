@@ -27,18 +27,22 @@ import 'edit_profile_screen.dart'; // Import EditProfileScreen
 // Removed the placeholder AccountScreen class definition
 
 class MainNavigationScreen extends StatefulWidget {
-  // DIAGNOSTIC: Made navigatorKey public to fix library_private_types_in_public_api
-  static final GlobalKey<MainNavigationScreenState> navigatorKey = GlobalKey<MainNavigationScreenState>();
+  // Static instance reference for profile completion check
+  static MainNavigationScreenState? _instance;
   
-  // Use the static key when creating a new instance
-  MainNavigationScreen({Key? key}) : super(key: navigatorKey);
+  // Constructor now uses a regular key instead of the static key
+  const MainNavigationScreen({Key? key}) : super(key: key);
 
   @override
-  State<MainNavigationScreen> createState() => MainNavigationScreenState();
+  State<MainNavigationScreen> createState() {
+    final state = MainNavigationScreenState();
+    _instance = state;
+    return state;
+  }
   
   // Static method to check profile completion from anywhere
   static void checkProfileCompletion() {
-    navigatorKey.currentState?.checkProfileCompletion();
+    _instance?.checkProfileCompletion();
   }
 }
 

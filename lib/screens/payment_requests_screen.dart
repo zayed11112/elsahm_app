@@ -7,8 +7,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import '../constants/theme.dart';
 import '../extensions/theme_extensions.dart';
 import '../widgets/themed_card.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'dart:math' as math;
+import 'complaints_screen.dart';
 
 // Define colors used in other screens for consistency
 const Color primarySkyBlue = Color(0xFF4FC3F7);
@@ -89,39 +89,6 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
     }
   }
 
-  // فتح واتساب للتواصل مع الدعم الفني
-  Future<void> _openWhatsApp() async {
-    final phoneNumber = '+201093130120';
-    final Uri whatsappUri = Uri.parse('https://wa.me/$phoneNumber');
-
-    try {
-      if (!await launchUrl(whatsappUri, mode: LaunchMode.externalApplication)) {
-        // إذا فشل في فتح واتساب، يمكن استخدام رابط بديل
-        final Uri fallbackUri = Uri.parse(
-          'https://api.whatsapp.com/send?phone=$phoneNumber',
-        );
-        if (!await launchUrl(
-          fallbackUri,
-          mode: LaunchMode.externalApplication,
-        )) {
-          _showErrorSnackBar();
-        }
-      }
-    } catch (e) {
-      _showErrorSnackBar();
-    }
-  }
-
-  void _showErrorSnackBar() {
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('لا يمكن فتح واتساب. يرجى التأكد من تثبيت التطبيق.'),
-        backgroundColor: Colors.red,
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
@@ -160,15 +127,54 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
       length: 3,
       child: Scaffold(
         appBar: _buildAppBar(),
+        floatingActionButton: Padding(
+          padding: const EdgeInsets.only(top: 60),
+          child: FloatingActionButton(
+            onPressed: () {
+              setState(() {
+                // إعادة إنشاء الاستعلامات لتحديث البيانات
+                _streams.clear();
+              });
+              
+              // عرض إشعار لتأكيد التحديث
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('تم تحديث البيانات'),
+                  backgroundColor: primarySkyBlue,
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            },
+            backgroundColor: primarySkyBlue,
+            child: const Icon(Icons.refresh, color: Colors.white),
+          ),
+        ),
+        floatingActionButtonLocation: FloatingActionButtonLocation.endTop,
         body: RefreshIndicator(
           color: primarySkyBlue,
+          backgroundColor: isDarkMode ? Colors.grey[800] : Colors.white,
+          strokeWidth: 3.0,
+          displacement: 40,
+          edgeOffset: 20,
           onRefresh: () async {
+            // Show a snackbar to indicate refresh is happening
+            if (mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(
+                  content: Text('جاري تحديث البيانات...'),
+                  backgroundColor: primarySkyBlue,
+                  duration: Duration(seconds: 1),
+                ),
+              );
+            }
+            
             setState(() {
               // إعادة إنشاء الاستعلامات لتحديث البيانات
               _streams.clear();
             });
+            
             // انتظار قليلاً لإعطاء شعور بالتحديث
-            return Future.delayed(const Duration(milliseconds: 500));
+            return Future.delayed(const Duration(milliseconds: 800));
           },
           child: Stack(
             children: [
@@ -205,12 +211,11 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                 ],
               ),
 
-              // WhatsApp support button
+              // Complaints button
               Positioned(
                 bottom: 20,
-                left: 20,
                 right: 20,
-                child: _buildWhatsAppButton(),
+                child: _buildComplaintsButton(),
               ),
             ],
           ),
@@ -272,75 +277,87 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting &&
             !snapshot.hasData) {
-          return const Center(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                CircularProgressIndicator(color: primarySkyBlue),
-                SizedBox(height: 16),
-                Text('جاري تحميل الطلبات...'),
-              ],
-            ),
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              SizedBox(height: MediaQuery.of(context).size.height * 0.3),
+              const Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    CircularProgressIndicator(color: primarySkyBlue),
+                    SizedBox(height: 16),
+                    Text('جاري تحميل الطلبات...'),
+                  ],
+                ),
+              ),
+            ],
           );
         }
 
         if (snapshot.hasError) {
-          return Center(
-            child: Padding(
-              padding: const EdgeInsets.all(24),
-              child: ThemedCard(
+          return ListView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            children: [
+              const SizedBox(height: 60),
+              Center(
                 child: Padding(
                   padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        Icons.error_outline,
-                        color: rejectedColor,
-                        size: 48,
-                      ),
-                      const SizedBox(height: 16),
-                      const Text(
-                        'حدث خطأ أثناء تحميل الطلبات',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        snapshot.error.toString(),
-                        style: TextStyle(
-                          color:
-                              context.isDarkMode
-                                  ? Colors.grey[400]
-                                  : Colors.grey[700],
-                          fontSize: 12,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 16),
-                      ElevatedButton(
-                        onPressed: () => setState(() => _streams.clear()),
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: primarySkyBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 24,
-                            vertical: 12,
+                  child: ThemedCard(
+                    child: Padding(
+                      padding: const EdgeInsets.all(24),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(
+                            Icons.error_outline,
+                            color: rejectedColor,
+                            size: 48,
                           ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(8),
+                          const SizedBox(height: 16),
+                          const Text(
+                            'حدث خطأ أثناء تحميل الطلبات',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                            ),
+                            textAlign: TextAlign.center,
                           ),
-                        ),
-                        child: const Text('إعادة المحاولة'),
+                          const SizedBox(height: 8),
+                          Text(
+                            snapshot.error.toString(),
+                            style: TextStyle(
+                              color:
+                                  context.isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[700],
+                              fontSize: 12,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 16),
+                          ElevatedButton(
+                            onPressed: () => setState(() => _streams.clear()),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: primarySkyBlue,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 24,
+                                vertical: 12,
+                              ),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
+                            child: const Text('إعادة المحاولة'),
+                          ),
+                        ],
                       ),
-                    ],
+                    ),
                   ),
                 ),
               ),
-            ),
+            ],
           );
         }
 
@@ -418,36 +435,44 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
 
   // بناء حالة فارغة بتصميم جذاب
   Widget _buildEmptyState(IconData icon, String message) {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(24),
-            decoration: BoxDecoration(
-              color:
-                  context.isDarkMode
-                      ? Colors.grey[800]!.withValues(alpha: 0.3)
-                      : Colors.grey[200]!.withValues(alpha: 0.5),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(
-              icon,
-              size: 60,
-              color: context.isDarkMode ? Colors.grey[600] : Colors.grey[400],
-            ),
+    return ListView(
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [
+        SizedBox(
+          height: MediaQuery.of(context).size.height * 0.3, // Enough space for pull
+        ),
+        Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color:
+                      context.isDarkMode
+                          ? Colors.grey[800]!.withValues(alpha: 0.3)
+                          : Colors.grey[200]!.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  size: 60,
+                  color: context.isDarkMode ? Colors.grey[600] : Colors.grey[400],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                message,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: context.isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            message,
-            style: TextStyle(
-              fontSize: 16,
-              color: context.isDarkMode ? Colors.grey[400] : Colors.grey[600],
-            ),
-            textAlign: TextAlign.center,
-          ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -1302,36 +1327,45 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
     );
   }
 
-  // بناء زر واتساب
-  Widget _buildWhatsAppButton() {
-    return ElevatedButton(
-      onPressed: _openWhatsApp,
-      style: ElevatedButton.styleFrom(
-        backgroundColor: const Color(0xFF25D366), // لون واتساب الأخضر
-        foregroundColor: Colors.white,
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        elevation: 3,
-      ),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          // أيقونة واتساب
-          Image.asset(
-            'assets/images/WhatsApp.svg.webp',
-            width: 24,
-            height: 24,
-            color: Colors.white,
-            errorBuilder: (context, error, stackTrace) {
-              return const Icon(Icons.chat, size: 24);
-            },
-          ),
-          const SizedBox(width: 12),
-          const Text(
-            'تواصل مع الدعم الفني عبر واتساب',
-            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+  // بناء زر الشكوى
+  Widget _buildComplaintsButton() {
+    return Container(
+      decoration: BoxDecoration(
+        boxShadow: [
+          BoxShadow(
+            color: primarySkyBlue.withOpacity(0.3),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
           ),
         ],
+      ),
+      child: ElevatedButton.icon(
+        onPressed: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (context) => const ComplaintsScreen(),
+            ),
+          );
+        },
+        icon: const Icon(
+          Icons.report_problem_outlined,
+          size: 22,
+        ),
+        label: const Text(
+          'تقديم شكوى جديدة',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+          ),
+        ),
+        style: ElevatedButton.styleFrom(
+          backgroundColor: primarySkyBlue,
+          foregroundColor: Colors.white,
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+          elevation: 0,
+        ),
       ),
     );
   }
