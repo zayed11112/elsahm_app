@@ -501,10 +501,19 @@ class _SearchScreenState extends State<SearchScreen> {
   }
 
   Widget _buildPropertyCard(Apartment apartment) {
-    // تحضير بطاقة العقار
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
     return Card(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      elevation: 4,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+        side: BorderSide(
+          width: 0.5, 
+          color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+        ),
+      ),
+      elevation: 5,
+      shadowColor: Colors.black38,
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
@@ -518,172 +527,227 @@ class _SearchScreenState extends State<SearchScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // Image Section - تم تبسيطه لعرض الصورة الأولى فقط
-            Stack(
-              alignment: Alignment.bottomCenter,
-              children: [
-                SizedBox(
-                  height: 140,
-                  child:
-                      apartment.imageUrls.isNotEmpty
-                          ? CachedNetworkImage(
-                            imageUrl:
-                                apartment.imageUrls[0], // عرض الصورة الأولى فقط
-                            fit: BoxFit.cover,
-                            width: double.infinity,
-                            placeholder:
-                                (context, url) => Container(
-                                  color: Colors.grey[300],
-                                  child: const Center(
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                ),
-                            errorWidget:
-                                (context, url, error) => Container(
-                                  color: Colors.grey[300],
-                                  child: const Icon(Icons.error),
-                                ),
-                          )
-                          : Container(
-                            color: Colors.grey[300],
-                            child: const Icon(
-                              Icons.home,
-                              size: 50,
-                              color: Colors.grey,
+            // Image Section - with improved aspect ratio and error handling
+            AspectRatio(
+              aspectRatio: 1.5,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  apartment.imageUrls.isNotEmpty
+                    ? CachedNetworkImage(
+                        imageUrl: apartment.imageUrls[0],
+                        fit: BoxFit.cover,
+                        placeholder: (context, url) => Container(
+                          color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
+                          child: const Center(
+                            child: SizedBox(
+                              width: 30,
+                              height: 30,
+                              child: CircularProgressIndicator(strokeWidth: 2),
                             ),
                           ),
-                ),
-
-                // زر المفضلة
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Consumer<FavoritesProvider>(
-                    builder: (context, favoritesProvider, _) {
-                      final bool isFavorite = favoritesProvider.isFavorite(
-                        apartment.id,
-                      );
-                      return GestureDetector(
-                        onTap: () async {
-                          // التحقق من حالة تسجيل الدخول
-                          final authProvider = Provider.of<AuthProvider>(
-                            context,
-                            listen: false,
-                          );
-                          if (!authProvider.isAuthenticated) {
-                            // عرض رسالة تنبيه بضرورة تسجيل الدخول
-                            AuthUtils.showAuthRequiredDialog(context);
-                            return;
-                          }
-
-                          // المستخدم مسجل الدخول، يمكن إضافة/إزالة العقار من المفضلة
-                          try {
-                            final scaffoldMessenger = ScaffoldMessenger.of(
-                              context,
-                            );
-                            final isNowFavorite = await favoritesProvider
-                                .toggleFavorite(apartment);
-                            if (mounted) {
-                              scaffoldMessenger.showSnackBar(
-                                SnackBar(
-                                  content: Text(
-                                    isNowFavorite
-                                        ? 'تم إضافة ${apartment.name} إلى المفضلة'
-                                        : 'تم إزالة ${apartment.name} من المفضلة',
-                                  ),
-                                  duration: const Duration(seconds: 2),
+                        ),
+                        errorWidget: (context, url, error) => Container(
+                          color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
+                          child: Column(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.home_work_outlined,
+                                size: 40,
+                                color: theme.colorScheme.primary.withOpacity(0.7),
+                              ),
+                              const SizedBox(height: 4),
+                              Text(
+                                'لا توجد صورة',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                                 ),
-                              );
-                            }
-                          } catch (e) {
-                            _logger.severe('خطأ في تبديل حالة المفضلة: $e');
-                          }
-                        },
-                        child: Container(
-                          padding: const EdgeInsets.all(8),
-                          decoration: BoxDecoration(
-                            color:
-                                Theme.of(context).brightness == Brightness.dark
-                                    ? const Color(0xFF2A2A2A)
-                                    : Colors.white.withAlpha(204),
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withAlpha(26),
-                                blurRadius: 4,
-                                offset: const Offset(0, 2),
                               ),
                             ],
                           ),
-                          child: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            color:
-                                isFavorite
-                                    ? Colors.red
-                                    : Theme.of(context).brightness ==
-                                        Brightness.dark
-                                    ? Colors.white
-                                    : Colors.grey,
-                            size: 20,
-                          ),
                         ),
-                      );
-                    },
+                      )
+                    : Container(
+                        color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.home_work_outlined,
+                              size: 40,
+                              color: theme.colorScheme.primary.withOpacity(0.7),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'لا توجد صورة',
+                              style: TextStyle(
+                                fontSize: 12,
+                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                  // Price badge overlay
+                  Positioned(
+                    bottom: 0,
+                    left: 0,
+                    right: 0,
+                    child: Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            Colors.black87,
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                      child: Text(
+                        '${apartment.price.toStringAsFixed(0)} جنيه',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          shadows: [
+                            Shadow(
+                              offset: Offset(0, 1),
+                              blurRadius: 2,
+                              color: Colors.black54,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
-              ],
+
+                  // Favorite button
+                  Positioned(
+                    top: 8,
+                    right: 8,
+                    child: Consumer<FavoritesProvider>(
+                      builder: (context, favoritesProvider, _) {
+                        final bool isFavorite = favoritesProvider.isFavorite(apartment.id);
+                        return Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: () async {
+                              // التحقق من حالة تسجيل الدخول
+                              final authProvider = Provider.of<AuthProvider>(
+                                context,
+                                listen: false,
+                              );
+                              if (!authProvider.isAuthenticated) {
+                                AuthUtils.showAuthRequiredDialog(context);
+                                return;
+                              }
+
+                              try {
+                                final scaffoldMessenger = ScaffoldMessenger.of(context);
+                                final isNowFavorite = await favoritesProvider.toggleFavorite(apartment);
+                                if (mounted) {
+                                  scaffoldMessenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(
+                                        isNowFavorite
+                                            ? 'تم إضافة ${apartment.name} إلى المفضلة'
+                                            : 'تم إزالة ${apartment.name} من المفضلة',
+                                      ),
+                                      duration: const Duration(seconds: 2),
+                                    ),
+                                  );
+                                }
+                              } catch (e) {
+                                _logger.severe('خطأ في تبديل حالة المفضلة: $e');
+                              }
+                            },
+                            borderRadius: BorderRadius.circular(20),
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.black38
+                                    : Colors.white.withAlpha(225),
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black.withAlpha(50),
+                                    blurRadius: 3,
+                                    offset: const Offset(0, 1),
+                                  ),
+                                ],
+                              ),
+                              child: Icon(
+                                isFavorite ? Icons.favorite : Icons.favorite_border,
+                                color: isFavorite 
+                                  ? Colors.red 
+                                  : isDarkMode ? Colors.white : Colors.grey[700],
+                                size: 22,
+                              ),
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
             ),
 
-            // Property Info
+            // Property Info with improved layout
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
+                  // Title with better styling
                   Text(
                     apartment.name,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
                       fontSize: 16,
+                      color: isDarkMode ? Colors.white : Colors.black87,
+                      height: 1.3,
                     ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 8),
 
-                  // Location
+                  // Location with improved icon alignment
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
                         Icons.location_on,
                         size: 16,
-                        color: Theme.of(context).colorScheme.primary,
+                        color: theme.colorScheme.primary,
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           apartment.location,
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.grey[600],
+                            fontSize: 13,
+                            color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                            height: 1.3,
                           ),
-                          maxLines: 1,
+                          maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: 8),
 
-                  // Price
-                  Text(
-                    '${apartment.price.toStringAsFixed(0)} جنيه',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 18,
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
+                  // Add a subtle separator
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 8),
+                    child: Divider(height: 1),
                   ),
                 ],
               ),

@@ -66,7 +66,7 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
   // المتغيرات الثابتة والخدمات
   final PropertyServiceSupabase _propertyService = PropertyServiceSupabase();
   final CategoryService _categoryService = CategoryService();
@@ -88,7 +88,6 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-
     // استخدام Future.microtask لإتاحة وقت للشاشة للبناء أولاً
     Future.microtask(() async {
       // جلب البانرات
@@ -107,7 +106,7 @@ class _HomeScreenState extends State<HomeScreen> {
       _setupApartmentsListener();
     });
   }
-
+  
   @override
   void dispose() {
     _apartmentsStreamSubscription?.cancel();
@@ -159,6 +158,8 @@ class _HomeScreenState extends State<HomeScreen> {
       }
     }
   }
+
+  // دالة مساعدة للانتقال إلى صفحة الدردشة مع تأثير انتقال جميل - تم إزالتها
 
   @override
   Widget build(BuildContext context) {

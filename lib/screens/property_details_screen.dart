@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:carousel_slider/carousel_slider.dart' as cs;
-import 'package:logging/logging.dart';
-import 'package:provider/provider.dart';
-import '../models/apartment.dart';
-import '../providers/favorites_provider.dart';
-import 'package:url_launcher/url_launcher.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:video_player/video_player.dart';
 import 'package:chewie/chewie.dart';
 import 'package:flutter/services.dart';
+import 'package:logging/logging.dart';
+import 'package:provider/provider.dart';
+import 'package:share_plus/share_plus.dart';
+import 'package:url_launcher/url_launcher.dart';
+import 'package:video_player/video_player.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import '../models/apartment.dart';
+import '../providers/favorites_provider.dart';
 import '../providers/auth_provider.dart';
 import '../utils/auth_utils.dart';
 import '../screens/checkout_screen.dart';
@@ -2165,19 +2165,80 @@ class _FullScreenGallery extends StatefulWidget {
 class _FullScreenGalleryState extends State<_FullScreenGallery> {
   late int _currentIndex;
   late PageController _pageController;
-  bool _isNavigating = false; // Add this for navigation tracking
+  bool _isNavigating = false; // Track navigation state
+  
+  // Add zoom controller variables
+  List<TransformationController> _transformationControllers = [];
+  List<double> _currentScales = [];
+  final double _minScale = 0.5;
+  final double _maxScale = 4.0;
+  final double _scaleInterval = 0.5;
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
     _pageController = PageController(initialPage: widget.initialIndex);
+    
+    // Initialize transformation controllers for each image
+    _transformationControllers = List.generate(
+      widget.imageUrls.length,
+      (_) => TransformationController(),
+    );
+    
+    // Initialize scale values for each image
+    _currentScales = List.generate(widget.imageUrls.length, (_) => 1.0);
   }
 
   @override
   void dispose() {
     _pageController.dispose();
+    
+    // Dispose all transformation controllers
+    for (final controller in _transformationControllers) {
+      controller.dispose();
+    }
+    
     super.dispose();
+  }
+
+  // Reset zoom when page changes
+  void _resetZoom() {
+    _transformationControllers[_currentIndex].value = Matrix4.identity();
+    _currentScales[_currentIndex] = 1.0;
+    setState(() {});
+  }
+
+  // Zoom in function
+  void _zoomIn() {
+    if (_currentScales[_currentIndex] < _maxScale) {
+      _currentScales[_currentIndex] += _scaleInterval;
+      if (_currentScales[_currentIndex] > _maxScale) {
+        _currentScales[_currentIndex] = _maxScale;
+      }
+      
+      // Apply zoom transformation
+      final scale = _currentScales[_currentIndex];
+      final Matrix4 newMatrix = Matrix4.identity()..scale(scale, scale);
+      _transformationControllers[_currentIndex].value = newMatrix;
+      setState(() {});
+    }
+  }
+
+  // Zoom out function
+  void _zoomOut() {
+    if (_currentScales[_currentIndex] > _minScale) {
+      _currentScales[_currentIndex] -= _scaleInterval;
+      if (_currentScales[_currentIndex] < _minScale) {
+        _currentScales[_currentIndex] = _minScale;
+      }
+      
+      // Apply zoom transformation
+      final scale = _currentScales[_currentIndex];
+      final Matrix4 newMatrix = Matrix4.identity()..scale(scale, scale);
+      _transformationControllers[_currentIndex].value = newMatrix;
+      setState(() {});
+    }
   }
 
   @override
@@ -2189,13 +2250,15 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // معرض الصور بدون تكبير
+          // معرض الصور مع إمكانية التكبير
           PageView.builder(
             controller: _pageController,
             itemCount: widget.imageUrls.length,
             onPageChanged: (index) {
               setState(() {
                 _currentIndex = index;
+                // Reset zoom when changing to a different image
+                _resetZoom();
               });
             },
             itemBuilder: (context, index) {
@@ -2203,64 +2266,75 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                 child: Stack(
                   alignment: Alignment.center,
                   children: [
-                    // الصورة الأساسية
+                    // الصورة الأساسية مع إمكانية التكبير/التصغير
                     Hero(
                       tag: 'image_${widget.imageUrls[index]}',
-                      child: CachedNetworkImage(
-                        imageUrl: widget.imageUrls[index],
-                        fit: BoxFit.contain,
-                        width: size.width,
-                        height: size.height,
-                        placeholder:
-                            (context, url) => Center(
-                              child: CircularProgressIndicator(
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  Theme.of(context).primaryColor,
+                      child: InteractiveViewer(
+                        transformationController: _transformationControllers[index],
+                        minScale: _minScale,
+                        maxScale: _maxScale,
+                        onInteractionEnd: (_) {
+                          // Update current scale after manual zooming
+                          final scale = _transformationControllers[index].value.getMaxScaleOnAxis();
+                          _currentScales[index] = scale;
+                        },
+                        child: CachedNetworkImage(
+                          imageUrl: widget.imageUrls[index],
+                          fit: BoxFit.contain,
+                          width: size.width,
+                          height: size.height,
+                          placeholder:
+                              (context, url) => Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    Theme.of(context).primaryColor,
+                                  ),
+                                  strokeWidth: 2.0,
                                 ),
-                                strokeWidth: 2.0,
                               ),
-                            ),
-                        errorWidget:
-                            (context, url, error) => Column(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Icon(
-                                  Icons.error,
-                                  color: Colors.red[300],
-                                  size: 50,
-                                ),
-                                const SizedBox(height: 10),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(
-                                    horizontal: 16,
-                                    vertical: 8,
+                          errorWidget:
+                              (context, url, error) => Column(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(
+                                    Icons.error,
+                                    color: Colors.red[300],
+                                    size: 50,
                                   ),
-                                  decoration: BoxDecoration(
-                                    color: Colors.red.withValues(alpha: 0.1),
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Text(
-                                    'فشل تحميل الصورة',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.w500,
+                                  const SizedBox(height: 10),
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 16,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color: Colors.red.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(20),
+                                    ),
+                                    child: const Text(
+                                      'فشل تحميل الصورة',
+                                      style: TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
+                                ],
+                              ),
+                        ),
                       ),
                     ),
 
                     // إضافة اللوجو بشفافية 20% (شفاف قليلاً)
-                    Positioned(
-                      bottom: size.height / 3, // وضعه في الثلث السفلي من الشاشة
-                      child: Opacity(
-                        opacity: 0.2, // شفافية 20% فقط
-                        child: Image.asset(
-                          'assets/images/logo_new.png',
-                          height: 80,
-                          width: 80,
+                    Positioned.fill(
+                      child: Center(
+                        child: Opacity(
+                          opacity: 0.2, // شفافية 20%
+                          child: Image.asset(
+                            'assets/images/logo_new.png',
+                            height: 120,
+                            width: 120,
+                          ),
                         ),
                       ),
                     ),
@@ -2284,26 +2358,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                   height: 50,
                   width: 50,
                 ),
-                const SizedBox(height: 3),
-                // رقم الهاتف
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 6,
-                    vertical: 3,
-                  ),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.6),
-                    borderRadius: BorderRadius.circular(6),
-                  ),
-                  child: const Text(
-                    '01093130120',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 12,
-                    ),
-                  ),
-                ),
+                // تم حذف رقم الهاتف
               ],
             ),
           ),
@@ -2459,6 +2514,97 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                         color: Colors.white,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+
+          // أزرار التكبير والتصغير (Zoom controls)
+          Positioned(
+            bottom: 65, // أقرب إلى الأسفل (كان 70)
+            left: 0,
+            right: 0,
+            child: Center(
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(25),
+                  border: Border.all(
+                    color: Colors.white.withValues(alpha: 0.15),
+                    width: 0.8,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.2),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // زر التكبير
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 36, // حجم أصغر (كان 42)
+                      height: 36, // حجم أصغر (كان 42)
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.add,
+                          color: Colors.white,
+                          size: 20, // حجم أيقونة أصغر (كان 24)
+                        ),
+                        padding: EdgeInsets.zero,
+                        onPressed: _zoomIn,
+                      ),
+                    ),
+                    
+                    // زر التصغير
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 36, // حجم أصغر (كان 42)
+                      height: 36, // حجم أصغر (كان 42)
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.remove,
+                          color: Colors.white,
+                          size: 20, // حجم أيقونة أصغر (كان 24)
+                        ),
+                        padding: EdgeInsets.zero,
+                        onPressed: _zoomOut,
+                      ),
+                    ),
+                    
+                    // زر إعادة الضبط
+                    Container(
+                      margin: const EdgeInsets.symmetric(horizontal: 4),
+                      width: 36, // حجم أصغر (كان 42)
+                      height: 36, // حجم أصغر (كان 42)
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: IconButton(
+                        icon: const Icon(
+                          Icons.refresh,
+                          color: Colors.white,
+                          size: 18, // حجم أيقونة أصغر (كان 20)
+                        ),
+                        padding: EdgeInsets.zero,
+                        onPressed: _resetZoom,
                       ),
                     ),
                   ],
