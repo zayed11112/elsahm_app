@@ -79,4 +79,114 @@ class NotificationUtils {
       iconColor: Colors.red[300]!,
     );
   }
+  
+  /// Shows an error message as a MaterialBanner at the top of the screen
+  static void showTopErrorBanner(BuildContext context, String message) {
+    // Hide any existing banner first
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.red.shade700,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        leadingPadding: const EdgeInsets.only(right: 0),
+        actions: [
+          TextButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+            },
+            child: const Text(
+              'حسناً',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    // Auto-hide the banner after 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      }
+    });
+  }
+  
+  /// Shows a success message as a MaterialBanner at the top of the screen
+  static void showTopSuccessBanner(BuildContext context, String message) {
+    // Hide any existing banner first
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.check_circle,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.green.shade700,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        leadingPadding: const EdgeInsets.only(right: 0),
+        actions: [
+          TextButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+            },
+            child: const Text(
+              'حسناً',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    // Auto-hide the banner after 4 seconds
+    Future.delayed(const Duration(seconds: 4), () {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      }
+    });
+  }
 } 

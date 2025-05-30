@@ -44,6 +44,387 @@ class MainNavigationScreen extends StatefulWidget {
   static void checkProfileCompletion() {
     _instance?.checkProfileCompletion();
   }
+  
+  // Static method to wrap other screens with the bottom navigation bar
+  static Widget wrapWithBottomNav({
+    required BuildContext context, 
+    required Widget child,
+    required int selectedIndex,
+  }) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    Provider.of<ThemeProvider>(context);
+    final authProvider = Provider.of<AuthProvider>(context);
+    
+    // Choose logo based on theme
+    final logoAsset = isDarkMode
+        ? 'assets/images/logo_dark.png'
+        : 'assets/images/logo_white.png';
+    
+    // Create a scaffold that includes both app bar and bottom navigation bar
+    return Scaffold(
+      // Include the app bar
+      appBar: AppBar(
+        title: Image.asset(
+          logoAsset,
+          height: 40,
+          errorBuilder: (context, error, stackTrace) {
+            return const Text('Elsahm'); // Fallback text
+          },
+        ),
+        centerTitle: true,
+        leading: Builder(
+          builder: (context) => Padding(
+            padding: const EdgeInsets.only(right: 8.0),
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                splashColor: Colors.white.withValues(alpha: 0.2),
+                onTap: () {
+                  Scaffold.of(context).openDrawer();
+                },
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: Icon(
+                    Icons.menu,
+                    size: 26,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+        actions: [
+          // User balance display with wallet animation
+          Container(
+            margin: EdgeInsets.zero,
+            child: InkWell(
+              borderRadius: BorderRadius.circular(20),
+              onTap: () {
+                // Check if user is authenticated
+                if (authProvider.isAuthenticated) {
+                  // Navigate to wallet screen
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const WalletScreen()),
+                  );
+                } else {
+                  // Show auth required dialog
+                  _showStaticAuthRequiredDialog(context);
+                }
+              },
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Balance amount and currency
+                  if (authProvider.isAuthenticated)
+                    StreamBuilder<UserProfile?>(
+                      stream: FirestoreService().getUserProfileStream(
+                        authProvider.user!.uid,
+                      ),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.waiting) {
+                          return Container(
+                            margin: const EdgeInsets.symmetric(horizontal: 8),
+                            width: 16,
+                            height: 16,
+                            child: const CircularProgressIndicator(
+                              color: Colors.grey,
+                              strokeWidth: 2,
+                            ),
+                          );
+                        }
+
+                        final userBalance = snapshot.data?.balance ?? 0.0;
+                        // Convert to int to remove decimals
+                        final balanceInt = userBalance.toInt();
+
+                        return Container(
+                          margin: EdgeInsets.zero,
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              // Price number
+                              Text(
+                                "$balanceInt",
+                                style: TextStyle(
+                                  color: isDarkMode ? Colors.white : Colors.black87,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 14,
+                                ),
+                              ),
+                              // Currency label below the number
+                              Text(
+                                "جنية",
+                                style: TextStyle(
+                                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 10,
+                                ),
+                              ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                    
+                  // Wallet icon
+                  SizedBox(
+                    width: 70,
+                    height: 70,
+                    child: Lottie.asset(
+                      'assets/animations/wallet2.json',
+                      repeat: true,
+                      animate: true,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+      drawer: const AppDrawer(),
+      body: child,
+      floatingActionButton: FloatingActionButton(
+        onPressed: () {
+          // Navigate to Home (Index 0)
+          final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+          navigationProvider.setIndex(0);
+          // Return to the main screen
+          Navigator.of(context).popUntil((route) => route.isFirst);
+        },
+        backgroundColor: Colors.white,
+        elevation: 4.0,
+        shape: const CircleBorder(),
+        child: Lottie.asset(
+          'assets/animations/app_home_new2.json',
+          width: 42,
+          height: 42,
+          fit: BoxFit.contain,
+        ),
+      ),
+      floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
+      bottomNavigationBar: BottomAppBar(
+        shape: const CircularNotchedRectangle(),
+        notchMargin: 8.0,
+        color: isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFF2C3E50),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: <Widget>[
+            _buildStaticNavItem(
+              context,
+              Icons.search,
+              'البحث',
+              1,
+              selectedIndex,
+            ),
+            _buildStaticNavItem(
+              context,
+              Icons.dashboard_outlined,
+              'الاقسام',
+              2,
+              selectedIndex,
+            ),
+            const SizedBox(width: 40),
+            _buildStaticNavItem(
+              context,
+              Icons.favorite_outline,
+              'المفضلة',
+              3,
+              selectedIndex,
+            ),
+            _buildStaticNavItem(
+              context,
+              Icons.more_horiz_outlined,
+              'المزيد',
+              4,
+              selectedIndex,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+  
+  // Static version of _buildNavItem for use in the static wrapper
+  static Widget _buildStaticNavItem(
+    BuildContext context,
+    IconData icon,
+    String label,
+    int index,
+    int selectedIndex,
+  ) {
+    final bool isSelected = selectedIndex == index;
+    final Color color = isSelected
+        ? (Theme.of(context).brightness == Brightness.dark
+            ? Colors.lightBlueAccent
+            : Colors.tealAccent[400]!)
+        : Colors.grey[400]!;
+
+    return Expanded(
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+            navigationProvider.setIndex(index);
+            // Return to the main navigation screen
+            Navigator.of(context).popUntil((route) => route.isFirst);
+          },
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 4.0),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Icon(icon, color: color, size: 24),
+                const SizedBox(height: 2),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 11,
+                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  // Static method to show auth required dialog
+  static void _showStaticAuthRequiredDialog(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (context) => Dialog(
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        elevation: 10,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(20),
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: isDarkMode 
+                ? [const Color(0xFF2D3748), const Color(0xFF1A202C)]
+                : [Colors.white, const Color(0xFFF7FAFC)],
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.1),
+                blurRadius: 10,
+                spreadRadius: 1,
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Warning animation
+              SizedBox(
+                height: 100,
+                width: 100,
+                child: Lottie.asset(
+                  'assets/animations/warning.json',
+                  repeat: true,
+                  animate: true,
+                  fit: BoxFit.cover,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Title
+              Text(
+                'تسجيل الدخول مطلوب',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: theme.colorScheme.primary,
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Content
+              Text(
+                'يجب عليك تسجيل الدخول أو إنشاء حساب للوصول إلى المحفظة وإدارة رصيدك',
+                textAlign: TextAlign.center,
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  height: 1.5,
+                  color: isDarkMode ? Colors.white70 : Colors.black87,
+                ),
+              ),
+              const SizedBox(height: 24),
+              
+              // Buttons
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  // Cancel button
+                  TextButton(
+                    onPressed: () => Navigator.pop(context),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      child: Text(
+                        'إلغاء',
+                        style: TextStyle(
+                          color: theme.colorScheme.secondary,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 16),
+                  
+                  // Login button
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.pop(context); // Close dialog
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                      );
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: theme.colorScheme.primary,
+                      foregroundColor: Colors.white,
+                      elevation: 2,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                    ),
+                    child: const Text(
+                      'تسجيل الدخول',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 class MainNavigationScreenState extends State<MainNavigationScreen> {

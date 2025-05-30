@@ -43,7 +43,6 @@ class _ComplaintsScreenState extends State<ComplaintsScreen>
       _titleController.text = 'طلب إلغاء الحجز: ${booking.apartmentName}';
       _descriptionController.text = 'أرغب في إلغاء الحجز الخاص بي\n'
           'اسم الوحدة: ${booking.apartmentName}\n'
-          'رقم الحجز: ${booking.id}\n'
           'تاريخ الحجز: ${booking.startDate.toString().substring(0, 10)}\n'
           'سبب الإلغاء: ';
     }

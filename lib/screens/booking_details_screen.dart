@@ -5,6 +5,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
+import '../screens/complaints_screen.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
   final String bookingId;
@@ -318,10 +319,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                   onPressed: () {
                     _showCancelConfirmationDialog(context, booking.id);
                   },
-                  icon: const Icon(Icons.cancel_outlined),
-                  label: const Text('إلغاء الحجز'),
+                  icon: const Icon(Icons.report_problem_outlined),
+                  label: const Text('تقديم شكوى'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.red.shade600,
+                    backgroundColor: Colors.orange.shade700,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
                     shape: RoundedRectangleBorder(
@@ -403,11 +404,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                       onPressed: () {
                         _showCancelConfirmationDialog(context, booking.id);
                       },
-                      icon: const Icon(Icons.cancel_outlined, size: 18),
-                      label: const Text('إلغاء'),
+                      icon: const Icon(Icons.report_problem_outlined, size: 18),
+                      label: const Text('تقديم شكوى'),
                       style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.red,
-                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.white,
+                        backgroundColor: Colors.orange.shade700,
                         elevation: 0,
                         padding: const EdgeInsets.symmetric(
                           horizontal: 16,
@@ -459,79 +460,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            
-            // Property mockup image
-            Container(
-              height: 150,
-              width: double.infinity,
-              margin: const EdgeInsets.symmetric(vertical: 16),
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(12),
-                gradient: LinearGradient(
-                  colors: [
-                    theme.primaryColor.withAlpha(102),
-                    theme.primaryColor.withAlpha(204),
-                  ],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ),
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Icon(
-                      Icons.business,
-                      color: Colors.white.withAlpha(204),
-                      size: 80,
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 12,
-                    right: 12,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withAlpha(153),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        booking.apartmentName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    top: 12,
-                    left: 12,
-                    child: Container(
-                      padding: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withAlpha(51),
-                            blurRadius: 6,
-                            offset: const Offset(0, 2),
-                          ),
-                        ],
-                      ),
-                      child: Icon(
-                        Icons.location_on_outlined,
-                        color: theme.primaryColor,
-                        size: 20,
-                      ),
                     ),
                   ),
                 ],
@@ -749,19 +677,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                     ),
                   ),
                   child: const Text(
-                    'هل أنت متأكد من رغبتك في إلغاء هذا الحجز؟',
+                    'لإلغاء الحجز، يجب تقديم شكوى توضح سبب طلب الإلغاء. هل تريد الانتقال إلى صفحة الشكاوى؟',
                     style: TextStyle(
                       fontSize: 16,
                     ),
                     textAlign: TextAlign.center,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                const Text(
-                  'لا يمكن التراجع عن هذه العملية',
-                  style: TextStyle(
-                    color: Colors.grey,
-                    fontSize: 13,
                   ),
                 ),
               ],
@@ -786,33 +706,38 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                   // Show loading indicator
                   _showLoadingDialog(context);
                   
-                  // Cancel the booking
-                  final success = await _bookingService.cancelBooking(bookingId);
+                  // Get the booking details
+                  final booking = await _bookingService.getBookingById(bookingId);
                   
                   // Hide loading indicator
                   if (!context.mounted) return;
                   Navigator.of(context).pop();
                   
-                  if (success) {
-                    // Reload booking details
-                    await _loadBookingDetails();
+                  if (booking != null) {
+                    // Navigate to complaints screen with the booking data
+                    if (!context.mounted) return;
                     
-                    // Show success message
-                    _showSuccessSnackBar('تم إلغاء الحجز بنجاح');
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => ComplaintsScreen(
+                          bookingToCancel: booking,
+                        ),
+                      ),
+                    );
                   } else {
                     // Show error message
-                    _showErrorSnackBar('حدث خطأ أثناء إلغاء الحجز');
+                    _showErrorSnackBar('حدث خطأ أثناء تحميل بيانات الحجز');
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.red.shade600,
+                  backgroundColor: Theme.of(context).primaryColor,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
                 child: const Text(
-                  'نعم، إلغاء الحجز',
+                  'متابعة',
                   style: TextStyle(fontSize: 15),
                 ),
               ),
@@ -873,30 +798,6 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
   }
   
   // Show success snackbar
-  void _showSuccessSnackBar(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const Icon(
-              Icons.check_circle,
-              color: Colors.white,
-            ),
-            const SizedBox(width: 12),
-            Text(message),
-          ],
-        ),
-        backgroundColor: Colors.green.shade600,
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
-        margin: const EdgeInsets.all(16),
-        elevation: 6,
-      ),
-    );
-  }
   
   // Show error snackbar
   void _showErrorSnackBar(String message) {

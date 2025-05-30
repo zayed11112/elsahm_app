@@ -13,19 +13,23 @@ import 'package:webview_flutter/webview_flutter.dart';
 import '../models/apartment.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/auth_provider.dart';
+import '../providers/navigation_provider.dart';
 import '../utils/auth_utils.dart';
 import '../screens/checkout_screen.dart';
+import 'main_navigation_screen.dart';
 
 //  Create a Property model in lib/models/property.dart
 
 class PropertyDetailsScreen extends StatefulWidget {
   final dynamic property;
   final bool fromCategoriesScreen;
+  final bool fromMainScreen;
 
   const PropertyDetailsScreen({
     super.key,
     required this.property,
     this.fromCategoriesScreen = false,
+    this.fromMainScreen = false,
   });
 
   // Constructor that takes an Apartment object
@@ -33,6 +37,7 @@ class PropertyDetailsScreen extends StatefulWidget {
     super.key,
     required Apartment apartment,
     this.fromCategoriesScreen = false,
+    this.fromMainScreen = false,
   }) : property = apartment;
 
   @override
@@ -65,6 +70,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
     final favoritesProvider = Provider.of<FavoritesProvider>(context);
+    final navigationProvider = Provider.of<NavigationProvider>(context);
 
     // Handle both Apartment and Property models
     final String propertyTitle =
@@ -86,8 +92,19 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         property is Apartment
             ? '${property.price.toStringAsFixed(0)} ج.م'
             : '${property.price} ج.م';
+    final String priceType = // إضافة متغير لنوع السعر
+        property is Apartment
+            ? property.priceType ?? ''
+            : property.priceType ?? '';
     final String description =
         property.description ?? 'لا يوجد وصف متاح لهذا العقار';
+    // استخراج معلومات VIP إذا كانت متوفرة
+    final String? infoVip = 
+        property is Apartment
+            ? property.infoVip
+            : property is Map && property['info_vip'] != null
+                ? property['info_vip']?.toString()
+                : null;
     final bool isAvailable = property.isAvailable ?? true;
     final List<String> features =
         property is Apartment && property.features != null
@@ -112,7 +129,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
             ? favoritesProvider.isFavorite(property.id)
             : false;
 
-    return Scaffold(
+    final Widget content = Scaffold(
       body: CustomScrollView(
         slivers: [
           // 1. صور العقار (كاروسيل) مع أبار متحرك
@@ -247,14 +264,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   // اسم العقار وحالة التوفر
                   Row(
                     children: [
-                      Expanded(
-                        child: Text(
-                          propertyTitle,
-                          style: textTheme.headlineSmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
                       Container(
                         padding: const EdgeInsets.symmetric(
                           horizontal: 12,
@@ -282,6 +291,15 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                           ),
                         ),
                       ),
+                      Expanded(
+                        child: Text(
+                          propertyTitle,
+                          style: textTheme.headlineSmall?.copyWith(
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
                     ],
                   ),
 
@@ -290,12 +308,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   // الموقع مع أيقونة
                   Row(
                     children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 22,
-                        color: colorScheme.primary,
-                      ),
-                      const SizedBox(width: 8),
                       Expanded(
                         child: Text(
                           location,
@@ -305,7 +317,14 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                     ? Colors.grey[400]
                                     : Colors.grey[700],
                           ),
+                          textAlign: TextAlign.right,
                         ),
+                      ),
+                      const SizedBox(width: 8),
+                      Icon(
+                        Icons.location_on,
+                        size: 22,
+                        color: colorScheme.primary,
                       ),
                     ],
                   ),
@@ -341,18 +360,39 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
+                            // تعديل عرض السعر مع نوع السعر ليكونا بجانب بعضهما
+                            Row(
+                              children: [
+                                // إظهار نوع السعر إذا كان موجوداً بجانب السعر (في البداية للغة العربية)
+                                if (priceType.isNotEmpty)
+                                  Container(
+                                    margin: const EdgeInsets.only(left: 8),
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: colorScheme.primary.withOpacity(0.1),
+                                      borderRadius: BorderRadius.circular(8),
+                                    ),
+                                    child: Text(
+                                      priceType,
+                                      style: textTheme.bodySmall?.copyWith(
+                                        color: colorScheme.primary,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ),
+                                Text(
+                                  price,
+                                  style: textTheme.headlineSmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ],
+                            ),
                             Text(
                               'السعر',
                               style: textTheme.titleMedium?.copyWith(
                                 fontWeight: FontWeight.w500,
-                              ),
-                            ),
-
-                            Text(
-                              price,
-                              style: textTheme.headlineSmall?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                color: colorScheme.primary,
                               ),
                             ),
                           ],
@@ -403,7 +443,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const Spacer(),
                                 Text(
                                   '${commission.toStringAsFixed(0)} ج.م',
                                   style: textTheme.titleSmall?.copyWith(
@@ -463,7 +503,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                     fontWeight: FontWeight.bold,
                                   ),
                                 ),
-                                const SizedBox(width: 8),
+                                const Spacer(),
                                 Text(
                                   '${deposit.toStringAsFixed(0)} ج.م',
                                   style: textTheme.titleSmall?.copyWith(
@@ -725,18 +765,16 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                         MainAxisAlignment.spaceBetween,
                                     children: [
                                       Text(
-                                        'الإجمالي',
-                                        style: textTheme.titleSmall?.copyWith(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      Text(
-                                        (deposit + commission).toStringAsFixed(
-                                          0,
-                                        ),
+                                        "${(deposit + commission).toStringAsFixed(0)} ج.م",
                                         style: textTheme.titleMedium?.copyWith(
                                           fontWeight: FontWeight.bold,
                                           color: colorScheme.primary,
+                                        ),
+                                      ),
+                                      Text(
+                                        'الإجمالي',
+                                        style: textTheme.titleSmall?.copyWith(
+                                          fontWeight: FontWeight.bold,
                                         ),
                                       ),
                                     ],
@@ -752,10 +790,13 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   const SizedBox(height: 24),
 
                   // مواصفات العقار
-                  Text(
-                    'مواصفات العقار',
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: Text(
+                      'مواصفات العقار',
+                      style: textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -769,6 +810,105 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   ),
 
                   const SizedBox(height: 24),
+
+                  // قسم معلومات VIP - قسم جديد بتصميم مميز وجذاب
+                  if (infoVip != null && infoVip.isNotEmpty)
+                    Container(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                          colors: [
+                            Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFF3A1464)
+                                : const Color(0xFFF0E6FF),
+                            Theme.of(context).brightness == Brightness.dark
+                                ? const Color(0xFF2C1057)
+                                : const Color(0xFFE6D9FF),
+                          ],
+                        ),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Theme.of(context).brightness == Brightness.dark
+                                ? Colors.purple.withAlpha(30)
+                                : Colors.purple.withAlpha(20),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
+                          ),
+                        ],
+                        border: Border.all(
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.purple[300]!.withAlpha(70)
+                              : Colors.purple[200]!,
+                          width: 1.5,
+                        ),
+                      ),
+                      margin: const EdgeInsets.only(bottom: 24, left: 4, right: 4),
+                      padding: const EdgeInsets.symmetric(vertical: 30, horizontal: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          // عنوان القسم مع أيقونة مميزة
+                          // تم حذف صف العنوان بالكامل
+
+                          // محتوى المعلومات المميزة
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+                            decoration: BoxDecoration(
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.purple[900]?.withAlpha(100)
+                                  : Colors.white.withAlpha(180),
+                              borderRadius: BorderRadius.circular(16),
+                              border: Border.all(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.purple[700]!
+                                    : Colors.purple[100]!,
+                                width: 1,
+                              ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withAlpha(15),
+                                  blurRadius: 6,
+                                  offset: const Offset(0, 3),
+                                ),
+                              ],
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                // أيقونة تمييز النص
+                                Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Icon(
+                                      Icons.format_quote,
+                                      size: 20,
+                                      color: Colors.purple[300],
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Expanded(
+                                      child: Text(
+                                        infoVip,
+                                        style: textTheme.bodyLarge?.copyWith(
+                                          height: 1.7,
+                                          fontSize: 16,
+                                          color: Theme.of(context).brightness == Brightness.dark
+                                              ? Colors.white
+                                              : Colors.black87,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                        textAlign: TextAlign.right,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
 
                   // قسم فيديوهات الشقة
                   _buildVideosSection(),
@@ -787,7 +927,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               : Colors.white,
                           Theme.of(context).brightness == Brightness.dark
                               ? const Color(0xFF1E1E1E)
-                              : Colors.grey[50]!,
+                              : Colors.grey[50] ?? Colors.grey,
                         ],
                       ),
                       borderRadius: BorderRadius.circular(20),
@@ -804,8 +944,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       border: Border.all(
                         color:
                             Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey[800]!
-                                : Colors.grey[200]!,
+                                ? Colors.grey[800] ?? Colors.grey
+                                : Colors.grey[200] ?? Colors.grey,
                         width: 1,
                       ),
                     ),
@@ -822,42 +962,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // عنوان القسم مع أيقونة متحركة
+                        // عنوان القسم مع أيقونة متحركة (من اليمين إلى اليسار)
                         Row(
                           children: [
-                            Container(
-                              width: 46,
-                              height: 46,
-                              padding: const EdgeInsets.all(0),
-                              decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).primaryColor.withAlpha(20), // 0.08 opacity
-                                borderRadius: BorderRadius.circular(14),
-                              ),
-                              child: Icon(
-                                Icons.star_rounded,
-                                size: 30,
-                                color: Colors.amber,
-                              ),
-                            ),
-                            const SizedBox(width: 14),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'المرافق المتاحة',
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'مميزات وخدمات العقار',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
-                            ),
-                            const Spacer(),
                             Container(
                               padding: const EdgeInsets.symmetric(
                                 horizontal: 12,
@@ -874,9 +981,44 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                 style: Theme.of(
                                   context,
                                 ).textTheme.bodyMedium?.copyWith(
-                                  color: Theme.of(context).primaryColor,
+                                  color: Theme.of(context).brightness == Brightness.dark 
+                                      ? Colors.white 
+                                      : Theme.of(context).primaryColor,
                                   fontWeight: FontWeight.bold,
                                 ),
+                              ),
+                            ),
+                            const Spacer(),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'المرافق المتاحة',
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'مميزات وخدمات العقار',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 14),
+                            Container(
+                              width: 46,
+                              height: 46,
+                              padding: const EdgeInsets.all(0),
+                              decoration: BoxDecoration(
+                                color: Theme.of(
+                                  context,
+                                ).primaryColor.withAlpha(20), // 0.08 opacity
+                                borderRadius: BorderRadius.circular(14),
+                              ),
+                              child: Icon(
+                                Icons.star_rounded,
+                                size: 30,
+                                color: Colors.amber,
                               ),
                             ),
                           ],
@@ -904,7 +1046,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               : Colors.white,
                           Theme.of(context).brightness == Brightness.dark
                               ? const Color(0xFF1E1E1E)
-                              : Colors.grey[50]!,
+                              : Colors.grey[50] ?? Colors.grey,
                         ],
                       ),
                       borderRadius: BorderRadius.circular(20),
@@ -921,8 +1063,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       border: Border.all(
                         color:
                             Theme.of(context).brightness == Brightness.dark
-                                ? Colors.grey[800]!
-                                : Colors.grey[200]!,
+                                ? Colors.grey[800] ?? Colors.grey
+                                : Colors.grey[200] ?? Colors.grey,
                         width: 1,
                       ),
                     ),
@@ -937,11 +1079,28 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       right: 16,
                     ),
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      crossAxisAlignment: CrossAxisAlignment.end,
                       children: [
-                        // عنوان القسم مع أيقونة متحركة
+                        // عنوان القسم مع أيقونة متحركة (من اليمين إلى اليسار)
                         Row(
                           children: [
+                            const Spacer(),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'وصف العقار',
+                                  style: Theme.of(context).textTheme.titleLarge
+                                      ?.copyWith(fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'تفاصيل ومعلومات إضافية',
+                                  style: Theme.of(context).textTheme.bodySmall,
+                                ),
+                              ],
+                            ),
+                            const SizedBox(width: 14),
                             Container(
                               width: 46,
                               height: 46,
@@ -955,24 +1114,10 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               child: Icon(
                                 Icons.description_outlined,
                                 size: 30,
-                                color: Theme.of(context).primaryColor,
+                                color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.white
+                                  : Theme.of(context).primaryColor,
                               ),
-                            ),
-                            const SizedBox(width: 14),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'وصف العقار',
-                                  style: Theme.of(context).textTheme.titleLarge
-                                      ?.copyWith(fontWeight: FontWeight.bold),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  'تفاصيل ومعلومات إضافية',
-                                  style: Theme.of(context).textTheme.bodySmall,
-                                ),
-                              ],
                             ),
                           ],
                         ),
@@ -989,8 +1134,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                               color:
                                   Theme.of(context).brightness ==
                                           Brightness.dark
-                                      ? Colors.grey[800]!
-                                      : Colors.grey[200]!,
+                                      ? Colors.grey[800] ?? Colors.grey
+                                      : Colors.grey[200] ?? Colors.grey,
                               width: 1,
                             ),
                             boxShadow: [
@@ -1010,7 +1155,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             style: textTheme.bodyLarge?.copyWith(
                               height: 1.7,
                               fontSize: 15,
+                              fontWeight: FontWeight.bold,
                             ),
+                            textAlign: TextAlign.right,
                           ),
                         ),
                       ],
@@ -1100,6 +1247,28 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         ],
       ),
     );
+
+    // Check if we're already inside MainNavigationScreen to avoid duplicated navigation bars
+    bool isAlreadyInMainNavigation = false;
+    context.visitAncestorElements((element) {
+      if (element.widget.toString().contains('MainNavigationScreen')) {
+        isAlreadyInMainNavigation = true;
+        return false; // Stop visiting
+      }
+      return true; // Continue visiting
+    });
+
+    // Only wrap with navigation bars if needed and we're not already in a MainNavigationScreen
+    if ((widget.fromMainScreen || widget.fromCategoriesScreen) && !isAlreadyInMainNavigation) {
+      return MainNavigationScreen.wrapWithBottomNav(
+        context: context,
+        child: content,
+        selectedIndex: navigationProvider.selectedIndex,
+      );
+    }
+
+    // Otherwise return the content directly
+    return content;
   }
 
   // عرض صور العقار في كاروسيل
@@ -1297,22 +1466,27 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
         color: isDarkMode ? const Color(0xFF2A2A2A) : Colors.grey[100],
         borderRadius: BorderRadius.circular(10),
         border: Border.all(
-          color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+          color: isDarkMode ? Colors.grey[800] ?? Colors.grey : Colors.grey[300] ?? Colors.grey,
         ),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           Row(
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              Icon(icon, size: 18, color: Theme.of(context).primaryColor),
-              const SizedBox(width: 8),
               Text(
                 title,
                 style: TextStyle(
                   color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
                   fontSize: 13,
                 ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                icon, 
+                size: 18, 
+                color: isDarkMode ? Colors.white : Theme.of(context).primaryColor
               ),
             ],
           ),
@@ -1324,6 +1498,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
               fontSize: 15,
               color: isDarkMode ? Colors.white : Colors.black87,
             ),
+            textAlign: TextAlign.right,
           ),
         ],
       ),
@@ -1402,8 +1577,25 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                           vertical: 5,
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.end,
                           children: [
+                            Expanded(
+                              child: Text(
+                                feature,
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 13,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.lightBlue[100]
+                                          : Colors.blue[800],
+                                ),
+                                textAlign: TextAlign.right,
+                                softWrap: true,
+                                overflow: TextOverflow.visible,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Container(
                               width: 30,
                               height: 30,
@@ -1432,23 +1624,6 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                                           ? Colors.lightBlue[300]
                                           : Colors.blue[600],
                                 ),
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            Expanded(
-                              child: Text(
-                                feature,
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                  color:
-                                      isDarkMode
-                                          ? Colors.lightBlue[100]
-                                          : Colors.blue[800],
-                                ),
-                                textAlign: TextAlign.start,
-                                softWrap: true,
-                                overflow: TextOverflow.visible,
                               ),
                             ),
                           ],
@@ -1619,7 +1794,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   : Colors.white,
               Theme.of(context).brightness == Brightness.dark
                   ? const Color(0xFF1E1E1E)
-                  : Colors.grey[50]!,
+                  : Colors.grey[50] ?? Colors.grey,
             ],
           ),
           borderRadius: BorderRadius.circular(20),
@@ -1636,8 +1811,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
           border: Border.all(
             color:
                 Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[800]!
-                    : Colors.grey[200]!,
+                    ? Colors.grey[800] ?? Colors.grey
+                    : Colors.grey[200] ?? Colors.grey,
             width: 1,
           ),
         ),
@@ -1655,24 +1830,29 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
             Row(
               children: [
                 Container(
-                  width: 46,
-                  height: 46,
-                  padding: const EdgeInsets.all(0),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).primaryColor.withAlpha(20), // 0.08 opacity
-                    borderRadius: BorderRadius.circular(14),
+                    ).primaryColor.withAlpha(25), // 0.1 opacity
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                  child: Icon(
-                    Icons.videocam_rounded,
-                    size: 30,
-                    color: Colors.blue,
+                  child: Text(
+                    '${videoIds.length} فيديو',
+                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? Colors.white
+                          : Theme.of(context).primaryColor,
+                      fontWeight: FontWeight.bold,
+                    ),
                   ),
                 ),
-                const SizedBox(width: 14),
+                const Spacer(),
                 Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
                       'فيديوهات العقار',
@@ -1687,24 +1867,21 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                     ),
                   ],
                 ),
-                const Spacer(),
+                const SizedBox(width: 14),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 6,
-                  ),
+                  width: 46,
+                  height: 46,
+                  padding: const EdgeInsets.all(0),
                   decoration: BoxDecoration(
                     color: Theme.of(
                       context,
-                    ).primaryColor.withAlpha(25), // 0.1 opacity
-                    borderRadius: BorderRadius.circular(20),
+                    ).primaryColor.withAlpha(20), // 0.08 opacity
+                    borderRadius: BorderRadius.circular(14),
                   ),
-                  child: Text(
-                    '${videoIds.length} فيديو',
-                    style: Theme.of(context).textTheme.bodyMedium?.copyWith(
-                      color: Theme.of(context).primaryColor,
-                      fontWeight: FontWeight.bold,
-                    ),
+                  child: Icon(
+                    Icons.videocam_rounded,
+                    size: 30,
+                    color: Colors.blue,
                   ),
                 ),
               ],
@@ -1751,7 +1928,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
     return Container(
       width: 220,
       height: 176, // زيادة الارتفاع بمقدار 2 بيكسل لتفادي التجاوز
-      margin: const EdgeInsets.only(left: 16),
+      margin: const EdgeInsets.only(right: 16),
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -1763,7 +1940,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
           ),
         ],
         border: Border.all(
-          color: isDarkMode ? Colors.grey[800]! : Colors.grey[200]!,
+          color: isDarkMode ? Colors.grey[800] ?? Colors.grey : Colors.grey[300] ?? Colors.grey,
           width: 1,
         ),
       ),
@@ -1906,7 +2083,9 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         child: Icon(
                           Icons.play_arrow_rounded,
                           size: 36,
-                          color: Theme.of(context).primaryColor,
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Colors.white
+                              : Theme.of(context).primaryColor,
                         ),
                       ),
                     ),
@@ -1961,6 +2140,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                     vertical: 4,
                   ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
                       // أيقونة فيديو
@@ -1984,31 +2164,61 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                       const SizedBox(width: 8),
                       // نص وصفي للفيديو
                       Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisAlignment: MainAxisAlignment.center,
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.end,
+                          crossAxisAlignment: CrossAxisAlignment.center,
                           children: [
-                            Text(
-                              'فيديو العقار ${index + 1}',
-                              style: const TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 13,
+                            // نص وصفي للفيديو
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.end,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Text(
+                                    'فيديو العقار ${index + 1}',
+                                    style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 13,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.right,
+                                  ),
+                                  Text(
+                                    'اضغط للمشاهدة',
+                                    style: TextStyle(
+                                      color:
+                                          Theme.of(context).brightness ==
+                                                  Brightness.dark
+                                              ? Colors.grey[400]
+                                              : Colors.grey[600],
+                                      fontSize: 11,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.right,
+                                  ),
+                                ],
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
                             ),
-                            Text(
-                              'اضغط للمشاهدة',
-                              style: TextStyle(
+                            const SizedBox(width: 8),
+                            // أيقونة فيديو
+                            Container(
+                              padding: const EdgeInsets.all(6),
+                              decoration: BoxDecoration(
                                 color:
-                                    Theme.of(context).brightness ==
-                                            Brightness.dark
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
-                                fontSize: 11,
+                                    Theme.of(context).brightness == Brightness.dark
+                                        ? Theme.of(context).primaryColor.withAlpha(38)
+                                        : Theme.of(
+                                          context,
+                                        ).primaryColor.withAlpha(25),
+                                shape: BoxShape.circle,
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
+                              child: Icon(
+                                Icons.video_library,
+                                size: 16,
+                                color: Theme.of(context).primaryColor,
+                              ),
                             ),
                           ],
                         ),

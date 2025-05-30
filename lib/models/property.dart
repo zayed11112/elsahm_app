@@ -4,6 +4,7 @@ class Property {
   final String description;
   final String location;
   final double price;
+  final String? priceType;
   final List<String> imageUrls;
   final int bedrooms;
   final int bathrooms;
@@ -24,6 +25,7 @@ class Property {
     required this.description,
     required this.location,
     required this.price,
+    this.priceType,
     required this.imageUrls,
     required this.bedrooms,
     required this.bathrooms,
@@ -45,6 +47,7 @@ class Property {
     String? description,
     String? location,
     double? price,
+    String? priceType,
     List<String>? imageUrls,
     int? bedrooms,
     int? bathrooms,
@@ -65,6 +68,7 @@ class Property {
       description: description ?? this.description,
       location: location ?? this.location,
       price: price ?? this.price,
+      priceType: priceType ?? this.priceType,
       imageUrls: imageUrls ?? this.imageUrls,
       bedrooms: bedrooms ?? this.bedrooms,
       bathrooms: bathrooms ?? this.bathrooms,
@@ -88,6 +92,7 @@ class Property {
       description: json['description'] as String,
       location: json['location'] as String,
       price: (json['price'] as num).toDouble(),
+      priceType: json['price_type'] as String?,
       imageUrls: List<String>.from(json['imageUrls'] as List),
       bedrooms: json['bedrooms'] as int,
       bathrooms: json['bathrooms'] as int,
@@ -113,6 +118,7 @@ class Property {
       'description': description,
       'location': location,
       'price': price,
+      'price_type': priceType,
       'imageUrls': imageUrls,
       'bedrooms': bedrooms,
       'bathrooms': bathrooms,

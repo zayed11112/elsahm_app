@@ -12,6 +12,7 @@ list(APPEND FLUTTER_PLUGIN_LIST
   flutter_inappwebview_windows
   permission_handler_windows
   rive_common
+  sentry_flutter
   share_plus
   url_launcher_windows
 )

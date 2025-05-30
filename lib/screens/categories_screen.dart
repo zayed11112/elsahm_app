@@ -8,6 +8,7 @@ import '../services/property_service_supabase.dart';
 import '../services/available_places_service.dart';
 import '../utils/navigation_utils.dart';
 import '../utils/loading_service.dart';
+import '../providers/navigation_provider.dart';
 
 import '../widgets/shimmer_loading_effect.dart';
 import '../widgets/custom_tab_indicator.dart';
@@ -17,6 +18,7 @@ import 'place_details_screen.dart';
 import 'package:provider/provider.dart';
 import '../providers/favorites_provider.dart';
 import 'package:marquee_widget/marquee_widget.dart';
+import 'main_navigation_screen.dart';
 
 class CategoriesScreen extends StatefulWidget {
   final String? initialCategory;
@@ -167,6 +169,8 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     setState(() => _isNavigating = true);
     try {
       if (_selectedCategory != null) {
+        // Just update the state to show the categories list again
+        // This ensures we stay in the same screen with nav bars
         setState(() => _selectedCategory = null);
       } else if (Navigator.canPop(context)) {
         Navigator.of(context).pop();
@@ -181,29 +185,12 @@ class _CategoriesScreenState extends State<CategoriesScreen>
   }
 
   // Handle safe navigation to home
-  void _safelyNavigateToHome(BuildContext context) {
-    if (_isNavigating) return;
-
-    setState(() => _isNavigating = true);
-    try {
-      // Navigate to the root/home screen by popping all routes
-      Navigator.of(context).popUntil((route) => route.isFirst);
-    } catch (e) {
-      _logger.severe('خطأ في العودة للرئيسية: $e');
-      if (Navigator.of(context).canPop()) {
-        Navigator.of(context).pop();
-      }
-    } finally {
-      Future.delayed(const Duration(milliseconds: 300), () {
-        if (mounted) setState(() => _isNavigating = false);
-      });
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final navigationProvider = Provider.of<NavigationProvider>(context);
 
     // Show loading screen if initial data is loading
     if (_isLoading && _selectedCategory == null) {
@@ -222,7 +209,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
       );
     }
 
-    return PopScope(
+    final Widget content = PopScope(
       canPop: !_isNavigating && _selectedCategory == null,
       onPopInvokedWithResult: (didPop, result) {
         if (didPop) return;
@@ -231,6 +218,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
         setState(() => _isNavigating = true);
 
         if (_selectedCategory != null) {
+          // Just update state to show categories list, maintaining the same screen with navigation bars
           setState(() => _selectedCategory = null);
           Future.delayed(const Duration(milliseconds: 300), () {
             if (mounted) setState(() => _isNavigating = false);
@@ -259,6 +247,21 @@ class _CategoriesScreenState extends State<CategoriesScreen>
         ),
       ),
     );
+
+    // Only wrap with navigation when in detail view AND NOT coming from main screen
+    // This prevents double wrapping which causes duplicated nav bars
+    if (_selectedCategory != null && !widget.fromMainScreen) {
+      // This ensures we maintain the bottom navigation bar when viewing category details
+      // but only when we're not already inside the main navigation screen
+      return MainNavigationScreen.wrapWithBottomNav(
+        context: context,
+        child: content,
+        selectedIndex: navigationProvider.selectedIndex,
+      );
+    }
+
+    // Otherwise just return the content directly
+    return content;
   }
 
   // Main categories screen with tabbed interface
@@ -533,436 +536,461 @@ class _CategoriesScreenState extends State<CategoriesScreen>
 
   // Category details screen
   Widget _buildCategoryDetailsScreen(ThemeData theme, bool isDarkMode) {
-    return Scaffold(
-      body: SafeArea(
-        bottom: false, // Allow content to extend below bottom safe area
-        child: NestedScrollView(
-          headerSliverBuilder:
-              (context, innerBoxIsScrolled) => [
-                SliverAppBar(
-                  pinned: true,
-                  floating: true,
-                  title: Text(_selectedCategory!),
-                  centerTitle: true,
-                  leading: IconButton(
-                    icon: const Icon(Icons.arrow_back),
-                    onPressed: () => _safelyNavigateBack(context),
-                  ),
-                  actions: [
-                    IconButton(
-                      icon: const Icon(Icons.home),
-                      onPressed: () => _safelyNavigateToHome(context),
-                      tooltip: 'الرئيسية',
-                    ),
-                  ],
-                ),
-              ],
-          body:
-              _isLoadingApartments
-                  ? _buildShimmerLoading()
-                  : _buildApartmentsContent(theme, isDarkMode),
+    // Show loading state
+    if (_isLoadingApartments) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircularProgressIndicator(
+              color: theme.colorScheme.primary,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              "جاري تحميل العقارات...",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+              ),
+            ),
+          ],
         ),
-      ),
-    );
-  }
-
-  // Apartments content
-  Widget _buildApartmentsContent(ThemeData theme, bool isDarkMode) {
-    if (_apartments.isEmpty) {
-      return EmptyStateWidget(
-        icon: Icons.apartment,
-        title: 'لا توجد عقارات متاحة',
-        message: 'لا توجد عقارات متاحة في هذا القسم حالياً',
-        buttonText: 'تحديث',
-        onPressed: () => _loadApartmentsByCategory(_selectedCategory!),
       );
     }
 
-    return RefreshIndicator(
-      onRefresh: () => _loadApartmentsByCategory(_selectedCategory!),
-      child: Padding(
-        // Remove bottom padding
-        padding: const EdgeInsets.only(left: 12.0, right: 12.0, top: 12.0),
-        child: ListView.builder(
-          // Remove bottom padding
-          padding: EdgeInsets.zero,
-          itemCount: _apartments.length,
-          itemBuilder: (context, index) {
-            final apartment = _apartments[index];
-            return Container(
-              margin: const EdgeInsets.only(bottom: 20),
-              decoration: BoxDecoration(
-                color: theme.cardColor,
-                borderRadius: BorderRadius.circular(16),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    offset: const Offset(0, 3),
-                    blurRadius: 10,
-                    spreadRadius: 0,
+    // Build results screen
+    return CustomScrollView(
+      slivers: [
+        // Header with category name and back button
+        SliverAppBar(
+          pinned: true,
+          automaticallyImplyLeading: false,
+          title: Text(_selectedCategory ?? ""),
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back),
+            onPressed: () => _safelyNavigateBack(context),
+          ),
+        ),
+
+        // Empty state
+        if (_apartments.isEmpty)
+          SliverFillRemaining(
+            child: Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(
+                    Icons.search_off_rounded,
+                    size: 80,
+                    color: isDarkMode ? Colors.white30 : Colors.grey.shade300,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    "لا توجد عقارات في هذا القسم",
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      color: isDarkMode ? Colors.white70 : Colors.black54,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  TextButton.icon(
+                    onPressed: () => _loadApartmentsByCategory(_selectedCategory!),
+                    icon: const Icon(Icons.refresh),
+                    label: const Text("إعادة المحاولة"),
                   ),
                 ],
               ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(16),
-                child: Material(
-                  color: Colors.transparent,
-                  child: InkWell(
-                    onTap: () => _navigateToPropertyDetails(apartment),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+          ),
+
+        // List of apartments
+        if (_apartments.isNotEmpty)
+          SliverPadding(
+            padding: const EdgeInsets.all(16.0),
+            sliver: SliverList(
+              delegate: SliverChildBuilderDelegate(
+                (context, index) {
+                  final apartment = _apartments[index];
+                  return Padding(
+                    padding: const EdgeInsets.only(bottom: 16.0),
+                    child: _buildApartmentCard(apartment, theme, isDarkMode),
+                  );
+                },
+                childCount: _apartments.length,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  Widget _buildApartmentCard(Apartment apartment, ThemeData theme, bool isDarkMode) {
+    return Card(
+      elevation: 2,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: InkWell(
+        borderRadius: BorderRadius.circular(12),
+        onTap: () {
+          NavigationUtils.navigateWithLoading(
+            context: context,
+            page: PropertyDetailsScreen(
+              property: apartment,
+              fromCategoriesScreen: true,
+              fromMainScreen: widget.fromMainScreen,
+            ),
+            minimumLoadingTime: const Duration(milliseconds: 800),
+          );
+        },
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // صورة العقار مع شريط معلومات
+            Stack(
+              children: [
+                // صورة العقار
+                SizedBox(
+                  height: 200,
+                  width: double.infinity,
+                  child:
+                      apartment.imageUrls.isNotEmpty
+                          ? CachedNetworkImage(
+                              imageUrl: apartment.imageUrls[0],
+                              fit: BoxFit.cover,
+                              placeholder:
+                                  (context, url) => Center(
+                                    child: CircularProgressIndicator(
+                                      color:
+                                          theme.colorScheme.primary,
+                                    ),
+                                  ),
+                              errorWidget:
+                                  (context, url, error) => Container(
+                                    color: Colors.grey[300],
+                                    child: Icon(
+                                      Icons.broken_image,
+                                      size: 40,
+                                      color: Colors.grey[500],
+                                    ),
+                                  ),
+                            )
+                          : Container(
+                              color: Colors.grey[300],
+                              child: Icon(
+                                Icons.apartment,
+                                size: 40,
+                                color: Colors.grey[500],
+                              ),
+                            ),
+                ),
+
+                // السعر في الأعلى اليمين
+                Positioned(
+                  top: 12,
+                  right: 12,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: theme.colorScheme.primary,
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: Text(
+                      '${apartment.price.toInt()} جنيه',
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ),
+                ),
+
+                // تصنيف العقار في الأسفل
+                Positioned(
+                  bottom: 0,
+                  left: 0,
+                  right: 0,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.bottomCenter,
+                        end: Alignment.topCenter,
+                        colors: [
+                          Colors.black.withValues(alpha: 0.7),
+                          Colors.black.withValues(alpha: 0.0),
+                        ],
+                      ),
+                    ),
+                    child: Row(
                       children: [
-                        // صورة العقار مع شريط معلومات
-                        Stack(
-                          children: [
-                            // صورة العقار
-                            SizedBox(
-                              height: 200,
-                              width: double.infinity,
-                              child:
-                                  apartment.imageUrls.isNotEmpty
-                                      ? CachedNetworkImage(
-                                        imageUrl: apartment.imageUrls[0],
-                                        fit: BoxFit.cover,
-                                        placeholder:
-                                            (context, url) => Center(
-                                              child: CircularProgressIndicator(
-                                                color:
-                                                    theme.colorScheme.primary,
-                                              ),
-                                            ),
-                                        errorWidget:
-                                            (context, url, error) => Container(
-                                              color: Colors.grey[300],
-                                              child: Icon(
-                                                Icons.broken_image,
-                                                size: 40,
-                                                color: Colors.grey[500],
-                                              ),
-                                            ),
-                                      )
-                                      : Container(
-                                        color: Colors.grey[300],
-                                        child: Icon(
-                                          Icons.apartment,
-                                          size: 40,
-                                          color: Colors.grey[500],
-                                        ),
-                                      ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(
+                              alpha: 0.2,
                             ),
-
-                            // السعر في الأعلى اليمين
-                            Positioned(
-                              top: 12,
-                              right: 12,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 12,
-                                  vertical: 6,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: theme.colorScheme.primary,
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
-                                child: Text(
-                                  '${apartment.price.toInt()} جنيه',
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: Colors.white,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            _selectedCategory ?? 'شاليه',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
                             ),
-
-                            // تصنيف العقار في الأسفل
-                            Positioned(
-                              bottom: 0,
-                              left: 0,
-                              right: 0,
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    begin: Alignment.bottomCenter,
-                                    end: Alignment.topCenter,
-                                    colors: [
-                                      Colors.black.withValues(alpha: 0.7),
-                                      Colors.black.withValues(alpha: 0.0),
-                                    ],
-                                  ),
-                                ),
-                                child: Row(
-                                  children: [
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 8,
-                                        vertical: 4,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: Colors.white.withValues(
-                                          alpha: 0.2,
-                                        ),
-                                        borderRadius: BorderRadius.circular(4),
-                                      ),
-                                      child: Text(
-                                        _selectedCategory ?? 'شاليه',
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontSize: 12,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-
-                        // تفاصيل العقار
-                        Padding(
-                          padding: const EdgeInsets.all(16),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              // اسم العقار
-                              Text(
-                                apartment.name,
-                                style: theme.textTheme.titleLarge?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                              ),
-
-                              const SizedBox(height: 8),
-
-                              // الموقع
-                              Row(
-                                children: [
-                                  Icon(
-                                    Icons.location_on,
-                                    size: 16,
-                                    color:
-                                        isDarkMode
-                                            ? Colors.grey[400]
-                                            : Colors.grey[700],
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Expanded(
-                                    child: Text(
-                                      apartment.location,
-                                      style: theme.textTheme.bodyMedium
-                                          ?.copyWith(
-                                            color:
-                                                isDarkMode
-                                                    ? Colors.grey[400]
-                                                    : Colors.grey[600],
-                                          ),
-                                      maxLines: 2,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 16),
-
-                              // المميزات
-                              Wrap(
-                                spacing: 8,
-                                runSpacing: 8,
-                                children: [
-                                  _buildFeatureChip(
-                                    theme,
-                                    Icons.meeting_room,
-                                    '${apartment.rooms} غرف',
-                                    isDarkMode,
-                                  ),
-                                  _buildFeatureChip(
-                                    theme,
-                                    Icons.bed,
-                                    '${apartment.bathrooms} سرير',
-                                    isDarkMode,
-                                  ),
-                                  if (apartment.type.isNotEmpty)
-                                    _buildFeatureChip(
-                                      theme,
-                                      _getFeatureIcon(apartment.type),
-                                      apartment.type,
-                                      isDarkMode,
-                                    ),
-                                  ...apartment.features
-                                      .take(3)
-                                      .map(
-                                        (feature) => _buildFeatureChip(
-                                          theme,
-                                          _getFeatureIcon(feature),
-                                          feature,
-                                          isDarkMode,
-                                        ),
-                                      ),
-                                ],
-                              ),
-
-                              const SizedBox(height: 16),
-
-                              // وصف مختصر
-                              if (apartment.description.isNotEmpty)
-                                Container(
-                                  padding: const EdgeInsets.all(12),
-                                  decoration: BoxDecoration(
-                                    color:
-                                        isDarkMode
-                                            ? Colors.grey[850]
-                                            : Colors.grey[100],
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        'وصف العقار',
-                                        style: theme.textTheme.titleSmall
-                                            ?.copyWith(
-                                              fontWeight: FontWeight.bold,
-                                            ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        apartment.description.length > 120
-                                            ? '${apartment.description.substring(0, 120)}...'
-                                            : apartment.description,
-                                        style: theme.textTheme.bodyMedium,
-                                        maxLines: 3,
-                                        overflow: TextOverflow.ellipsis,
-                                      ),
-                                    ],
-                                  ),
-                                ),
-
-                              const SizedBox(height: 16),
-
-                              // أزرار التفاعل
-                              Row(
-                                children: [
-                                  Expanded(
-                                    child: OutlinedButton.icon(
-                                      onPressed:
-                                          () => _navigateToPropertyDetails(
-                                            apartment,
-                                          ),
-                                      icon: const Icon(Icons.visibility),
-                                      label: const Text('معلومات اكثر'),
-                                      style: OutlinedButton.styleFrom(
-                                        padding: const EdgeInsets.symmetric(
-                                          vertical: 12,
-                                        ),
-                                        side: BorderSide(
-                                          color: theme.colorScheme.primary,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Container(
-                                    height: 48,
-                                    width: 48,
-                                    decoration: BoxDecoration(
-                                      color: theme.colorScheme.primary,
-                                      borderRadius: BorderRadius.circular(12),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: theme.colorScheme.primary
-                                              .withValues(alpha: 0.3),
-                                          blurRadius: 8,
-                                          offset: const Offset(0, 2),
-                                        ),
-                                      ],
-                                    ),
-                                    child: Material(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(12),
-                                      clipBehavior: Clip.antiAlias,
-                                      child: Consumer<FavoritesProvider>(
-                                        builder: (
-                                          context,
-                                          favoritesProvider,
-                                          _,
-                                        ) {
-                                          final isFavorite = favoritesProvider
-                                              .isFavorite(apartment.id);
-
-                                          return InkWell(
-                                            onTap: () async {
-                                              // احفظ السياق والحالة قبل العملية غير المتزامنة
-                                              final scaffoldMessenger =
-                                                  ScaffoldMessenger.of(context);
-                                              final bool wasFavorite =
-                                                  isFavorite;
-                                              final String propertyName =
-                                                  apartment.name;
-
-                                              // Toggle favorite status
-                                              await favoritesProvider
-                                                  .toggleFavorite(apartment);
-
-                                              // تحقق من أن الحالة ما زالت مرتبطة
-                                              if (!mounted) return;
-
-                                              // استخدم المتغيرات المحفوظة مسبقًا
-                                              final message =
-                                                  wasFavorite
-                                                      ? 'تم إزالة $propertyName من المفضلة'
-                                                      : 'تم إضافة $propertyName إلى المفضلة';
-
-                                              // Use the pre-captured ScaffoldMessenger
-                                              scaffoldMessenger.showSnackBar(
-                                                SnackBar(
-                                                  content: Text(message),
-                                                  duration: const Duration(
-                                                    seconds: 2,
-                                                  ),
-                                                  behavior:
-                                                      SnackBarBehavior.floating,
-                                                ),
-                                              );
-                                            },
-                                            child: Center(
-                                              child: Icon(
-                                                isFavorite
-                                                    ? Icons.favorite
-                                                    : Icons.favorite_outline,
-                                                color:
-                                                    isFavorite
-                                                        ? Colors.red
-                                                        : Colors.white,
-                                                size: 24,
-                                              ),
-                                            ),
-                                          );
-                                        },
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ],
                           ),
                         ),
                       ],
                     ),
                   ),
                 ),
+              ],
+            ),
+
+            // تفاصيل العقار
+            Padding(
+              padding: const EdgeInsets.all(16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // اسم العقار
+                  Text(
+                    apartment.name,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+
+                  const SizedBox(height: 8),
+
+                  // الموقع
+                  Row(
+                    children: [
+                      Icon(
+                        Icons.location_on,
+                        size: 16,
+                        color:
+                            isDarkMode
+                                ? Colors.grey[400]
+                                : Colors.grey[700],
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(
+                          apartment.location,
+                          style: theme.textTheme.bodyMedium
+                              ?.copyWith(
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[400]
+                                        : Colors.grey[600],
+                              ),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // المميزات
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      _buildFeatureChip(
+                        theme,
+                        Icons.meeting_room,
+                        '${apartment.rooms} غرف',
+                        isDarkMode,
+                      ),
+                      _buildFeatureChip(
+                        theme,
+                        Icons.bed,
+                        '${apartment.bathrooms} سرير',
+                        isDarkMode,
+                      ),
+                      if (apartment.type.isNotEmpty)
+                        _buildFeatureChip(
+                          theme,
+                          _getFeatureIcon(apartment.type),
+                          apartment.type,
+                          isDarkMode,
+                        ),
+                      ...apartment.features
+                          .take(3)
+                          .map(
+                            (feature) => _buildFeatureChip(
+                              theme,
+                              _getFeatureIcon(feature),
+                              feature,
+                              isDarkMode,
+                            ),
+                          ),
+                    ],
+                  ),
+
+                  const SizedBox(height: 16),
+
+                  // وصف مختصر
+                  if (apartment.description.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color:
+                            isDarkMode
+                                ? Colors.grey[850]
+                                : Colors.grey[100],
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Column(
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'وصف العقار',
+                            style: theme.textTheme.titleSmall
+                                ?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            apartment.description.length > 120
+                                ? '${apartment.description.substring(0, 120)}...'
+                                : apartment.description,
+                            style: theme.textTheme.bodyMedium,
+                            maxLines: 3,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+
+                  const SizedBox(height: 16),
+
+                  // أزرار التفاعل
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed:
+                              () => _navigateToPropertyDetails(
+                                apartment,
+                              ),
+                          icon: const Icon(Icons.visibility),
+                          label: const Text('معلومات اكثر'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(
+                              vertical: 12,
+                            ),
+                            side: BorderSide(
+                              color: theme.colorScheme.primary,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Container(
+                        height: 48,
+                        width: 48,
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: theme.colorScheme.primary
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 8,
+                              offset: const Offset(0, 2),
+                            ),
+                          ],
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          borderRadius: BorderRadius.circular(12),
+                          clipBehavior: Clip.antiAlias,
+                          child: Consumer<FavoritesProvider>(
+                            builder: (
+                              context,
+                              favoritesProvider,
+                              _,
+                            ) {
+                              final isFavorite = favoritesProvider
+                                  .isFavorite(apartment.id);
+
+                              return InkWell(
+                                onTap: () async {
+                                  // احفظ السياق والحالة قبل العملية غير المتزامنة
+                                  final scaffoldMessenger =
+                                      ScaffoldMessenger.of(context);
+                                  final bool wasFavorite =
+                                      isFavorite;
+                                  final String propertyName =
+                                      apartment.name;
+
+                                  // Toggle favorite status
+                                  await favoritesProvider
+                                      .toggleFavorite(apartment);
+
+                                  // تحقق من أن الحالة ما زالت مرتبطة
+                                  if (!mounted) return;
+
+                                  // استخدم المتغيرات المحفوظة مسبقًا
+                                  final message =
+                                      wasFavorite
+                                          ? 'تم إزالة $propertyName من المفضلة'
+                                          : 'تم إضافة $propertyName إلى المفضلة';
+
+                                  // Use the pre-captured ScaffoldMessenger
+                                  scaffoldMessenger.showSnackBar(
+                                    SnackBar(
+                                      content: Text(message),
+                                      duration: const Duration(
+                                        seconds: 2,
+                                      ),
+                                      behavior:
+                                          SnackBarBehavior.floating,
+                                    ),
+                                  );
+                                },
+                                child: Center(
+                                  child: Icon(
+                                    isFavorite
+                                        ? Icons.favorite
+                                        : Icons.favorite_outline,
+                                    color:
+                                        isFavorite
+                                            ? Colors.red
+                                            : Colors.white,
+                                    size: 24,
+                                  ),
+                                ),
+                              );
+                            },
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
-            );
-          },
+            ),
+          ],
         ),
       ),
     );
@@ -1046,6 +1074,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
       page: PropertyDetailsScreen(
         property: apartment,
         fromCategoriesScreen: true,
+        fromMainScreen: widget.fromMainScreen,
       ),
     ).then((_) {
       if (mounted) setState(() => _isNavigating = false);
@@ -1061,11 +1090,14 @@ class _CategoriesScreenState extends State<CategoriesScreen>
 
     try {
       _logger.info('فتح صفحة التفاصيل للمكان: ${place.name}');
-      // استخدام التنقل المباشر لضمان عمله
+      // Use direct navigation with the fromMainScreen flag set
       Navigator.of(context)
           .push(
             MaterialPageRoute(
-              builder: (context) => PlaceDetailsScreen(place: place),
+              builder: (context) => PlaceDetailsScreen(
+                place: place, 
+                fromMainScreen: widget.fromMainScreen
+              ),
             ),
           )
           .then((_) {
@@ -1241,11 +1273,14 @@ class _CategoriesScreenState extends State<CategoriesScreen>
 
           try {
             _logger.info('فتح صفحة التفاصيل للمكان: ${place.name}');
-            // استخدام التنقل المباشر لضمان عمله
+            // Pass the fromMainScreen flag to ensure navigation bars are shown
             Navigator.of(context)
                 .push(
                   MaterialPageRoute(
-                    builder: (context) => PlaceDetailsScreen(place: place),
+                    builder: (context) => PlaceDetailsScreen(
+                      place: place,
+                      fromMainScreen: widget.fromMainScreen,
+                    ),
                   ),
                 )
                 .then((_) {

@@ -100,10 +100,10 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
         elevation: 0,
         backgroundColor: isDarkMode 
           ? Theme.of(context).scaffoldBackgroundColor 
-          : Theme.of(context).primaryColor,
+          : Colors.white,
         foregroundColor: isDarkMode
           ? Theme.of(context).primaryColor
-          : Colors.white,
+          : Theme.of(context).primaryColor,
       ),
       floatingActionButton: FloatingActionButton.extended(
         onPressed: () {
@@ -137,7 +137,7 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                 decoration: BoxDecoration(
                   color: isDarkMode 
                     ? Theme.of(context).scaffoldBackgroundColor 
-                    : Theme.of(context).primaryColor,
+                    : Colors.white,
                   boxShadow: [
                     BoxShadow(
                       color: Colors.black.withOpacity(0.05),
@@ -155,7 +155,7 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14,
-                    color: isDarkMode ? Colors.grey[400] : Colors.white.withOpacity(0.85),
+                    color: isDarkMode ? Colors.grey[400] : Theme.of(context).primaryColor,
                   ),
                 ),
               ),
@@ -442,7 +442,7 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                               borderRadius: BorderRadius.circular(12),
                               color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                               image: const DecorationImage(
-                                image: AssetImage('assets/icons/icon_real-estate.png'),
+                                image: AssetImage('assets/icons/home-button.png'),
                                 fit: BoxFit.contain,
                               ),
                             ),

@@ -1,15 +1,23 @@
 import 'package:flutter/material.dart';
 import 'dart:developer' as developer;
 import 'package:logging/logging.dart';
+import 'package:provider/provider.dart';
 import '../models/available_place.dart';
 import '../models/apartment.dart';
 import '../services/property_service_supabase.dart';
+import '../providers/navigation_provider.dart';
 import 'property_details_screen.dart';
+import 'main_navigation_screen.dart';
 
 class PlaceDetailsScreen extends StatefulWidget {
   final AvailablePlace place;
+  final bool fromMainScreen;
 
-  const PlaceDetailsScreen({super.key, required this.place});
+  const PlaceDetailsScreen({
+    super.key, 
+    required this.place, 
+    this.fromMainScreen = false,
+  });
 
   @override
   State<PlaceDetailsScreen> createState() => _PlaceDetailsScreenState();
@@ -63,8 +71,9 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
   @override
   Widget build(BuildContext context) {
     developer.log('Building PlaceDetailsScreen for: ${widget.place.name}');
+    final navigationProvider = Provider.of<NavigationProvider>(context);
 
-    return Scaffold(
+    final Widget content = Scaffold(
       appBar: AppBar(
         title: Text(widget.place.name),
         centerTitle: true,
@@ -81,6 +90,36 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
               ? const Center(child: CircularProgressIndicator())
               : _buildContent(),
     );
+
+    // If we're coming from the main screen, use MainNavigationScreen layout to keep bottom navbar
+    // But only if we're not already inside the main navigation screen
+    if (widget.fromMainScreen && !_isAlreadyInMainNavigation(context)) {
+      return MainNavigationScreen.wrapWithBottomNav(
+        context: context,
+        child: content,
+        selectedIndex: navigationProvider.selectedIndex,
+      );
+    }
+
+    // Otherwise just return the content directly
+    return content;
+  }
+  
+  // Check if we're already inside the main navigation screen
+  bool _isAlreadyInMainNavigation(BuildContext context) {
+    // Check ancestors for MainNavigationScreen
+    bool result = false;
+    
+    // Use element visitor to check ancestors
+    context.visitAncestorElements((element) {
+      if (element.widget.toString().contains('MainNavigationScreen')) {
+        result = true;
+        return false; // Stop visiting
+      }
+      return true; // Continue visiting
+    });
+    
+    return result;
   }
 
   Widget _buildContent() {
@@ -210,6 +249,7 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
                       (context) => PropertyDetailsScreen(
                         property: property,
                         fromCategoriesScreen: true,
+                        fromMainScreen: widget.fromMainScreen,
                       ),
                 ),
               );

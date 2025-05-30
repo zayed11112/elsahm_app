@@ -38,6 +38,9 @@ dependencies:
   # State Management
   provider: ^6.0.0 # Check for latest version
 
+  # Error tracking and monitoring
+  sentry_flutter: ^8.14.2
+
   # Reactive Extensions for Dart
   rxdart: ^0.27.7 # For combining streams
 

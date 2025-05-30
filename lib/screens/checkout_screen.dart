@@ -220,6 +220,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   // إرسال النموذج
   Future<void> _submitForm() async {
+    // التحقق من رقم الهاتف أولاً
+    if (_phoneController.text.trim().isEmpty) {
+      _showTopErrorMessage('يجب إدخال رقم الهاتف للمتابعة');
+      return;
+    }
+
     if (_formKey.currentState!.validate()) {
       // إذا المستخدم غير مسجل دخول
       if (_userId == null) {
@@ -756,6 +762,61 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
     );
   }
 
+  // إظهار رسالة خطأ في الأعلى
+  void _showTopErrorMessage(String message) {
+    // إزالة أي رسائل خطأ سابقة
+    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    
+    ScaffoldMessenger.of(context).showMaterialBanner(
+      MaterialBanner(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: Colors.white,
+              size: 24,
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                message,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ],
+        ),
+        backgroundColor: Colors.red.shade700,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        leadingPadding: const EdgeInsets.only(right: 0),
+        actions: [
+          TextButton(
+            onPressed: () {
+              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+            },
+            child: const Text(
+              'حسناً',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    
+    // إخفاء الرسالة تلقائياً بعد 4 ثواني
+    Future.delayed(const Duration(seconds: 4), () {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      }
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final textTheme = Theme.of(context).textTheme;
@@ -957,6 +1018,96 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               ),
                               const SizedBox(height: 24),
                               
+                              // حقل رقم الهاتف (تم نقله ليكون أول حقل)
+                              Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(10),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: colorScheme.primary.withOpacity(0.2),
+                                      blurRadius: 4,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: TextFormField(
+                                  controller: _phoneController,
+                                  decoration: InputDecoration(
+                                    labelText: 'رقم الهاتف',
+                                    prefixIcon: Icon(
+                                      Icons.phone_android,
+                                      color: colorScheme.primary,
+                                      size: 26,
+                                    ),
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: colorScheme.primary,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: colorScheme.primary,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(8),
+                                      borderSide: BorderSide(
+                                        color: colorScheme.primary,
+                                        width: 2,
+                                      ),
+                                    ),
+                                    fillColor: colorScheme.primary.withOpacity(0.05),
+                                    filled: true,
+                                    labelStyle: TextStyle(
+                                      color: colorScheme.primary,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  keyboardType: TextInputType.phone,
+                                  inputFormatters: [
+                                    FilteringTextInputFormatter.digitsOnly,
+                                  ],
+                                  validator: (value) {
+                                    if (value == null || value.isEmpty) {
+                                      return 'الرجاء إدخال رقم الهاتف';
+                                    }
+                                    if (value.length < 10) {
+                                      return 'رقم الهاتف غير صحيح';
+                                    }
+                                    return null;
+                                  },
+                                ),
+                              ),
+                              // ملاحظة تحت حقل رقم الهاتف
+                              Padding(
+                                padding: const EdgeInsets.only(top: 4, right: 8),
+                                child: Row(
+                                  children: [
+                                    Icon(
+                                      Icons.message,
+                                      color: Colors.green,
+                                      size: 16,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    Expanded(
+                                      child: Text(
+                                        'يرجى إدخال رقم هاتف للتواصل معك، ويفضل أن يكون الرقم متاح على واتساب',
+                                        style: TextStyle(
+                                          color: colorScheme.primary,
+                                          fontSize: 12,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              
                               // حقل الاسم
                               TextFormField(
                                 controller: _nameController,
@@ -970,32 +1121,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                 validator: (value) {
                                   if (value == null || value.isEmpty) {
                                     return 'الرجاء إدخال اسمك';
-                                  }
-                                  return null;
-                                },
-                              ),
-                              const SizedBox(height: 16),
-                              
-                              // حقل رقم الهاتف
-                              TextFormField(
-                                controller: _phoneController,
-                                decoration: InputDecoration(
-                                  labelText: 'رقم الهاتف',
-                                  prefixIcon: const Icon(Icons.phone),
-                                  border: OutlineInputBorder(
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                ),
-                                keyboardType: TextInputType.phone,
-                                inputFormatters: [
-                                  FilteringTextInputFormatter.digitsOnly,
-                                ],
-                                validator: (value) {
-                                  if (value == null || value.isEmpty) {
-                                    return 'الرجاء إدخال رقم الهاتف';
-                                  }
-                                  if (value.length < 10) {
-                                    return 'رقم الهاتف غير صحيح';
                                   }
                                   return null;
                                 },
@@ -1083,15 +1208,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                               
                               // إظهار إجمالي المبلغ المطلوب بطريقة احترافية
                               Container(
-                                padding: const EdgeInsets.all(12),
+                                padding: const EdgeInsets.all(16),
                                 decoration: BoxDecoration(
-                                  color: Color.fromRGBO(
-                                    colorScheme.primary.r.toInt(),
-                                    colorScheme.primary.g.toInt(),
-                                    colorScheme.primary.b.toInt(),
-                                    0.1
+                                  color: Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color: Colors.grey.shade300,
+                                    width: 1,
                                   ),
-                                  borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Column(
                                   children: [
@@ -1100,14 +1224,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       children: [
                                         Icon(
                                           Icons.receipt_long,
-                                          color: Colors.white,
-                                          size: 22,
+                                          color: colorScheme.primary,
+                                          size: 24,
                                         ),
                                         const SizedBox(width: 8),
                                         Text(
                                           'ملخص الدفع',
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: colorScheme.primary,
+                                            fontWeight: FontWeight.bold,
+                                            fontSize: 18,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                    const SizedBox(height: 16),
+                                    Row(
+                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        Text(
+                                          'العربون:',
+                                          style: TextStyle(
+                                            color: Colors.black87,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
+                                          ),
+                                        ),
+                                        Text(
+                                          '${formatCurrency(_propertyDeposit)} جنيه',
+                                          style: TextStyle(
+                                            color: Colors.black,
                                             fontWeight: FontWeight.bold,
                                             fontSize: 16,
                                           ),
@@ -1119,67 +1265,47 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
                                         Text(
-                                          'العربون:',
-                                          style: TextStyle(
-                                            color: Color.fromRGBO(255, 255, 255, 0.9),
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                        Text(
-                                          '${formatCurrency(_propertyDeposit)} جنيه',
-                                          style: const TextStyle(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                            fontSize: 14,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                    const SizedBox(height: 6),
-                                    Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Text(
                                           'العمولة:',
                                           style: TextStyle(
-                                            color: Color.fromRGBO(255, 255, 255, 0.9),
-                                            fontSize: 14,
+                                            color: Colors.black87,
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.w500,
                                           ),
                                         ),
                                         Text(
                                           '${formatCurrency(_propertyCommission)} جنيه',
-                                          style: const TextStyle(
-                                            color: Colors.white,
+                                          style: TextStyle(
+                                            color: Colors.black,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 14,
+                                            fontSize: 16,
                                           ),
                                         ),
                                       ],
                                     ),
-                                    const Padding(
-                                      padding: EdgeInsets.symmetric(vertical: 8),
+                                    Padding(
+                                      padding: const EdgeInsets.symmetric(vertical: 12),
                                       child: Divider(
-                                        color: Colors.white,
-                                        thickness: 0.5,
+                                        color: Colors.grey.shade400,
+                                        thickness: 1,
                                       ),
                                     ),
                                     Row(
                                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                       children: [
-                                        const Text(
+                                        Text(
                                           'المجموع:',
                                           style: TextStyle(
-                                            color: Colors.white,
+                                            color: colorScheme.primary,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 16,
+                                            fontSize: 18,
                                           ),
                                         ),
                                         Text(
                                           '${formatCurrency(_propertyDeposit + _propertyCommission)} جنيه',
-                                          style: const TextStyle(
-                                            color: Colors.white,
+                                          style: TextStyle(
+                                            color: colorScheme.primary,
                                             fontWeight: FontWeight.bold,
-                                            fontSize: 18,
+                                            fontSize: 20,
                                           ),
                                         ),
                                       ],
@@ -1547,7 +1673,6 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
 
   // بناء قسم رسالة توضيحية للحجز
   Widget _buildBookingInfoMessage(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
     final colorScheme = Theme.of(context).colorScheme;
     
     // حساب إجمالي المبلغ المطلوب (العربون + العمولة)
@@ -1570,7 +1695,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             // عنوان القسم مع أيقونة
             Row(
@@ -1578,15 +1703,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
               children: [
                 Icon(
                   Icons.info_outline,
-                  color: colorScheme.primary,
-                  size: 24,
+                  color: Colors.blue,
+                  size: 28,
                 ),
                 const SizedBox(width: 8),
                 Text(
                   'معلومات هامة',
-                  style: textTheme.titleMedium?.copyWith(
+                  style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    color: colorScheme.primary,
+                    fontSize: 20,
+                    color: Colors.blue,
                   ),
                 ),
               ],
@@ -1594,58 +1720,126 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
             const SizedBox(height: 16),
             
             // رسالة الترحيب
-            Text(
-              'أهلا بك في شركة السهم',
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: colorScheme.secondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            
-            // معلومات الحجز
-            Text(
-              'لتأكيد الحجز، يرجى التأكد من شحن رصيد محفظتك لإتمام عملية الحجز بنجاح.',
-              style: textTheme.bodyMedium,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 12),
-            
-            // شرح آلية الدفع
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+            Align(
+              alignment: Alignment.center,
               child: Text(
-                'الحجز يتضمن دفع العربون (${formatCurrency(_propertyDeposit)} جنيه) وهو يذهب للمالك كتأكيد للحجز، بالإضافة إلى العمولة (${formatCurrency(_propertyCommission)} جنيه) وهي خاصة بشركة السهم.',
-                style: textTheme.bodyMedium,
+                'أهلا بك في شركة السهم',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  fontSize: 18,
+                  color: colorScheme.secondary,
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
             const SizedBox(height: 16),
             
-            // إظهار إجمالي المبلغ المطلوب
+            // معلومات الحجز - تفاصيل مهمة
             Container(
-              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: Color.fromRGBO(
-                  colorScheme.primary.r.toInt(),
-                  colorScheme.primary.g.toInt(),
-                  colorScheme.primary.b.toInt(),
-                  0.1
-                ),
+                color: Colors.grey.shade50,
                 borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              padding: const EdgeInsets.all(12),
+              width: double.infinity,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'إجمالي المبلغ المطلوب: ',
-                    style: textTheme.titleSmall,
+                    'لتأكيد الحجز يرجى التأكد من شحن رصيد محفظتك لإتمام عملية الحجز بنجاح',
+                    style: TextStyle(
+                      fontSize: 15,
+                      height: 1.5,
+                      color: Colors.black87,
+                      fontWeight: FontWeight.bold,
+                    ),
+                    textAlign: TextAlign.right,
+                  ),
+                  const SizedBox(height: 16),
+                  
+                  // شرح آلية الدفع
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.payments_outlined, 
+                        color: colorScheme.primary, 
+                        size: 20
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'الحجز يتضمن دفع العربون (${formatCurrency(_propertyDeposit)} جنيه) وهو يذهب للمالك كتأكيد للحجز',
+                          style: TextStyle(
+                            fontSize: 15,
+                            height: 1.5,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                    ],
+                  ),
+                  
+                  const SizedBox(height: 8),
+                  
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Icon(
+                        Icons.business_center_outlined, 
+                        color: colorScheme.primary, 
+                        size: 20
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          'بالإضافة إلى العمولة (${formatCurrency(_propertyCommission)} جنيه) وهي خاصة بشركة السهم',
+                          style: TextStyle(
+                            fontSize: 15,
+                            height: 1.5,
+                            color: Colors.black87,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          textAlign: TextAlign.right,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            
+            const SizedBox(height: 16),
+            
+            // إظهار إجمالي المبلغ المطلوب
+            Container(
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+              decoration: BoxDecoration(
+                color: colorScheme.primary.withOpacity(0.1),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: colorScheme.primary.withOpacity(0.3),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'إجمالي المبلغ المطلوب:',
+                    style: TextStyle(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                      color: colorScheme.primary,
+                    ),
                   ),
                   Text(
                     '${formatCurrency(totalAmount)} جنيه',
-                    style: textTheme.titleSmall?.copyWith(
+                    style: TextStyle(
                       fontWeight: FontWeight.bold,
+                      fontSize: 18,
                       color: colorScheme.primary,
                     ),
                   ),

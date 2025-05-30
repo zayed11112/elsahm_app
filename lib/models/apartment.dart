@@ -9,6 +9,7 @@ class Apartment {
   final String name;
   final String location;
   final double price;
+  final String? priceType;
   final double commission;
   final double deposit;
   final int rooms;
@@ -33,12 +34,14 @@ class Apartment {
   final List<Map<String, dynamic>> categories; // قائمة الأقسام المرتبطة بالعقار
   final List<Map<String, dynamic>>
   places; // قائمة الأماكن المتاحة المرتبطة بالعقار
+  final String? infoVip; // معلومات مميزة للعقار (VIP)
 
   Apartment({
     required this.id,
     required this.name,
     required this.location,
     required this.price,
+    this.priceType,
     this.commission = 0,
     this.deposit = 0,
     required this.rooms,
@@ -61,6 +64,7 @@ class Apartment {
     this.category = '',
     this.categories = const [],
     this.places = const [],
+    this.infoVip,
   }) : imageUrls = imageUrls ?? images;
 
   // Create Apartment from Supabase data
@@ -113,6 +117,7 @@ class Apartment {
             (data['price'] != null)
                 ? double.tryParse(data['price'].toString()) ?? 0.0
                 : 0.0,
+        priceType: data['price_type']?.toString(),
         commission:
             (data['commission'] != null)
                 ? double.tryParse(data['commission'].toString()) ?? 0.0
@@ -172,6 +177,7 @@ class Apartment {
             data['category']?.toString() ?? data['type']?.toString() ?? '',
         categories: List<Map<String, dynamic>>.from(data['categories'] ?? []),
         places: List<Map<String, dynamic>>.from(data['places'] ?? []),
+        infoVip: data['info_vip']?.toString(),
       );
     } catch (e) {
       _logger.severe('خطأ أثناء تحويل بيانات العقار: $e');
@@ -189,6 +195,7 @@ class Apartment {
         rooms: 0,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
+        infoVip: data['info_vip']?.toString(),
       );
     }
   }
@@ -201,6 +208,7 @@ class Apartment {
       name: data['name'] ?? '',
       location: data['location'] ?? '',
       price: (data['price'] ?? 0).toDouble(),
+      priceType: data['priceType'],
       commission: (data['commission'] ?? 0).toDouble(),
       deposit: (data['deposit'] ?? 0).toDouble(),
       rooms: data['rooms'] ?? 0,
@@ -229,31 +237,38 @@ class Apartment {
       category: data['category'] ?? '',
       categories: List<Map<String, dynamic>>.from(data['categories'] ?? []),
       places: List<Map<String, dynamic>>.from(data['places'] ?? []),
+      infoVip: data['infoVip'],
     );
   }
 
   // Convert Apartment to Supabase data
   Map<String, dynamic> toSupabase() {
     return {
+      'id': id,
       'name': name,
       'address': location,
       'price': price,
+      'price_type': priceType,
       'commission': commission,
       'deposit': deposit,
+      'rooms': rooms,
       'bedrooms': bedrooms,
       'beds': bathrooms,
-      'images': imageUrls,
-      'videos': videos,
-      'drive_images': driveImages,
+      'floor': floor,
       'is_available': isAvailable,
       'description': description,
       'features': features,
-      'type': type,
-      'floor': floor,
+      'images': images,
+      'videos': videos,
+      'drive_images': driveImages,
+      'created_at': createdAt.toIso8601String(),
+      'updated_at': updatedAt.toIso8601String(),
       'owner_id': ownerId,
       'owner_name': ownerName,
       'owner_phone': ownerPhone,
-      'updated_at': DateTime.now().toIso8601String(),
+      'type': type,
+      'category': category,
+      'info_vip': infoVip,
     };
   }
 
@@ -263,9 +278,12 @@ class Apartment {
       'name': name,
       'location': location,
       'price': price,
+      'priceType': priceType,
       'commission': commission,
       'deposit': deposit,
       'rooms': rooms,
+      'bedrooms': bedrooms,
+      'bathrooms': bathrooms,
       'images': images,
       'videos': videos,
       'driveImages': driveImages,
@@ -274,17 +292,13 @@ class Apartment {
       'features': features,
       'type': type,
       'floor': floor,
-      'createdAt': createdAt,
-      'updatedAt': DateTime.now(),
-      'imageUrls': imageUrls,
-      'bedrooms': bedrooms,
-      'bathrooms': bathrooms,
+      'createdAt': Timestamp.fromDate(createdAt),
+      'updatedAt': Timestamp.fromDate(updatedAt),
       'ownerId': ownerId,
       'ownerName': ownerName,
       'ownerPhone': ownerPhone,
       'category': category,
-      'categories': categories,
-      'places': places,
+      'infoVip': infoVip,
     };
   }
 
@@ -294,6 +308,7 @@ class Apartment {
     String? name,
     String? location,
     double? price,
+    String? priceType,
     double? commission,
     double? deposit,
     int? rooms,
@@ -316,12 +331,14 @@ class Apartment {
     String? category,
     List<Map<String, dynamic>>? categories,
     List<Map<String, dynamic>>? places,
+    String? infoVip,
   }) {
     return Apartment(
       id: id ?? this.id,
       name: name ?? this.name,
       location: location ?? this.location,
       price: price ?? this.price,
+      priceType: priceType ?? this.priceType,
       commission: commission ?? this.commission,
       deposit: deposit ?? this.deposit,
       rooms: rooms ?? this.rooms,
@@ -344,6 +361,7 @@ class Apartment {
       category: category ?? this.category,
       categories: categories ?? this.categories,
       places: places ?? this.places,
+      infoVip: infoVip ?? this.infoVip,
     );
   }
 }

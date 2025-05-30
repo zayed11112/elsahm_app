@@ -7,6 +7,7 @@ import '../services/firestore_service.dart'; // إضافة FirestoreService
 import '../services/supabase_service.dart'; // إضافة SupabaseService
 import '../services/payment_methods_service.dart'; // إضافة خدمة طرق الدفع
 import '../providers/auth_provider.dart'; // إضافة AuthProvider
+import '../utils/notification_utils.dart'; // إضافة خدمة الإشعارات
 import 'dart:io';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
@@ -78,14 +79,9 @@ class _WalletScreenState extends State<WalletScreen> {
           _isLoadingPaymentMethods = false;
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'خطأ في تحميل طرق الدفع: $e',
-              textAlign: TextAlign.center,
-            ),
-            backgroundColor: Colors.red,
-          ),
+        NotificationUtils.showTopErrorBanner(
+          context,
+          'خطأ في تحميل طرق الدفع: $e',
         );
       }
     }
@@ -155,14 +151,9 @@ class _WalletScreenState extends State<WalletScreen> {
       _uploadImage();
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'خطأ في اختيار الصورة: $e',
-              textAlign: TextAlign.center,
-            ),
-            backgroundColor: Colors.red,
-          ),
+        NotificationUtils.showTopErrorBanner(
+          context,
+          'خطأ في اختيار الصورة: $e',
         );
       }
     }
@@ -186,11 +177,9 @@ class _WalletScreenState extends State<WalletScreen> {
         });
 
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('تم رفع الصورة بنجاح', textAlign: TextAlign.center),
-              backgroundColor: Colors.green,
-            ),
+          NotificationUtils.showTopSuccessBanner(
+            context,
+            'تم رفع الصورة بنجاح',
           );
         }
       } catch (imgbbError) {
@@ -204,14 +193,9 @@ class _WalletScreenState extends State<WalletScreen> {
           });
 
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text(
-                  'تم رفع الصورة بنجاح (باستخدام الخادم البديل)',
-                  textAlign: TextAlign.center,
-                ),
-                backgroundColor: Colors.green,
-              ),
+            NotificationUtils.showTopSuccessBanner(
+              context,
+              'تم رفع الصورة بنجاح (باستخدام الخادم البديل)',
             );
           }
         } catch (freeimageError) {
@@ -226,11 +210,9 @@ class _WalletScreenState extends State<WalletScreen> {
       });
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('فشل في رفع الصورة: $e', textAlign: TextAlign.center),
-            backgroundColor: Colors.red,
-          ),
+        NotificationUtils.showTopErrorBanner(
+          context,
+          'فشل في رفع الصورة: $e',
         );
       }
     }
@@ -284,72 +266,47 @@ class _WalletScreenState extends State<WalletScreen> {
   Future<void> _submitRequest() async {
     // التحقق من اختيار طريقة دفع
     if (_selectedPaymentMethod == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'يرجى اختيار طريقة دفع أولاً',
-            textAlign: TextAlign.center,
-          ),
-          backgroundColor: Colors.red,
-        ),
+      NotificationUtils.showTopErrorBanner(
+        context,
+        'يرجى اختيار طريقة دفع أولاً',
       );
       return;
     }
 
     // التحقق من إدخال المبلغ المراد شحنه
     if (_amountController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'يرجى إدخال المبلغ المراد شحنه',
-            textAlign: TextAlign.center,
-          ),
-          backgroundColor: Colors.red,
-        ),
+      NotificationUtils.showTopErrorBanner(
+        context,
+        'يرجى إدخال المبلغ المراد شحنه',
       );
       return;
     }
 
     // التحقق من إدخال رقم الهاتف أو اسم المستخدم
     if (_sourcePhoneController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            _selectedPaymentMethod == 'إنستا باي'
-                ? 'يرجى إدخال اسم المستخدم على إنستا باي'
-                : 'يرجى إدخال الرقم الذي حولت منه',
-            textAlign: TextAlign.center,
-          ),
-          backgroundColor: Colors.red,
-        ),
+      NotificationUtils.showTopErrorBanner(
+        context,
+        _selectedPaymentMethod == 'إنستا باي'
+            ? 'يرجى إدخال اسم المستخدم على إنستا باي'
+            : 'يرجى إدخال الرقم الذي حولت منه',
       );
       return;
     }
 
     // التحقق من رفع صورة التحويل
     if (_uploadedImageUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'يرجى رفع صورة إثبات التحويل',
-            textAlign: TextAlign.center,
-          ),
-          backgroundColor: Colors.red,
-        ),
+      NotificationUtils.showTopErrorBanner(
+        context,
+        'يرجى رفع صورة إثبات التحويل',
       );
       return;
     }
 
     // التحقق من باقي البيانات المطلوبة
     if (_nameController.text.isEmpty || _universityIdController.text.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text(
-            'يرجى إكمال جميع البيانات المطلوبة',
-            textAlign: TextAlign.center,
-          ),
-          backgroundColor: Colors.red,
-        ),
+      NotificationUtils.showTopErrorBanner(
+        context,
+        'يرجى إكمال جميع البيانات المطلوبة',
       );
       return;
     }
@@ -359,11 +316,9 @@ class _WalletScreenState extends State<WalletScreen> {
       _sourcePhoneController.text,
     );
     if (validationError != null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(validationError, textAlign: TextAlign.center),
-          backgroundColor: Colors.red,
-        ),
+      NotificationUtils.showTopErrorBanner(
+        context,
+        validationError,
       );
       return;
     }
@@ -591,14 +546,9 @@ class _WalletScreenState extends State<WalletScreen> {
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'فشل في إرسال الطلب: $e',
-              textAlign: TextAlign.center,
-            ),
-            backgroundColor: Colors.red,
-          ),
+        NotificationUtils.showTopErrorBanner(
+          context,
+          'فشل في إرسال الطلب: $e',
         );
         setState(() {
           _isSubmitting = false;
@@ -1385,14 +1335,9 @@ class _WalletScreenState extends State<WalletScreen> {
               onPressed: () {
                 Clipboard.setData(ClipboardData(text: details)).then((_) {
                   if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text(
-                          'تم نسخ $details إلى الحافظة',
-                          textAlign: TextAlign.center,
-                        ),
-                        backgroundColor: Colors.green,
-                      ),
+                    NotificationUtils.showTopErrorBanner(
+                      context,
+                      'تم نسخ $details إلى الحافظة',
                     );
                   }
                 });

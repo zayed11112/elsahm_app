@@ -47,16 +47,18 @@ class _Feature {
 
 // جمل النص المتحرك - تم تقليلها إلى جملتين فقط
 const List<String> animatedTexts = [
-  "شركة السهم للتسكين - خبرة 5 سنوات في خدمة الطلبة",
-  "ارخص الاسعار - افضل الامكان - الامان العالي",
+  "أكثر من 5 سنوات من الخبرة في خدمة الطلاب",
+  " أسعار تنافسية تناسب كل الميزانيات",
+  "مستوى عالٍ من الأمان والخصوصية",
+  "بيئة آمنة وهادئة تساعدك على التركيز والدراسة",
+  "دعم فني  متواصل لضمان راحتك",
+  " احجز مكانك الآن قبل نفاد الأماكن!",
 ];
 
 // Fallback banner images (for offline or error cases)
 final List<String> fallbackBannerImages = [
   'assets/images/banners/banner1.png',
   'assets/images/banners/banner2.png',
-  'assets/images/banners/banner3.png',
-  'assets/images/banners/banner4.png',
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -293,7 +295,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                         ),
                                         const SizedBox(height: 8),
                                         AutoSizeText(
-                                          'للوصول إلى مميزات حصرية وعروض خاصة',
+                                          'للوصول إلى مميزات حصرية',
                                           style: textTheme.bodyMedium?.copyWith(
                                             color: Colors.white.withValues(alpha:0.9),
                                           ),
