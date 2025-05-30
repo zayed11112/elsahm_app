@@ -27,7 +27,7 @@ class WalletScreen extends StatefulWidget {
   State<WalletScreen> createState() => _WalletScreenState();
 }
 
-class _WalletScreenState extends State<WalletScreen> {
+class _WalletScreenState extends State<WalletScreen> with WidgetsBindingObserver {
   final TextEditingController _amountController = TextEditingController();
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _universityIdController = TextEditingController();
@@ -52,10 +52,46 @@ class _WalletScreenState extends State<WalletScreen> {
   @override
   void initState() {
     super.initState();
+    // Add observer for app lifecycle changes
+    WidgetsBinding.instance.addObserver(this);
     // تعبئة اسم المستخدم من الملف الشخصي إذا كان متاحاً
     _fillUserDetails();
     // تحميل طرق الدفع المتاحة من قاعدة البيانات
     _loadPaymentMethods();
+  }
+
+  @override
+  void dispose() {
+    // Hide any displayed banners when the screen is disposed
+    if (mounted && context.mounted) {
+      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    }
+    // Remove observer
+    WidgetsBinding.instance.removeObserver(this);
+    _amountController.dispose();
+    _nameController.dispose();
+    _universityIdController.dispose();
+    _sourcePhoneController.dispose();
+    _amountFocusNode.dispose();
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    // Hide banners when app is paused or inactive
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+      if (mounted && context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+      }
+    }
+  }
+
+  // اضافة طريقة لإخفاء الإشعارات عند الانتقال للخلف
+  void _hideNotificationsOnBack() {
+    if (mounted && context.mounted) {
+      ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+    }
   }
 
   // تحميل طرق الدفع من قاعدة البيانات
@@ -100,16 +136,6 @@ class _WalletScreenState extends State<WalletScreen> {
         });
       }
     }
-  }
-
-  @override
-  void dispose() {
-    _amountController.dispose();
-    _nameController.dispose();
-    _universityIdController.dispose();
-    _sourcePhoneController.dispose();
-    _amountFocusNode.dispose();
-    super.dispose();
   }
 
   void _selectPredefinedAmount(String amount) {
@@ -181,6 +207,18 @@ class _WalletScreenState extends State<WalletScreen> {
             context,
             'تم رفع الصورة بنجاح',
           );
+          
+          // Ensure banner is automatically hidden when leaving the screen
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (mounted && context.mounted) {
+              Future.delayed(const Duration(seconds: 4), () {
+                // Check if widget is still mounted before accessing context
+                if (mounted && context.mounted) {
+                  ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                }
+              });
+            }
+          });
         }
       } catch (imgbbError) {
         // If ImgBB fails, try with Freeimage.host as fallback
@@ -197,6 +235,18 @@ class _WalletScreenState extends State<WalletScreen> {
               context,
               'تم رفع الصورة بنجاح (باستخدام الخادم البديل)',
             );
+            
+            // Ensure banner is automatically hidden when leaving the screen
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              if (mounted && context.mounted) {
+                Future.delayed(const Duration(seconds: 4), () {
+                  // Check if widget is still mounted before accessing context
+                  if (mounted && context.mounted) {
+                    ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+                  }
+                });
+              }
+            });
           }
         } catch (freeimageError) {
           throw Exception(
@@ -214,6 +264,18 @@ class _WalletScreenState extends State<WalletScreen> {
           context,
           'فشل في رفع الصورة: $e',
         );
+        
+        // Ensure error banner is automatically hidden when leaving the screen
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && context.mounted) {
+            Future.delayed(const Duration(seconds: 4), () {
+              // Check if widget is still mounted before accessing context
+              if (mounted && context.mounted) {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              }
+            });
+          }
+        });
       }
     }
   }
@@ -506,9 +568,8 @@ class _WalletScreenState extends State<WalletScreen> {
                           elevation: 3,
                         ),
                         onPressed: () {
+                          _hideNotificationsOnBack();
                           Navigator.of(context).pop();
-
-                          // التوجه إلى صفحة طلبات الدفع بعد الإغلاق
                           Navigator.of(context).pushReplacement(
                             MaterialPageRoute(
                               builder:
@@ -550,6 +611,19 @@ class _WalletScreenState extends State<WalletScreen> {
           context,
           'فشل في إرسال الطلب: $e',
         );
+        
+        // Ensure error banner is automatically hidden when leaving the screen
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && context.mounted) {
+            Future.delayed(const Duration(seconds: 4), () {
+              // Check if widget is still mounted before accessing context
+              if (mounted && context.mounted) {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              }
+            });
+          }
+        });
+        
         setState(() {
           _isSubmitting = false;
         });
@@ -598,606 +672,613 @@ class _WalletScreenState extends State<WalletScreen> {
     final textColor = isDarkMode ? Colors.white70 : Colors.black87;
     final shadowColor = isDarkMode ? Colors.black54 : Colors.black12;
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('شحن المحفظة'),
-        centerTitle: true,
-        backgroundColor: primarySkyBlue,
-        foregroundColor: Colors.white,
-        elevation: 2.0,
-      ),
-      body: Column(
-        children: [
-          // Main content in scrollable area
-          Expanded(
-            child: GestureDetector(
-              onTap: () => FocusScope.of(context).unfocus(),
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // Current Balance Card
-                    _buildBalanceCard(cardBgColor, textColor),
-                    const SizedBox(height: 25),
+    return WillPopScope(
+      onWillPop: () async {
+        // Hide any displayed banners when user presses back button
+        _hideNotificationsOnBack();
+        return true;
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: const Text('شحن المحفظة'),
+          centerTitle: true,
+          backgroundColor: primarySkyBlue,
+          foregroundColor: Colors.white,
+          elevation: 2.0,
+        ),
+        body: Column(
+          children: [
+            // Main content in scrollable area
+            Expanded(
+              child: GestureDetector(
+                onTap: () => FocusScope.of(context).unfocus(),
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      // Current Balance Card
+                      _buildBalanceCard(cardBgColor, textColor),
+                      const SizedBox(height: 25),
 
-                    // Payment Methods Title
-                    Center(
-                      child: Text(
-                        'اختر طريقة الدفع المناسبة ليك',
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isDarkMode ? Colors.white : Colors.black87,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 15),
-
-                    // Payment Methods Section
-                    _buildSectionHeader('طرق الدفع المتاحة', Icons.payments),
-                    const SizedBox(height: 10),
-
-                    Card(
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      color: cardBgColor,
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child:
-                            _isLoadingPaymentMethods
-                                ? const Center(
-                                  child: Padding(
-                                    padding: EdgeInsets.all(20.0),
-                                    child: CircularProgressIndicator(),
-                                  ),
-                                )
-                                : _paymentMethods.isEmpty
-                                ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.payment_outlined,
-                                          size: 48,
-                                          color: Colors.grey.withAlpha(150),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        const Text(
-                                          'لا توجد طرق دفع متاحة حالياً',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                )
-                                : Column(
-                                  children:
-                                      _paymentMethods
-                                          .map(
-                                            (method) => _buildPaymentMethodItem(
-                                              method.name,
-                                              method.paymentIdentifier,
-                                              isDarkMode,
-                                              method.name ==
-                                                  _selectedPaymentMethod,
-                                              () => setState(
-                                                () =>
-                                                    _selectedPaymentMethod =
-                                                        method.name,
-                                              ),
-                                            ),
-                                          )
-                                          .toList(),
-                                ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 16),
-
-                    // رسالة تنبيه للمستخدم
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.amber.withValues(alpha: 0.2),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(
-                          color: Colors.amber.withValues(alpha: 0.5),
-                        ),
-                      ),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.info_outline,
-                            color: Colors.amber.shade700,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              'قم بالتحويل على إحدى طرق الدفع أعلاه ثم أدخل بياناتك واختر صورة إيصال التحويل',
-                              style: TextStyle(
-                                color:
-                                    isDarkMode
-                                        ? Colors.amber.shade200
-                                        : Colors.amber.shade900,
-                              ),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(height: 25),
-
-                    // Amount Input Section
-                    _buildSectionHeader(
-                      'المبلغ اللي شحنته',
-                      Icons.account_balance_wallet,
-                    ),
-                    const SizedBox(height: 10),
-
-                    // Center and constrain the TextField
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: TextField(
-                          controller: _amountController,
-                          focusNode: _amountFocusNode,
-                          keyboardType: const TextInputType.numberWithOptions(
-                            decimal: true,
-                          ),
-                          inputFormatters: [
-                            FilteringTextInputFormatter.allow(
-                              RegExp(r'^\d+\.?\d{0,2}'),
-                            ),
-                            LengthLimitingTextInputFormatter(
-                              25,
-                            ), // Limit to 25 digits
-                          ],
-                          decoration: InputDecoration(
-                            hintText: '0.00',
-                            labelText: 'المبلغ (بالجنيه)',
-                            prefixIcon: Icon(
-                              Icons.monetization_on,
-                              color: primarySkyBlue.withValues(alpha: 0.7),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: primarySkyBlue,
-                                width: 2.0,
-                              ),
-                            ),
-                          ),
-                          textAlign: TextAlign.center,
-                          style: const TextStyle(
+                      // Payment Methods Title
+                      Center(
+                        child: Text(
+                          'اختر طريقة الدفع المناسبة ليك',
+                          style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
-                          ),
-                          onChanged: _onAmountChanged,
-                          enabled: !_isSubmitting,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 10),
-
-                    // Predefined Amounts
-                    Wrap(
-                      spacing: 10.0,
-                      runSpacing: 10.0,
-                      alignment: WrapAlignment.center,
-                      children:
-                          ['1000', '2000', '4000', '6000']
-                              .map(
-                                (amount) =>
-                                    _buildPredefinedAmountButton(amount),
-                              )
-                              .toList(),
-                    ),
-
-                    const SizedBox(height: 25),
-
-                    // User Info Section
-                    _buildSectionHeader('ادخل بياناتك ', Icons.person),
-                    const SizedBox(height: 10),
-
-                    // اسم المستخدم
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: TextField(
-                          controller: _nameController,
-                          decoration: InputDecoration(
-                            labelText: 'الاسم داخل التطبيق',
-                            prefixIcon: Icon(
-                              Icons.person_outline,
-                              color: primarySkyBlue.withValues(alpha: 0.7),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: primarySkyBlue,
-                                width: 2.0,
-                              ),
-                            ),
-                          ),
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(
-                              40,
-                            ), // Limit to 40 characters
-                          ],
-                          textAlign: TextAlign.center,
-                          enabled: !_isSubmitting,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // الرقم الجامعي
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: TextField(
-                          controller: _universityIdController,
-                          decoration: InputDecoration(
-                            labelText: 'الرقم الجامعي',
-                            prefixIcon: Icon(
-                              Icons.badge_outlined,
-                              color: primarySkyBlue.withValues(alpha: 0.7),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: primarySkyBlue,
-                                width: 2.0,
-                              ),
-                            ),
-                          ),
-                          inputFormatters: [
-                            LengthLimitingTextInputFormatter(
-                              25,
-                            ), // Limit to 25 digits
-                          ],
-                          textAlign: TextAlign.center,
-                          enabled: !_isSubmitting,
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 15),
-
-                    // الرقم الذي حوّلت منه
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 300),
-                        child: TextField(
-                          controller: _sourcePhoneController,
-                          decoration: InputDecoration(
-                            labelText:
-                                _selectedPaymentMethod == 'إنستا باي'
-                                    ? 'اسم المستخدم على انستا باي'
-                                    : 'الرقم الذي حوّلت منه',
-                            hintText:
-                                _selectedPaymentMethod == 'إنستا باي'
-                                    ? 'فقط اكتب اسمك (سنضيف @instapay تلقائيًا)'
-                                    : 'مثال: 01xxxxxxxxx',
-                            suffixText:
-                                _selectedPaymentMethod == 'إنستا باي'
-                                    ? '@instapay'
-                                    : null,
-                            suffixStyle: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: primarySkyBlue,
-                            ),
-                            prefixIcon: Icon(
-                              _selectedPaymentMethod == 'إنستا باي'
-                                  ? Icons.alternate_email
-                                  : Icons.phone,
-                              color: primarySkyBlue.withValues(alpha: 0.7),
-                            ),
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12.0),
-                              borderSide: const BorderSide(
-                                color: primarySkyBlue,
-                                width: 2.0,
-                              ),
-                            ),
+                            color: isDarkMode ? Colors.white : Colors.black87,
                           ),
                           textAlign: TextAlign.center,
-                          keyboardType:
-                              _selectedPaymentMethod == 'إنستا باي'
-                                  ? TextInputType.text
-                                  : TextInputType.phone,
-                          inputFormatters:
-                              _selectedPaymentMethod == 'إنستا باي'
-                                  ? [
-                                    // منع المستخدم من إدخال @
-                                    FilteringTextInputFormatter.deny(
-                                      RegExp(r'@'),
-                                    ),
-                                    LengthLimitingTextInputFormatter(
-                                      25,
-                                    ), // Limit to 25 characters
-                                  ]
-                                  : [
-                                    FilteringTextInputFormatter.digitsOnly,
-                                    LengthLimitingTextInputFormatter(
-                                      25,
-                                    ), // Update limit to 25 digits
-                                  ],
-                          enabled: !_isSubmitting,
                         ),
                       ),
-                    ),
+                      const SizedBox(height: 15),
 
-                    const SizedBox(height: 25),
+                      // Payment Methods Section
+                      _buildSectionHeader('طرق الدفع المتاحة', Icons.payments),
+                      const SizedBox(height: 10),
 
-                    // Payment Proof Upload Section
-                    _buildSectionHeader('إثبات التحويل', Icons.image),
-                    const SizedBox(height: 10),
-
-                    // صورة إثبات التحويل
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 400),
-                        child: Card(
-                          elevation: 2,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(12),
-                          ),
-                          color: cardBgColor,
-                          child: InkWell(
-                            onTap: _isSubmitting ? null : _pickImage,
-                            borderRadius: BorderRadius.circular(12),
-                            child: Container(
-                              height: 200,
-                              width: double.infinity,
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(12),
-                                border: Border.all(
-                                  color:
-                                      _uploadedImageUrl != null
-                                          ? Colors.green.withValues(alpha: 0.5)
-                                          : Colors.grey.withValues(alpha: 0.3),
-                                  width: 1.5,
-                                ),
-                              ),
-                              child:
-                                  _isUploading
-                                      ? const Center(
-                                        child: Column(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            CircularProgressIndicator(
-                                              color: primarySkyBlue,
-                                            ),
-                                            SizedBox(height: 10),
-                                            Text('جاري رفع الصورة...'),
-                                          ],
-                                        ),
-                                      )
-                                      : _imageFile != null
-                                      ? Stack(
-                                        alignment: Alignment.center,
-                                        children: [
-                                          ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              11,
-                                            ),
-                                            child: Image.file(
-                                              _imageFile!,
-                                              fit: BoxFit.cover,
-                                              width: double.infinity,
-                                              height: double.infinity,
-                                            ),
-                                          ),
-                                          if (_uploadedImageUrl != null)
-                                            Positioned(
-                                              top: 10,
-                                              right: 10,
-                                              child: Container(
-                                                padding:
-                                                    const EdgeInsets.symmetric(
-                                                      horizontal: 8,
-                                                      vertical: 4,
-                                                    ),
-                                                decoration: BoxDecoration(
-                                                  color: Colors.green
-                                                      .withValues(alpha: 0.8),
-                                                  borderRadius:
-                                                      BorderRadius.circular(20),
-                                                ),
-                                                child: const Row(
-                                                  mainAxisSize:
-                                                      MainAxisSize.min,
-                                                  children: [
-                                                    Icon(
-                                                      Icons.check,
-                                                      color: Colors.white,
-                                                      size: 16,
-                                                    ),
-                                                    SizedBox(width: 4),
-                                                    Text(
-                                                      'تم الرفع',
-                                                      style: TextStyle(
-                                                        color: Colors.white,
-                                                        fontSize: 12,
-                                                      ),
-                                                    ),
-                                                  ],
-                                                ),
-                                              ),
-                                            ),
-                                        ],
-                                      )
-                                      : Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.upload_file,
-                                            size: 48,
-                                            color: primarySkyBlue.withValues(
-                                              alpha: 0.7,
-                                            ),
-                                          ),
-                                          const SizedBox(height: 10),
-                                          Text(
-                                            'انقر لرفع صورة إثبات التحويل',
-                                            style: TextStyle(color: textColor),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                          const SizedBox(height: 6),
-                                          Text(
-                                            '(سكرين شوت أو صورة إيصال)',
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              color: textColor.withValues(
-                                                alpha: 0.7,
-                                              ),
-                                            ),
-                                            textAlign: TextAlign.center,
-                                          ),
-                                        ],
-                                      ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    const SizedBox(height: 30),
-
-                    // Verification note
-                    Center(
-                      child: ConstrainedBox(
-                        constraints: const BoxConstraints(maxWidth: 400),
-                        child: Container(
-                          margin: const EdgeInsets.only(bottom: 15),
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.blue.withValues(alpha: 0.1),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                              color: primarySkyBlue.withValues(alpha: 0.3),
-                            ),
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              Icon(
-                                Icons.info_outline,
-                                color: primarySkyBlue,
-                                size: 20,
-                              ),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(
-                                  'سيتم التحقق من التحويل وسيتم إرسال إشعار لك إذا كان التحويل صحيح',
-                                  style: TextStyle(
-                                    color:
-                                        isDarkMode
-                                            ? Colors.white70
-                                            : Colors.black87,
-                                    fontSize: 13,
-                                  ),
-                                  textAlign: TextAlign.center,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Additional padding at the bottom to ensure space for the fixed button
-                    const SizedBox(height: 70),
-                  ],
-                ),
-              ),
-            ),
-          ),
-
-          // Fixed button at bottom
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-            decoration: BoxDecoration(
-              color: isDarkMode ? const Color(0xFF1F2937) : Colors.white,
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.1),
-                  blurRadius: 4,
-                  offset: const Offset(0, -2),
-                ),
-              ],
-            ),
-            child: SafeArea(
-              child: Center(
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 300),
-                  child: SizedBox(
-                    height: 50,
-                    width: double.infinity,
-                    child: ElevatedButton.icon(
-                      icon:
-                          _isSubmitting
-                              ? Container(
-                                width: 24,
-                                height: 24,
-                                padding: const EdgeInsets.all(2.0),
-                                child: const CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 3,
-                                ),
-                              )
-                              : const Icon(Icons.send),
-                      label: Text(
-                        _isSubmitting ? 'جاري الإرسال...' : 'إرسال الطلب',
-                      ),
-                      onPressed: _isSubmitting ? null : _submitRequest,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accentBlue,
-                        foregroundColor: Colors.white,
-                        textStyle: const TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
+                      Card(
+                        elevation: 2,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        elevation: 3,
-                        shadowColor: shadowColor,
+                        color: cardBgColor,
+                        child: Padding(
+                          padding: const EdgeInsets.all(16.0),
+                          child:
+                              _isLoadingPaymentMethods
+                                  ? const Center(
+                                    child: Padding(
+                                      padding: EdgeInsets.all(20.0),
+                                      child: CircularProgressIndicator(),
+                                    ),
+                                  )
+                                  : _paymentMethods.isEmpty
+                                  ? Center(
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(20.0),
+                                      child: Column(
+                                        children: [
+                                          Icon(
+                                            Icons.payment_outlined,
+                                            size: 48,
+                                            color: Colors.grey.withAlpha(150),
+                                          ),
+                                          const SizedBox(height: 16),
+                                          const Text(
+                                            'لا توجد طرق دفع متاحة حالياً',
+                                            style: TextStyle(
+                                              fontSize: 16,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  )
+                                  : Column(
+                                    children:
+                                        _paymentMethods
+                                            .map(
+                                              (method) => _buildPaymentMethodItem(
+                                                method.name,
+                                                method.paymentIdentifier,
+                                                isDarkMode,
+                                                method.name ==
+                                                    _selectedPaymentMethod,
+                                                () => setState(
+                                                  () =>
+                                                      _selectedPaymentMethod =
+                                                          method.name,
+                                                ),
+                                              ),
+                                            )
+                                            .toList(),
+                                  ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 16),
+
+                      // رسالة تنبيه للمستخدم
+                      Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: Colors.amber.withValues(alpha: 0.2),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: Colors.amber.withValues(alpha: 0.5),
+                          ),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.info_outline,
+                              color: Colors.amber.shade700,
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'قم بالتحويل على إحدى طرق الدفع أعلاه ثم أدخل بياناتك واختر صورة إيصال التحويل',
+                                style: TextStyle(
+                                  color:
+                                      isDarkMode
+                                          ? Colors.amber.shade200
+                                          : Colors.amber.shade900,
+                                ),
+                                textAlign: TextAlign.center,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      // Amount Input Section
+                      _buildSectionHeader(
+                        'المبلغ اللي شحنته',
+                        Icons.account_balance_wallet,
+                      ),
+                      const SizedBox(height: 10),
+
+                      // Center and constrain the TextField
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: TextField(
+                            controller: _amountController,
+                            focusNode: _amountFocusNode,
+                            keyboardType: const TextInputType.numberWithOptions(
+                              decimal: true,
+                            ),
+                            inputFormatters: [
+                              FilteringTextInputFormatter.allow(
+                                RegExp(r'^\d+\.?\d{0,2}'),
+                              ),
+                              LengthLimitingTextInputFormatter(
+                                25,
+                              ), // Limit to 25 digits
+                            ],
+                            decoration: InputDecoration(
+                              hintText: '0.00',
+                              labelText: 'المبلغ (بالجنيه)',
+                              prefixIcon: Icon(
+                                Icons.monetization_on,
+                                color: primarySkyBlue.withValues(alpha: 0.7),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: primarySkyBlue,
+                                  width: 2.0,
+                                ),
+                              ),
+                            ),
+                            textAlign: TextAlign.center,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            onChanged: _onAmountChanged,
+                            enabled: !_isSubmitting,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 10),
+
+                      // Predefined Amounts
+                      Wrap(
+                        spacing: 10.0,
+                        runSpacing: 10.0,
+                        alignment: WrapAlignment.center,
+                        children:
+                            ['1000', '2000', '4000', '6000']
+                                .map(
+                                  (amount) =>
+                                      _buildPredefinedAmountButton(amount),
+                                )
+                                .toList(),
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      // User Info Section
+                      _buildSectionHeader('ادخل بياناتك ', Icons.person),
+                      const SizedBox(height: 10),
+
+                      // اسم المستخدم
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: TextField(
+                            controller: _nameController,
+                            decoration: InputDecoration(
+                              labelText: 'الاسم داخل التطبيق',
+                              prefixIcon: Icon(
+                                Icons.person_outline,
+                                color: primarySkyBlue.withValues(alpha: 0.7),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: primarySkyBlue,
+                                  width: 2.0,
+                                ),
+                              ),
+                            ),
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(
+                                40,
+                              ), // Limit to 40 characters
+                            ],
+                            textAlign: TextAlign.center,
+                            enabled: !_isSubmitting,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      // الرقم الجامعي
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: TextField(
+                            controller: _universityIdController,
+                            decoration: InputDecoration(
+                              labelText: 'الرقم الجامعي',
+                              prefixIcon: Icon(
+                                Icons.badge_outlined,
+                                color: primarySkyBlue.withValues(alpha: 0.7),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: primarySkyBlue,
+                                  width: 2.0,
+                                ),
+                              ),
+                            ),
+                            inputFormatters: [
+                              LengthLimitingTextInputFormatter(
+                                25,
+                              ), // Limit to 25 digits
+                            ],
+                            textAlign: TextAlign.center,
+                            enabled: !_isSubmitting,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 15),
+
+                      // الرقم الذي حوّلت منه
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 300),
+                          child: TextField(
+                            controller: _sourcePhoneController,
+                            decoration: InputDecoration(
+                              labelText:
+                                  _selectedPaymentMethod == 'إنستا باي'
+                                      ? 'اسم المستخدم على انستا باي'
+                                      : 'الرقم الذي حوّلت منه',
+                              hintText:
+                                  _selectedPaymentMethod == 'إنستا باي'
+                                      ? 'فقط اكتب اسمك (سنضيف @instapay تلقائيًا)'
+                                      : 'مثال: 01xxxxxxxxx',
+                              suffixText:
+                                  _selectedPaymentMethod == 'إنستا باي'
+                                      ? '@instapay'
+                                      : null,
+                              suffixStyle: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: primarySkyBlue,
+                              ),
+                              prefixIcon: Icon(
+                                _selectedPaymentMethod == 'إنستا باي'
+                                    ? Icons.alternate_email
+                                    : Icons.phone,
+                                color: primarySkyBlue.withValues(alpha: 0.7),
+                              ),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12.0),
+                                borderSide: const BorderSide(
+                                  color: primarySkyBlue,
+                                  width: 2.0,
+                                ),
+                              ),
+                            ),
+                            textAlign: TextAlign.center,
+                            keyboardType:
+                                _selectedPaymentMethod == 'إنستا باي'
+                                    ? TextInputType.text
+                                    : TextInputType.phone,
+                            inputFormatters:
+                                _selectedPaymentMethod == 'إنستا باي'
+                                    ? [
+                                      // منع المستخدم من إدخال @
+                                      FilteringTextInputFormatter.deny(
+                                        RegExp(r'@'),
+                                      ),
+                                      LengthLimitingTextInputFormatter(
+                                        25,
+                                      ), // Limit to 25 characters
+                                    ]
+                                    : [
+                                      FilteringTextInputFormatter.digitsOnly,
+                                      LengthLimitingTextInputFormatter(
+                                        25,
+                                      ), // Update limit to 25 digits
+                                    ],
+                            enabled: !_isSubmitting,
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 25),
+
+                      // Payment Proof Upload Section
+                      _buildSectionHeader('إثبات التحويل', Icons.image),
+                      const SizedBox(height: 10),
+
+                      // صورة إثبات التحويل
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: Card(
+                            elevation: 2,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            color: cardBgColor,
+                            child: InkWell(
+                              onTap: _isSubmitting ? null : _pickImage,
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                height: 200,
+                                width: double.infinity,
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(12),
+                                  border: Border.all(
+                                    color:
+                                        _uploadedImageUrl != null
+                                            ? Colors.green.withValues(alpha: 0.5)
+                                            : Colors.grey.withValues(alpha: 0.3),
+                                    width: 1.5,
+                                  ),
+                                ),
+                                child:
+                                    _isUploading
+                                        ? const Center(
+                                          child: Column(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              CircularProgressIndicator(
+                                                color: primarySkyBlue,
+                                              ),
+                                              SizedBox(height: 10),
+                                              Text('جاري رفع الصورة...'),
+                                            ],
+                                          ),
+                                        )
+                                        : _imageFile != null
+                                        ? Stack(
+                                          alignment: Alignment.center,
+                                          children: [
+                                            ClipRRect(
+                                              borderRadius: BorderRadius.circular(
+                                                11,
+                                              ),
+                                              child: Image.file(
+                                                _imageFile!,
+                                                fit: BoxFit.cover,
+                                                width: double.infinity,
+                                                height: double.infinity,
+                                              ),
+                                            ),
+                                            if (_uploadedImageUrl != null)
+                                              Positioned(
+                                                top: 10,
+                                                right: 10,
+                                                child: Container(
+                                                  padding:
+                                                      const EdgeInsets.symmetric(
+                                                        horizontal: 8,
+                                                        vertical: 4,
+                                                      ),
+                                                  decoration: BoxDecoration(
+                                                    color: Colors.green
+                                                        .withValues(alpha: 0.8),
+                                                    borderRadius:
+                                                        BorderRadius.circular(20),
+                                                  ),
+                                                  child: const Row(
+                                                    mainAxisSize:
+                                                        MainAxisSize.min,
+                                                    children: [
+                                                      Icon(
+                                                        Icons.check,
+                                                        color: Colors.white,
+                                                        size: 16,
+                                                      ),
+                                                      SizedBox(width: 4),
+                                                      Text(
+                                                        'تم الرفع',
+                                                        style: TextStyle(
+                                                          color: Colors.white,
+                                                          fontSize: 12,
+                                                        ),
+                                                      ),
+                                                    ],
+                                                  ),
+                                                ),
+                                              ),
+                                          ],
+                                        )
+                                        : Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.upload_file,
+                                              size: 48,
+                                              color: primarySkyBlue.withValues(
+                                                alpha: 0.7,
+                                              ),
+                                            ),
+                                            const SizedBox(height: 10),
+                                            Text(
+                                              'انقر لرفع صورة إثبات التحويل',
+                                              style: TextStyle(color: textColor),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                            const SizedBox(height: 6),
+                                            Text(
+                                              '(سكرين شوت أو صورة إيصال)',
+                                              style: TextStyle(
+                                                fontSize: 12,
+                                                color: textColor.withValues(
+                                                  alpha: 0.7,
+                                                ),
+                                              ),
+                                              textAlign: TextAlign.center,
+                                            ),
+                                          ],
+                                        ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 30),
+
+                      // Verification note
+                      Center(
+                        child: ConstrainedBox(
+                          constraints: const BoxConstraints(maxWidth: 400),
+                          child: Container(
+                            margin: const EdgeInsets.only(bottom: 15),
+                            padding: const EdgeInsets.all(10),
+                            decoration: BoxDecoration(
+                              color: Colors.blue.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(
+                                color: primarySkyBlue.withValues(alpha: 0.3),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.info_outline,
+                                  color: primarySkyBlue,
+                                  size: 20,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    'سيتم التحقق من التحويل وسيتم إرسال إشعار لك إذا كان التحويل صحيح',
+                                    style: TextStyle(
+                                      color:
+                                          isDarkMode
+                                              ? Colors.white70
+                                              : Colors.black87,
+                                      fontSize: 13,
+                                    ),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+
+                      // Additional padding at the bottom to ensure space for the fixed button
+                      const SizedBox(height: 70),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+
+            // Fixed button at bottom
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF1F2937) : Colors.white,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, -2),
+                  ),
+                ],
+              ),
+              child: SafeArea(
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: const BoxConstraints(maxWidth: 300),
+                    child: SizedBox(
+                      height: 50,
+                      width: double.infinity,
+                      child: ElevatedButton.icon(
+                        icon:
+                            _isSubmitting
+                                ? Container(
+                                  width: 24,
+                                  height: 24,
+                                  padding: const EdgeInsets.all(2.0),
+                                  child: const CircularProgressIndicator(
+                                    color: Colors.white,
+                                    strokeWidth: 3,
+                                  ),
+                                )
+                                : const Icon(Icons.send),
+                        label: Text(
+                          _isSubmitting ? 'جاري الإرسال...' : 'إرسال الطلب',
+                        ),
+                        onPressed: _isSubmitting ? null : _submitRequest,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: accentBlue,
+                          foregroundColor: Colors.white,
+                          textStyle: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          elevation: 3,
+                          shadowColor: shadowColor,
+                        ),
                       ),
                     ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }

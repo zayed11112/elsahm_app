@@ -45,6 +45,123 @@ const String oneSignalAppId = '3136dbc6-c09c-4bca-b0aa-fe35421ac513';
 // Sentry DSN
 const String sentryDsn = 'https://1ba5f23f8807449a9943d0e4bea7b445@o4509413739266049.ingest.de.sentry.io/4509413740380240';
 
+// إضافة دالة لعرض مربع حوار الخروج من التطبيق
+Future<bool> showExitConfirmationDialog(BuildContext context) async {
+  final ThemeData theme = Theme.of(context);
+  final bool isDarkMode = theme.brightness == Brightness.dark;
+  
+  return await showDialog<bool>(
+    context: context,
+    barrierDismissible: false,
+    builder: (BuildContext context) {
+      return AlertDialog(
+        backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(16.0),
+          side: BorderSide(
+            color: isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700]!,
+            width: 1.5,
+          ),
+        ),
+        title: Row(
+          children: [
+            Icon(
+              Icons.warning_amber_rounded,
+              color: isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700],
+              size: 28,
+            ),
+            const SizedBox(width: 10),
+            Text(
+              'تأكيد الخروج',
+              style: GoogleFonts.tajawal(
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.black87,
+              ),
+              textAlign: TextAlign.right,
+            ),
+          ],
+        ),
+        content: Text(
+          'هل أنت متأكد من رغبتك في الخروج من التطبيق؟',
+          style: GoogleFonts.tajawal(
+            fontSize: 16,
+            color: isDarkMode ? Colors.white70 : Colors.black87,
+          ),
+          textAlign: TextAlign.right,
+        ),
+        actions: <Widget>[
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: TextButton(
+                  style: TextButton.styleFrom(
+                    foregroundColor: isDarkMode ? Colors.white70 : Colors.grey[700],
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(false),
+                  child: Text(
+                    'إلغاء',
+                    style: GoogleFonts.tajawal(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700],
+                    foregroundColor: isDarkMode ? Colors.black : Colors.white,
+                    padding: const EdgeInsets.symmetric(vertical: 12.0),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8.0),
+                    ),
+                  ),
+                  onPressed: () => Navigator.of(context).pop(true),
+                  child: Text(
+                    'خروج',
+                    style: GoogleFonts.tajawal(
+                      fontWeight: FontWeight.bold,
+                      fontSize: 15,
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      );
+    },
+  ) ?? false;
+}
+
+// إضافة رابط لشاشة البداية مع تنبيه الخروج
+class ExitConfirmationWrapper extends StatelessWidget {
+  final Widget child;
+
+  const ExitConfirmationWrapper({
+    Key? key,
+    required this.child,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return WillPopScope(
+      onWillPop: () async {
+        // عرض تنبيه تأكيد الخروج
+        return await showExitConfirmationDialog(context);
+      },
+      child: child,
+    );
+  }
+}
+
 Future<void> main() async {
   if (kReleaseMode) {
     // Initialize Sentry only in release mode
@@ -563,7 +680,9 @@ class MyApp extends StatelessWidget {
             themeMode: themeProvider.themeMode, // Use provider state
             theme: lightTheme, // Provide light theme
             darkTheme: darkTheme, // Provide dark theme
-            home: const SplashScreen(), // استخدام شاشة البداية مباشرة
+            home: const ExitConfirmationWrapper(
+              child: SplashScreen(),
+            ), // تطبيق ExitConfirmationWrapper فقط على الشاشة الرئيسية
             // تعريف الطرق المسماة (Named Routes)
             routes: {'/login': (context) => const LoginScreen()},
             // Add theme animation duration

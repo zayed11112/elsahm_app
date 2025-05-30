@@ -82,6 +82,9 @@ class NotificationUtils {
   
   /// Shows an error message as a MaterialBanner at the top of the screen
   static void showTopErrorBanner(BuildContext context, String message) {
+    // Don't attempt to show a banner if the context is no longer mounted
+    if (!context.mounted) return;
+    
     // Hide any existing banner first
     ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
     
@@ -113,7 +116,9 @@ class NotificationUtils {
         actions: [
           TextButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              }
             },
             child: const Text(
               'حسناً',
@@ -127,16 +132,21 @@ class NotificationUtils {
       ),
     );
     
+    // Store the scaffold messenger before the async gap
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
     // Auto-hide the banner after 4 seconds
     Future.delayed(const Duration(seconds: 4), () {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-      }
+      // Use the stored scaffoldMessenger to avoid context issues
+      scaffoldMessenger.hideCurrentMaterialBanner();
     });
   }
   
   /// Shows a success message as a MaterialBanner at the top of the screen
   static void showTopSuccessBanner(BuildContext context, String message) {
+    // Don't attempt to show a banner if the context is no longer mounted
+    if (!context.mounted) return;
+    
     // Hide any existing banner first
     ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
     
@@ -168,7 +178,9 @@ class NotificationUtils {
         actions: [
           TextButton(
             onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
+              }
             },
             child: const Text(
               'حسناً',
@@ -182,11 +194,13 @@ class NotificationUtils {
       ),
     );
     
+    // Store the scaffold messenger before the async gap
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    
     // Auto-hide the banner after 4 seconds
     Future.delayed(const Duration(seconds: 4), () {
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-      }
+      // Use the stored scaffoldMessenger to avoid context issues
+      scaffoldMessenger.hideCurrentMaterialBanner();
     });
   }
 } 
