@@ -53,6 +53,29 @@ class _SearchScreenState extends State<SearchScreen> {
     _loadAvailablePlaces(); // Load available places from Supabase
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    // Clear search when returning to this screen
+    _clearSearchOnReturn();
+  }
+
+  // Clear search text and reset state when returning to search screen
+  void _clearSearchOnReturn() {
+    if (_searchController.text.isNotEmpty) {
+      _searchController.clear();
+      setState(() {
+        _searchText = '';
+        // Reset filters to default
+        _selectedHousingCategory = null;
+        _selectedArea = null;
+        _priceRange = const RangeValues(0, 20000);
+      });
+      _loadInitialProperties();
+      _logger.info('تم مسح البحث وإعادة تعيين الحالة عند العودة للصفحة');
+    }
+  }
+
   // تحميل الأماكن المتاحة من قاعدة البيانات
   Future<void> _loadAvailablePlaces() async {
     try {
@@ -391,10 +414,12 @@ class _SearchScreenState extends State<SearchScreen> {
             // Filter Section
             AnimatedContainer(
               duration: const Duration(milliseconds: 300),
-              height: _showFilters ? null : 0, // Remove fixed height to allow content to determine height
-              constraints: _showFilters 
-                ? null 
-                : const BoxConstraints(maxHeight: 0),
+              height:
+                  _showFilters
+                      ? null
+                      : 0, // Remove fixed height to allow content to determine height
+              constraints:
+                  _showFilters ? null : const BoxConstraints(maxHeight: 0),
               margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
@@ -413,86 +438,126 @@ class _SearchScreenState extends State<SearchScreen> {
               child:
                   _showFilters
                       ? Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: _buildFilterContent(),
-                        )
+                        padding: const EdgeInsets.all(16.0),
+                        child: _buildFilterContent(),
+                      )
                       : const SizedBox(),
             ),
 
-            // Results Counter and Loading Indicator
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  Text(
-                    'النتائج: ${_searchResults.length}',
-                    style: textTheme.titleMedium?.copyWith(
-                      color: theme.colorScheme.primary,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const Spacer(),
-                  if (_isLoading)
-                    const SizedBox(
-                      width: 20,
-                      height: 20,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
-                ],
-              ),
-            ),
-
-            // Search Results Grid
+            // Enhanced Search Results Grid
             _isLoading
-                ? const Center(
-                  child: Padding(
-                    padding: EdgeInsets.all(50.0),
-                    child: CircularProgressIndicator(),
+                ? Container(
+                  margin: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(40),
+                  decoration: BoxDecoration(
+                    color:
+                        isDarkMode
+                            ? Colors.grey[850]!.withValues(alpha: 0.5)
+                            : Colors.grey[50]!.withValues(alpha: 0.8),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      SizedBox(
+                        width: 50,
+                        height: 50,
+                        child: CircularProgressIndicator(
+                          strokeWidth: 3,
+                          valueColor: AlwaysStoppedAnimation<Color>(
+                            theme.colorScheme.primary,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        'جاري البحث...',
+                        style: textTheme.titleMedium?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
                   ),
                 )
                 : _searchResults.isEmpty
-                ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(50.0),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.search_off,
-                          size: 80,
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.5,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text('لا توجد نتائج', style: textTheme.headlineSmall),
-                        const SizedBox(height: 8),
-                        Text(
-                          'حاول تغيير معايير البحث',
-                          style: textTheme.bodyLarge?.copyWith(
-                            color: Colors.grey,
-                          ),
-                        ),
+                ? Container(
+                  margin: const EdgeInsets.all(32),
+                  padding: const EdgeInsets.all(40),
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      colors: [
+                        theme.colorScheme.primary.withValues(alpha: 0.05),
+                        theme.colorScheme.primary.withValues(alpha: 0.02),
                       ],
                     ),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                    ),
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.all(20),
+                        decoration: BoxDecoration(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          shape: BoxShape.circle,
+                        ),
+                        child: Icon(
+                          Icons.search_off_rounded,
+                          size: 60,
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.7,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+                      Text(
+                        'لا توجد نتائج',
+                        style: textTheme.headlineSmall?.copyWith(
+                          color: theme.colorScheme.primary,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 12),
+                      Text(
+                        'حاول تغيير معايير البحث أو الفلاتر',
+                        style: textTheme.bodyLarge?.copyWith(
+                          color:
+                              isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                        ),
+                        textAlign: TextAlign.center,
+                      ),
+                    ],
                   ),
                 )
-                : GridView.builder(
-                  key: ValueKey(_searchResults.length),
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  padding: const EdgeInsets.all(8.0),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 2,
-                    childAspectRatio: 0.75,
-                    crossAxisSpacing: 10,
-                    mainAxisSpacing: 10,
+                : Padding(
+                  padding: const EdgeInsets.all(16.0),
+                  child: GridView.builder(
+                    key: ValueKey(_searchResults.length),
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate:
+                        const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          childAspectRatio: 0.75,
+                          crossAxisSpacing: 16,
+                          mainAxisSpacing: 16,
+                        ),
+                    itemCount: _searchResults.length,
+                    itemBuilder: (context, index) {
+                      final apartment = _searchResults[index];
+                      return AnimatedContainer(
+                        duration: Duration(milliseconds: 300 + (index * 50)),
+                        curve: Curves.easeOutBack,
+                        child: _buildPropertyCard(apartment),
+                      );
+                    },
                   ),
-                  itemCount: _searchResults.length,
-                  itemBuilder: (context, index) {
-                    final apartment = _searchResults[index];
-                    return _buildPropertyCard(apartment);
-                  },
                 ),
           ],
         ),
@@ -503,457 +568,694 @@ class _SearchScreenState extends State<SearchScreen> {
   Widget _buildPropertyCard(Apartment apartment) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
-    return Card(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-        side: BorderSide(
-          width: 0.5, 
-          color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors:
+              isDarkMode
+                  ? [
+                    Colors.grey[850]!.withValues(alpha: 0.9),
+                    Colors.grey[900]!.withValues(alpha: 0.8),
+                  ]
+                  : [Colors.white, Colors.grey[50]!.withValues(alpha: 0.8)],
         ),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: theme.colorScheme.primary.withValues(alpha: 0.1),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.primary.withValues(alpha: 0.08),
+            blurRadius: 12,
+            offset: const Offset(0, 4),
+            spreadRadius: 0,
+          ),
+          BoxShadow(
+            color:
+                isDarkMode
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : Colors.white.withValues(alpha: 0.9),
+            blurRadius: 8,
+            offset: const Offset(0, -2),
+            spreadRadius: 0,
+          ),
+        ],
       ),
-      elevation: 5,
-      shadowColor: Colors.black38,
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => PropertyDetailsScreen(property: apartment),
-            ),
-          );
-        },
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Image Section - with improved aspect ratio and error handling
-            AspectRatio(
-              aspectRatio: 1.5,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  apartment.imageUrls.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: apartment.imageUrls[0],
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
-                          color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                          child: const Center(
-                            child: SizedBox(
-                              width: 30,
-                              height: 30,
-                              child: CircularProgressIndicator(strokeWidth: 2),
-                            ),
-                          ),
-                        ),
-                        errorWidget: (context, url, error) => Container(
-                          color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder:
+                    (context) => PropertyDetailsScreen(property: apartment),
+              ),
+            );
+          },
+          borderRadius: BorderRadius.circular(20),
+          splashColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.05),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Image Section - with improved aspect ratio and error handling
+              AspectRatio(
+                aspectRatio: 1.5,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    apartment.imageUrls.isNotEmpty
+                        ? CachedNetworkImage(
+                          imageUrl: apartment.imageUrls[0],
+                          fit: BoxFit.cover,
+                          placeholder:
+                              (context, url) => Container(
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[800]
+                                        : Colors.grey[200],
+                                child: const Center(
+                                  child: SizedBox(
+                                    width: 30,
+                                    height: 30,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  ),
+                                ),
+                              ),
+                          errorWidget:
+                              (context, url, error) => Container(
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey[850]
+                                        : Colors.grey[100],
+                                child: Column(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.home_work_outlined,
+                                      size: 40,
+                                      color: theme.colorScheme.primary
+                                          .withValues(alpha: 0.7),
+                                    ),
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      'لا توجد صورة',
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.grey[400]
+                                                : Colors.grey[600],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                        )
+                        : Container(
+                          color:
+                              isDarkMode ? Colors.grey[850] : Colors.grey[100],
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.home_work_outlined,
                                 size: 40,
-                                color: theme.colorScheme.primary.withOpacity(0.7),
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.7,
+                                ),
                               ),
                               const SizedBox(height: 4),
                               Text(
                                 'لا توجد صورة',
                                 style: TextStyle(
                                   fontSize: 12,
-                                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
                                 ),
                               ),
                             ],
                           ),
                         ),
-                      )
-                    : Container(
-                        color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.home_work_outlined,
-                              size: 40,
-                              color: theme.colorScheme.primary.withOpacity(0.7),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'لا توجد صورة',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
 
-                  // Price badge overlay
-                  Positioned(
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    child: Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [
-                            Colors.black87,
-                            Colors.transparent,
-                          ],
+                    // Price badge overlay
+                    Positioned(
+                      bottom: 0,
+                      left: 0,
+                      right: 0,
+                      child: Container(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.bottomCenter,
+                            end: Alignment.topCenter,
+                            colors: [Colors.black87, Colors.transparent],
+                          ),
                         ),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                      child: Text(
-                        '${apartment.price.toStringAsFixed(0)} جنيه',
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          shadows: [
-                            Shadow(
-                              offset: Offset(0, 1),
-                              blurRadius: 2,
-                              color: Colors.black54,
-                            ),
-                          ],
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 10,
+                          vertical: 8,
+                        ),
+                        child: Text(
+                          '${apartment.price.toStringAsFixed(0)} جنيه',
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                            fontSize: 16,
+                            shadows: [
+                              Shadow(
+                                offset: Offset(0, 1),
+                                blurRadius: 2,
+                                color: Colors.black54,
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
-                  // Favorite button
-                  Positioned(
-                    top: 8,
-                    right: 8,
-                    child: Consumer<FavoritesProvider>(
-                      builder: (context, favoritesProvider, _) {
-                        final bool isFavorite = favoritesProvider.isFavorite(apartment.id);
-                        return Material(
-                          color: Colors.transparent,
-                          child: InkWell(
-                            onTap: () async {
-                              // التحقق من حالة تسجيل الدخول
-                              final authProvider = Provider.of<AuthProvider>(
-                                context,
-                                listen: false,
-                              );
-                              if (!authProvider.isAuthenticated) {
-                                AuthUtils.showAuthRequiredDialog(context);
-                                return;
-                              }
+                    // Favorite button
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Consumer<FavoritesProvider>(
+                        builder: (context, favoritesProvider, _) {
+                          final bool isFavorite = favoritesProvider.isFavorite(
+                            apartment.id,
+                          );
+                          return Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () async {
+                                // التحقق من حالة تسجيل الدخول
+                                final authProvider = Provider.of<AuthProvider>(
+                                  context,
+                                  listen: false,
+                                );
+                                if (!authProvider.isAuthenticated) {
+                                  AuthUtils.showAuthRequiredDialog(context);
+                                  return;
+                                }
 
-                              try {
-                                final scaffoldMessenger = ScaffoldMessenger.of(context);
-                                final isNowFavorite = await favoritesProvider.toggleFavorite(apartment);
-                                if (mounted) {
-                                  scaffoldMessenger.showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        isNowFavorite
-                                            ? 'تم إضافة ${apartment.name} إلى المفضلة'
-                                            : 'تم إزالة ${apartment.name} من المفضلة',
+                                try {
+                                  final scaffoldMessenger =
+                                      ScaffoldMessenger.of(context);
+                                  final isNowFavorite = await favoritesProvider
+                                      .toggleFavorite(apartment);
+                                  if (mounted) {
+                                    scaffoldMessenger.showSnackBar(
+                                      SnackBar(
+                                        content: Text(
+                                          isNowFavorite
+                                              ? 'تم إضافة ${apartment.name} إلى المفضلة'
+                                              : 'تم إزالة ${apartment.name} من المفضلة',
+                                        ),
+                                        duration: const Duration(seconds: 2),
                                       ),
-                                      duration: const Duration(seconds: 2),
-                                    ),
+                                    );
+                                  }
+                                } catch (e) {
+                                  _logger.severe(
+                                    'خطأ في تبديل حالة المفضلة: $e',
                                   );
                                 }
-                              } catch (e) {
-                                _logger.severe('خطأ في تبديل حالة المفضلة: $e');
-                              }
-                            },
-                            borderRadius: BorderRadius.circular(20),
-                            child: Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: BoxDecoration(
-                                color: Theme.of(context).brightness == Brightness.dark
-                                    ? Colors.black38
-                                    : Colors.white.withAlpha(225),
-                                shape: BoxShape.circle,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withAlpha(50),
-                                    blurRadius: 3,
-                                    offset: const Offset(0, 1),
-                                  ),
-                                ],
-                              ),
-                              child: Icon(
-                                isFavorite ? Icons.favorite : Icons.favorite_border,
-                                color: isFavorite 
-                                  ? Colors.red 
-                                  : isDarkMode ? Colors.white : Colors.grey[700],
-                                size: 22,
+                              },
+                              borderRadius: BorderRadius.circular(20),
+                              child: Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color:
+                                      Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.black38
+                                          : Colors.white.withAlpha(225),
+                                  shape: BoxShape.circle,
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black.withAlpha(50),
+                                      blurRadius: 3,
+                                      offset: const Offset(0, 1),
+                                    ),
+                                  ],
+                                ),
+                                child: Icon(
+                                  isFavorite
+                                      ? Icons.favorite
+                                      : Icons.favorite_border,
+                                  color:
+                                      isFavorite
+                                          ? Colors.red
+                                          : isDarkMode
+                                          ? Colors.white
+                                          : Colors.grey[700],
+                                  size: 22,
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            // Property Info with improved layout
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title with better styling
-                  Text(
-                    apartment.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: isDarkMode ? Colors.white : Colors.black87,
-                      height: 1.3,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 8),
-
-                  // Location with improved icon alignment
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: theme.colorScheme.primary,
+                          );
+                        },
                       ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          apartment.location,
-                          style: TextStyle(
-                            fontSize: 13,
-                            color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
-                            height: 1.3,
-                          ),
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                ),
+              ),
+
+              // Property Info with improved layout
+              Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Title with better styling
+                    Text(
+                      apartment.name,
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                        height: 1.3,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 8),
+
+                    // Location with improved icon alignment
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Icon(
+                          Icons.location_on,
+                          size: 16,
+                          color: theme.colorScheme.primary,
                         ),
-                      ),
-                    ],
-                  ),
+                        const SizedBox(width: 4),
+                        Expanded(
+                          child: Text(
+                            apartment.location,
+                            style: TextStyle(
+                              fontSize: 13,
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[300]
+                                      : Colors.grey[700],
+                              height: 1.3,
+                            ),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                      ],
+                    ),
 
-                  // Add a subtle separator
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Divider(height: 1),
-                  ),
-                ],
+                    // Add a subtle separator
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 8),
+                      child: Divider(height: 1),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // محتوى الفلتر منفصل عن حاوية الفلتر للتنظيم
   Widget _buildFilterContent() {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min, // Make the column take minimum required space
+      mainAxisSize: MainAxisSize.min,
       children: [
-        // Header with swapped positions
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            TextButton.icon(
-              onPressed: _resetFilters,
-              icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('إعادة ضبط'),
-              style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.primary,
+        // Header with enhanced design
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              colors: [
+                theme.colorScheme.primary.withValues(alpha: 0.1),
+                theme.colorScheme.primary.withValues(alpha: 0.05),
+              ],
+            ),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Container(
+                decoration: BoxDecoration(
+                  color:
+                      isDarkMode
+                          ? Colors.grey[800]!.withValues(alpha: 0.8)
+                          : Colors.white.withValues(alpha: 0.9),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                  ),
+                ),
+                child: TextButton.icon(
+                  onPressed: _resetFilters,
+                  icon: Icon(
+                    Icons.refresh_rounded,
+                    size: 18,
+                    color: theme.colorScheme.primary,
+                  ),
+                  label: Text(
+                    'إعادة ضبط',
+                    style: TextStyle(
+                      color: theme.colorScheme.primary,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
               ),
-            ),
-            Text(
-              'تصفية النتائج',
-              style: Theme.of(
-                context,
-              ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
-            ),
-          ],
+              Row(
+                children: [
+                  Icon(
+                    Icons.filter_alt_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 24,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'تصفية النتائج',
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
-        const Divider(),
-        const SizedBox(height: 8),
+        const SizedBox(height: 20),
 
         // First filter: Housing Category (القسم)
-        Align(
-          alignment: Alignment.centerRight,
-          child: Text(
-            'القسم',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-        ),
-        const SizedBox(height: 8), // Reduced from 12 to 8
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color:
-                Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[800]
-                    : Colors.white,
-            borderRadius: BorderRadius.circular(12),
+                isDarkMode
+                    ? Colors.grey[800]!.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.3),
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+              width: 1,
             ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: _selectedHousingCategory ?? 'الكل',
-              items:
-                  _housingCategories.map((String item) {
-                    return DropdownMenuItem<String>(
-                      value: item,
-                      child: Text(
-                        item,
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    );
-                  }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedHousingCategory = value;
-                  _applyFilters();
-                });
-              },
-              icon: Icon(
-                Icons.arrow_drop_down,
-                color: Theme.of(context).colorScheme.primary,
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              dropdownColor:
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.white,
-            ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.category_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'القسم',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors:
+                        isDarkMode
+                            ? [
+                              Colors.grey[700]!.withValues(alpha: 0.8),
+                              Colors.grey[800]!.withValues(alpha: 0.6),
+                            ]
+                            : [Colors.white, Colors.grey[50]!],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedHousingCategory ?? 'الكل',
+                    items:
+                        _housingCategories.map((String item) {
+                          return DropdownMenuItem<String>(
+                            value: item,
+                            child: Text(
+                              item,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isDarkMode ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedHousingCategory = value;
+                        _applyFilters();
+                      });
+                    },
+                    icon: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 28,
+                    ),
+                    dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 16), // Reduced from 24 to 16
-
+        const SizedBox(height: 20),
         // Second filter: Area (المنطقة)
-        Align(
-          alignment: Alignment.centerRight,
-          child: Text(
-            'المنطقة',
-            style: Theme.of(
-              context,
-            ).textTheme.titleMedium?.copyWith(fontWeight: FontWeight.bold),
-          ),
-        ),
-        const SizedBox(height: 8), // Reduced from 12 to 8
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
             color:
-                Theme.of(context).brightness == Brightness.dark
-                    ? Colors.grey[800]
-                    : Colors.white,
-            borderRadius: BorderRadius.circular(12),
+                isDarkMode
+                    ? Colors.grey[800]!.withValues(alpha: 0.6)
+                    : Colors.white.withValues(alpha: 0.8),
+            borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: Theme.of(
-                context,
-              ).colorScheme.primary.withValues(alpha: 0.3),
+              color: theme.colorScheme.primary.withValues(alpha: 0.2),
+              width: 1,
             ),
-          ),
-          child: DropdownButtonHideUnderline(
-            child: DropdownButton<String>(
-              isExpanded: true,
-              value: _selectedArea ?? 'الكل',
-              items:
-                  _areas.map((String item) {
-                    return DropdownMenuItem<String>(
-                      value: item,
-                      child: Text(
-                        item,
-                        textAlign: TextAlign.right,
-                        style: const TextStyle(fontSize: 16),
-                      ),
-                    );
-                  }).toList(),
-              onChanged: (value) {
-                setState(() {
-                  _selectedArea = value;
-                  _applyFilters();
-                });
-              },
-              icon: Icon(
-                Icons.arrow_drop_down,
-                color: Theme.of(context).colorScheme.primary,
+            boxShadow: [
+              BoxShadow(
+                color: theme.colorScheme.primary.withValues(alpha: 0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
-              dropdownColor:
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Colors.grey[800]
-                      : Colors.white,
-            ),
+            ],
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Icon(
+                    Icons.location_on_rounded,
+                    color: theme.colorScheme.primary,
+                    size: 20,
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'المنطقة',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 4,
+                ),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors:
+                        isDarkMode
+                            ? [
+                              Colors.grey[700]!.withValues(alpha: 0.8),
+                              Colors.grey[800]!.withValues(alpha: 0.6),
+                            ]
+                            : [Colors.white, Colors.grey[50]!],
+                  ),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
+                ),
+                child: DropdownButtonHideUnderline(
+                  child: DropdownButton<String>(
+                    isExpanded: true,
+                    value: _selectedArea ?? 'الكل',
+                    items:
+                        _areas.map((String item) {
+                          return DropdownMenuItem<String>(
+                            value: item,
+                            child: Text(
+                              item,
+                              textAlign: TextAlign.right,
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.w500,
+                                color:
+                                    isDarkMode ? Colors.white : Colors.black87,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        _selectedArea = value;
+                        _applyFilters();
+                      });
+                    },
+                    icon: Icon(
+                      Icons.keyboard_arrow_down_rounded,
+                      color: theme.colorScheme.primary,
+                      size: 28,
+                    ),
+                    dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
-        // No bottom spacing here
       ],
     );
   }
 
-  // تعديل تصميم زر الفلتر ليكون أكثر جاذبية
   Widget _buildFilterToggleButton() {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-      child: Material(
-        borderRadius: BorderRadius.circular(12),
-        color:
-            _showFilters
-                ? Theme.of(context).colorScheme.primary
-                : Theme.of(context).colorScheme.surface,
-        elevation: 2,
-        child: InkWell(
-          borderRadius: BorderRadius.circular(12),
-          onTap: () {
-            setState(() {
-              _showFilters = !_showFilters;
-            });
-
-            // لا نقوم بإعادة تحميل العقارات عند الضغط على زر الفلتر
-            // فقط نعرض أو نخفي قسم الفلتر
-          },
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(
-                  _showFilters ? Icons.filter_list_off : Icons.filter_list,
-                  color:
-                      _showFilters
-                          ? Colors.white
-                          : Theme.of(context).colorScheme.primary,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _showFilters ? 'إخفاء الفلاتر' : 'عرض الفلاتر',
-                  style: TextStyle(
-                    color:
-                        _showFilters
-                            ? Colors.white
-                            : Theme.of(context).colorScheme.primary,
-                    fontWeight: FontWeight.bold,
+      child: Container(
+        decoration: BoxDecoration(
+          gradient:
+              _showFilters
+                  ? LinearGradient(
+                    colors: [
+                      theme.colorScheme.primary,
+                      theme.colorScheme.primary.withValues(alpha: 0.8),
+                    ],
+                  )
+                  : LinearGradient(
+                    colors:
+                        isDarkMode
+                            ? [
+                              Colors.grey[800]!.withValues(alpha: 0.9),
+                              Colors.grey[850]!.withValues(alpha: 0.8),
+                            ]
+                            : [Colors.white, Colors.grey[50]!],
                   ),
-                ),
-              ],
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(
+            color:
+                _showFilters
+                    ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                    : theme.colorScheme.primary.withValues(alpha: 0.2),
+            width: 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color:
+                  _showFilters
+                      ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                      : theme.colorScheme.primary.withValues(alpha: 0.1),
+              blurRadius: 8,
+              offset: const Offset(0, 3),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          child: InkWell(
+            borderRadius: BorderRadius.circular(16),
+            onTap: () {
+              setState(() {
+                _showFilters = !_showFilters;
+              });
+            },
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  AnimatedRotation(
+                    turns: _showFilters ? 0.5 : 0,
+                    duration: const Duration(milliseconds: 300),
+                    child: Icon(
+                      _showFilters ? Icons.tune_rounded : Icons.tune_rounded,
+                      color:
+                          _showFilters
+                              ? Colors.white
+                              : theme.colorScheme.primary,
+                      size: 22,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Text(
+                    _showFilters ? 'إخفاء الفلاتر' : 'عرض الفلاتر',
+                    style: TextStyle(
+                      color:
+                          _showFilters
+                              ? Colors.white
+                              : theme.colorScheme.primary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 16,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -963,80 +1265,199 @@ class _SearchScreenState extends State<SearchScreen> {
 
   Widget _buildSearchBar() {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
 
     return Container(
+      height: 60,
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.grey[800] : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors:
+              isDarkMode
+                  ? [const Color(0xFF2C2C2E), const Color(0xFF1C1C1E)]
+                  : [Colors.white, const Color(0xFFFAFAFA)],
+        ),
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(
+          color:
+              isDarkMode
+                  ? theme.colorScheme.primary.withValues(alpha: 0.3)
+                  : theme.colorScheme.primary.withValues(alpha: 0.15),
+          width: 2,
+        ),
         boxShadow: [
+          // Primary shadow for depth
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.1),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
+            color: theme.colorScheme.primary.withValues(alpha: 0.15),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: 0,
+          ),
+          // Secondary shadow for glow effect
+          BoxShadow(
+            color: theme.colorScheme.primary.withValues(alpha: 0.08),
+            blurRadius: 40,
+            offset: const Offset(0, 16),
+            spreadRadius: 0,
+          ),
+          // Inner highlight
+          BoxShadow(
+            color:
+                isDarkMode
+                    ? Colors.white.withValues(alpha: 0.05)
+                    : Colors.white.withValues(alpha: 0.9),
+            blurRadius: 1,
+            offset: const Offset(0, 1),
+            spreadRadius: 0,
           ),
         ],
       ),
-      child: TextField(
-        controller: _searchController,
-        textDirection: TextDirection.rtl,
-        textAlign: TextAlign.right,
-        maxLength: 50, // Limit text to 50 characters
-        buildCounter: (context, {required currentLength, required isFocused, maxLength}) => const SizedBox.shrink(), // Hide the counter
-        style: TextStyle(
-          fontSize: 16,
-          color: isDarkMode ? Colors.white : Colors.black87,
-        ),
-        onChanged: (value) {
-          setState(() {
-            _searchText = value;
-          });
-
-          // Clear results if search is empty
-          if (value.isEmpty) {
-            _loadInitialProperties();
-            return;
-          }
-
-          // Only search if text has meaningful content
-          if (value.length >= 2) {
-            _performSearch(value);
-          }
-        },
-        onSubmitted: (value) => _performSearch(value),
-        decoration: InputDecoration(
-          hintText: 'ابحث عن شقة، موقع، نوع سكن...',
-          hintTextDirection: TextDirection.rtl,
-          hintStyle: TextStyle(
-            color: isDarkMode ? Colors.grey[400] : Colors.grey[500],
-            fontSize: 16,
-          ),
-          prefixIcon:
-              _searchText.isNotEmpty
-                  ? IconButton(
-                    icon: Icon(
-                      Icons.clear,
-                      color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+      child: Row(
+        children: [
+          // Clear button (left side)
+          if (_searchText.isNotEmpty)
+            Container(
+              margin: const EdgeInsets.only(left: 12),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(6),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(6),
+                  onTap: () {
+                    _searchController.clear();
+                    setState(() {
+                      _searchText = '';
+                    });
+                    _loadInitialProperties();
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color:
+                          isDarkMode
+                              ? Colors.grey[700]!.withValues(alpha: 0.6)
+                              : Colors.grey[200]!.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color:
+                            isDarkMode
+                                ? Colors.grey[600]!.withValues(alpha: 0.3)
+                                : Colors.grey[300]!.withValues(alpha: 0.5),
+                      ),
                     ),
-                    onPressed: () {
-                      _searchController.clear();
-                      setState(() {
-                        _searchText = '';
-                      });
-                      _loadInitialProperties();
-                    },
-                  )
-                  : null,
-          suffixIcon: Icon(
-            Icons.search,
-            color: Theme.of(context).colorScheme.primary,
-            size: 26,
+                    child: Icon(
+                      Icons.close_rounded,
+                      color: isDarkMode ? Colors.grey[300] : Colors.grey[600],
+                      size: 18,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+
+          // Search input field
+          Expanded(
+            child: TextField(
+              controller: _searchController,
+              textDirection: TextDirection.rtl,
+              textAlign: TextAlign.right,
+              maxLength: 50,
+              buildCounter:
+                  (
+                    context, {
+                    required currentLength,
+                    required isFocused,
+                    maxLength,
+                  }) => const SizedBox.shrink(),
+              style: TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w500,
+                color: isDarkMode ? Colors.white : const Color(0xFF1D1D1F),
+                letterSpacing: 0.3,
+                height: 1.2,
+              ),
+              onChanged: (value) {
+                setState(() {
+                  _searchText = value;
+                });
+
+                if (value.isEmpty) {
+                  _loadInitialProperties();
+                  return;
+                }
+
+                if (value.length >= 2) {
+                  _performSearch(value);
+                }
+              },
+              onSubmitted: (value) => _performSearch(value),
+              decoration: InputDecoration(
+                hintText: 'ابحث عن شقة، موقع، نوع سكن...',
+                hintTextDirection: TextDirection.rtl,
+                hintStyle: TextStyle(
+                  color:
+                      isDarkMode
+                          ? Colors.grey[400]!.withValues(alpha: 0.8)
+                          : Colors.grey[500]!.withValues(alpha: 0.9),
+                  fontSize: 16,
+                  fontWeight: FontWeight.w400,
+                  letterSpacing: 0.2,
+                ),
+                border: InputBorder.none,
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 18,
+                ),
+              ),
+            ),
           ),
-          border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 16,
+
+          // Search icon (right side)
+          Container(
+            margin: const EdgeInsets.only(right: 8),
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    theme.colorScheme.primary,
+                    theme.colorScheme.primary.withValues(alpha: 0.8),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                boxShadow: [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.4),
+                    blurRadius: 12,
+                    offset: const Offset(0, 4),
+                  ),
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    blurRadius: 24,
+                    offset: const Offset(0, 8),
+                  ),
+                ],
+              ),
+              child: Material(
+                color: Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+                child: InkWell(
+                  borderRadius: BorderRadius.circular(16),
+                  onTap: () => _performSearch(_searchText),
+                  child: const Icon(
+                    Icons.search_rounded,
+                    color: Colors.white,
+                    size: 22,
+                  ),
+                ),
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

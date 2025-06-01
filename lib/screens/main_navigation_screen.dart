@@ -12,8 +12,10 @@ import '../widgets/app_drawer.dart';
 import 'home_screen.dart';
 import 'favorites_screen.dart';
 import 'search_screen.dart';
+import '../constants/theme.dart' as app_theme;
+import '../extensions/theme_extensions.dart';
 import 'categories_screen.dart';
-import 'more_screen.dart'; // Import the new MoreScreen
+import 'enhanced_more_screen.dart'; // Import the enhanced MoreScreen
 // DIAGNOSTIC: Removed unused dart:math import
 import 'wallet_screen.dart'; // Import wallet screen for navigation
 import 'login_screen.dart'; // Import LoginScreen
@@ -29,7 +31,7 @@ import 'edit_profile_screen.dart'; // Import EditProfileScreen
 class MainNavigationScreen extends StatefulWidget {
   // Static instance reference for profile completion check
   static MainNavigationScreenState? _instance;
-  
+
   // Constructor now uses a regular key instead of the static key
   const MainNavigationScreen({Key? key}) : super(key: key);
 
@@ -39,15 +41,15 @@ class MainNavigationScreen extends StatefulWidget {
     _instance = state;
     return state;
   }
-  
+
   // Static method to check profile completion from anywhere
   static void checkProfileCompletion() {
     _instance?.checkProfileCompletion();
   }
-  
+
   // Static method to wrap other screens with the bottom navigation bar
   static Widget wrapWithBottomNav({
-    required BuildContext context, 
+    required BuildContext context,
     required Widget child,
     required int selectedIndex,
   }) {
@@ -55,12 +57,13 @@ class MainNavigationScreen extends StatefulWidget {
     final isDarkMode = theme.brightness == Brightness.dark;
     Provider.of<ThemeProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
-    
+
     // Choose logo based on theme
-    final logoAsset = isDarkMode
-        ? 'assets/images/logo_dark.png'
-        : 'assets/images/logo_white.png';
-    
+    final logoAsset =
+        isDarkMode
+            ? 'assets/images/logo_dark.png'
+            : 'assets/images/logo_white.png';
+
     // Create a scaffold that includes both app bar and bottom navigation bar
     return Scaffold(
       // Include the app bar
@@ -74,27 +77,28 @@ class MainNavigationScreen extends StatefulWidget {
         ),
         centerTitle: true,
         leading: Builder(
-          builder: (context) => Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                customBorder: const CircleBorder(),
-                splashColor: Colors.white.withValues(alpha: 0.2),
-                onTap: () {
-                  Scaffold.of(context).openDrawer();
-                },
-                child: Padding(
-                  padding: const EdgeInsets.all(8.0),
-                  child: Icon(
-                    Icons.menu,
-                    size: 26,
-                    color: isDarkMode ? Colors.white : Colors.black87,
+          builder:
+              (context) => Padding(
+                padding: const EdgeInsets.only(right: 8.0),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    customBorder: const CircleBorder(),
+                    splashColor: Colors.white.withValues(alpha: 0.2),
+                    onTap: () {
+                      Scaffold.of(context).openDrawer();
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Icon(
+                        Icons.menu,
+                        size: 26,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                      ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ),
         ),
         actions: [
           // User balance display with wallet animation
@@ -126,7 +130,8 @@ class MainNavigationScreen extends StatefulWidget {
                         authProvider.user!.uid,
                       ),
                       builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
+                        if (snapshot.connectionState ==
+                            ConnectionState.waiting) {
                           return Container(
                             margin: const EdgeInsets.symmetric(horizontal: 8),
                             width: 16,
@@ -152,7 +157,10 @@ class MainNavigationScreen extends StatefulWidget {
                               Text(
                                 "$balanceInt",
                                 style: TextStyle(
-                                  color: isDarkMode ? Colors.white : Colors.black87,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.white
+                                          : Colors.black87,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 14,
                                 ),
@@ -161,7 +169,10 @@ class MainNavigationScreen extends StatefulWidget {
                               Text(
                                 "جنية",
                                 style: TextStyle(
-                                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.white70
+                                          : Colors.black54,
                                   fontWeight: FontWeight.bold,
                                   fontSize: 10,
                                 ),
@@ -171,7 +182,7 @@ class MainNavigationScreen extends StatefulWidget {
                         );
                       },
                     ),
-                    
+
                   // Wallet icon
                   SizedBox(
                     width: 70,
@@ -194,7 +205,10 @@ class MainNavigationScreen extends StatefulWidget {
       floatingActionButton: FloatingActionButton(
         onPressed: () {
           // Navigate to Home (Index 0)
-          final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+          final navigationProvider = Provider.of<NavigationProvider>(
+            context,
+            listen: false,
+          );
           navigationProvider.setIndex(0);
           // Return to the main screen
           Navigator.of(context).popUntil((route) => route.isFirst);
@@ -213,7 +227,7 @@ class MainNavigationScreen extends StatefulWidget {
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
-        color: isDarkMode ? const Color(0xFF1E1E1E) : const Color(0xFF2C3E50),
+        color: isDarkMode ? app_theme.darkSurface : app_theme.lightSurface,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround,
           children: <Widget>[
@@ -251,7 +265,7 @@ class MainNavigationScreen extends StatefulWidget {
       ),
     );
   }
-  
+
   // Static version of _buildNavItem for use in the static wrapper
   static Widget _buildStaticNavItem(
     BuildContext context,
@@ -261,18 +275,23 @@ class MainNavigationScreen extends StatefulWidget {
     int selectedIndex,
   ) {
     final bool isSelected = selectedIndex == index;
-    final Color color = isSelected
-        ? (Theme.of(context).brightness == Brightness.dark
-            ? Colors.lightBlueAccent
-            : Colors.tealAccent[400]!)
-        : Colors.grey[400]!;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final Color color =
+        isSelected
+            ? (isDarkMode ? app_theme.accentBlue : app_theme.primaryBlue)
+            : (isDarkMode
+                ? app_theme.darkTextTertiary
+                : app_theme.lightTextTertiary);
 
     return Expanded(
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: () {
-            final navigationProvider = Provider.of<NavigationProvider>(context, listen: false);
+            final navigationProvider = Provider.of<NavigationProvider>(
+              context,
+              listen: false,
+            );
             navigationProvider.setIndex(index);
             // Return to the main navigation screen
             Navigator.of(context).popUntil((route) => route.isFirst);
@@ -290,7 +309,8 @@ class MainNavigationScreen extends StatefulWidget {
                   style: TextStyle(
                     color: color,
                     fontSize: 11,
-                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                    fontWeight:
+                        isSelected ? FontWeight.bold : FontWeight.normal,
                   ),
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -306,123 +326,133 @@ class MainNavigationScreen extends StatefulWidget {
   static void _showStaticAuthRequiredDialog(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        elevation: 10,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDarkMode 
-                ? [const Color(0xFF2D3748), const Color(0xFF1A202C)]
-                : [Colors.white, const Color(0xFFF7FAFC)],
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1),
-                blurRadius: 10,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Warning animation
-              SizedBox(
-                height: 100,
-                width: 100,
-                child: Lottie.asset(
-                  'assets/animations/warning.json',
-                  repeat: true,
-                  animate: true,
-                  fit: BoxFit.cover,
+            elevation: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors:
+                      isDarkMode
+                          ? [const Color(0xFF2D3748), const Color(0xFF1A202C)]
+                          : [Colors.white, const Color(0xFFF7FAFC)],
                 ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Title
-              Text(
-                'تسجيل الدخول مطلوب',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Content
-              Text(
-                'يجب عليك تسجيل الدخول أو إنشاء حساب للوصول إلى المحفظة وإدارة رصيدك',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.5,
-                  color: isDarkMode ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Buttons
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Cancel button
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: Text(
-                        'إلغاء',
-                        style: TextStyle(
-                          color: theme.colorScheme.secondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  
-                  // Login button
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context); // Close dialog
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    ),
-                    child: const Text(
-                      'تسجيل الدخول',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.1),
+                    blurRadius: 10,
+                    spreadRadius: 1,
                   ),
                 ],
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Warning animation
+                  SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: Lottie.asset(
+                      'assets/animations/warning.json',
+                      repeat: true,
+                      animate: true,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Title
+                  Text(
+                    'تسجيل الدخول مطلوب',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Content
+                  Text(
+                    'يجب عليك تسجيل الدخول أو إنشاء حساب للوصول إلى المحفظة وإدارة رصيدك',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      height: 1.5,
+                      color: isDarkMode ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Buttons
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Cancel button
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          child: Text(
+                            'إلغاء',
+                            style: TextStyle(
+                              color: theme.colorScheme.secondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+
+                      // Login button
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context); // Close dialog
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text(
+                          'تسجيل الدخول',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 }
@@ -438,62 +468,85 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
     SearchScreen(), // Index 1 (Placeholder for Offers)
     CategoriesScreen(fromMainScreen: true), // Index 2
     FavoritesScreen(), // Index 3 (Placeholder for Cart)
-    MoreScreen(), // Index 4 - Use the new MoreScreen
+    EnhancedMoreScreen(), // Index 4 - Use the enhanced MoreScreen
   ];
 
   @override
   void initState() {
     super.initState();
-    developer.log("==== MainNavigationScreen initState ====", name: 'MainNavigation');
-    
+    developer.log(
+      "==== MainNavigationScreen initState ====",
+      name: 'MainNavigation',
+    );
+
     // تأخير تحميل البيانات لتسريع ظهور الواجهة
     _delayDataLoading();
-    
+
     // قم بالتحقق من اكتمال الملف الشخصي بعد عدة تأخيرات متتالية
     // لضمان رؤية الرسالة حتى لو تأخر تحميل البيانات
-    
+
     // محاولة فورية
     WidgetsBinding.instance.addPostFrameCallback((_) {
       developer.log("تحقق فوري من اكتمال الملف الشخصي", name: 'ProfileCheck');
       if (mounted) checkProfileCompletion();
     });
-    
+
     // محاولة بعد ثانيتين
     Future.delayed(const Duration(seconds: 2), () {
-      developer.log("تحقق من اكتمال الملف الشخصي بعد ثانيتين", name: 'ProfileCheck');
+      developer.log(
+        "تحقق من اكتمال الملف الشخصي بعد ثانيتين",
+        name: 'ProfileCheck',
+      );
       if (mounted) checkProfileCompletion();
     });
-    
+
     // محاولة بعد خمس ثوان للتأكد
     Future.delayed(const Duration(seconds: 5), () {
-      developer.log("تحقق من اكتمال الملف الشخصي بعد خمس ثوان", name: 'ProfileCheck');
+      developer.log(
+        "تحقق من اكتمال الملف الشخصي بعد خمس ثوان",
+        name: 'ProfileCheck',
+      );
       if (mounted) checkProfileCompletion();
     });
   }
 
   // دالة للتحقق من اكتمال الملف الشخصي
   Future<void> checkProfileCompletion() async {
-    developer.log("====== بدء التحقق من اكتمال الملف الشخصي ======", name: 'ProfileCheck');
+    developer.log(
+      "====== بدء التحقق من اكتمال الملف الشخصي ======",
+      name: 'ProfileCheck',
+    );
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
-    
-    developer.log("تحقق من اكتمال الملف الشخصي - مستخدم مسجل دخول: ${authProvider.isAuthenticated}", name: 'ProfileCheck');
-    developer.log("معرف المستخدم: ${authProvider.user?.uid}", name: 'ProfileCheck');
-    
+
+    developer.log(
+      "تحقق من اكتمال الملف الشخصي - مستخدم مسجل دخول: ${authProvider.isAuthenticated}",
+      name: 'ProfileCheck',
+    );
+    developer.log(
+      "معرف المستخدم: ${authProvider.user?.uid}",
+      name: 'ProfileCheck',
+    );
+
     // التحقق فقط إذا كان المستخدم مسجل دخول
     if (authProvider.isAuthenticated) {
       final firestoreService = FirestoreService();
-      final userProfile = await firestoreService.getUserProfile(authProvider.user!.uid);
-      
-      developer.log("تم الحصول على الملف الشخصي: ${userProfile != null}", name: 'ProfileCheck');
-      
+      final userProfile = await firestoreService.getUserProfile(
+        authProvider.user!.uid,
+      );
+
+      developer.log(
+        "تم الحصول على الملف الشخصي: ${userProfile != null}",
+        name: 'ProfileCheck',
+      );
+
       if (userProfile != null) {
         // التحقق مما إذا كان المستخدم جديدًا
         final isNewUser = authProvider.getAndResetIsNewUser();
         developer.log("هل المستخدم جديد: $isNewUser", name: 'ProfileCheck');
-        
+
         // قائمة بالبيانات المفقودة
         final List<String> missingFields = [];
-        
+
         // التحقق من البيانات المطلوبة
         if (userProfile.name.isEmpty) {
           missingFields.add("الاسم الكامل");
@@ -507,34 +560,58 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
         if (userProfile.studentId.isEmpty) {
           missingFields.add("الرقم الجامعي");
         }
-        
-        developer.log("البيانات المفقودة: $missingFields، مستخدم جديد: $isNewUser", name: 'ProfileCheck');
-        
+
+        developer.log(
+          "البيانات المفقودة: $missingFields، مستخدم جديد: $isNewUser",
+          name: 'ProfileCheck',
+        );
+
         // عرض رسالة فقط في حالة وجود بيانات مفقودة
         if (missingFields.isNotEmpty) {
           if (mounted) {
-            developer.log("عرض رسالة استكمال الملف الشخصي", name: 'ProfileCheck');
+            developer.log(
+              "عرض رسالة استكمال الملف الشخصي",
+              name: 'ProfileCheck',
+            );
             _showProfileCompletionDialog(userProfile, missingFields);
           } else {
-            developer.log("Widget غير مثبت، لا يمكن عرض الرسالة", name: 'ProfileCheck');
+            developer.log(
+              "Widget غير مثبت، لا يمكن عرض الرسالة",
+              name: 'ProfileCheck',
+            );
           }
         } else {
-          developer.log("الملف الشخصي مكتمل، لا داعي لعرض رسالة", name: 'ProfileCheck');
+          developer.log(
+            "الملف الشخصي مكتمل، لا داعي لعرض رسالة",
+            name: 'ProfileCheck',
+          );
         }
       } else {
-        developer.log("لم يتم العثور على ملف شخصي للمستخدم", name: 'ProfileCheck');
+        developer.log(
+          "لم يتم العثور على ملف شخصي للمستخدم",
+          name: 'ProfileCheck',
+        );
       }
     } else {
-      developer.log("المستخدم غير مسجل دخول، لا يمكن التحقق من الملف الشخصي", name: 'ProfileCheck');
+      developer.log(
+        "المستخدم غير مسجل دخول، لا يمكن التحقق من الملف الشخصي",
+        name: 'ProfileCheck',
+      );
     }
-    developer.log("====== انتهاء التحقق من اكتمال الملف الشخصي ======", name: 'ProfileCheck');
+    developer.log(
+      "====== انتهاء التحقق من اكتمال الملف الشخصي ======",
+      name: 'ProfileCheck',
+    );
   }
 
   // دالة لعرض رسالة استكمال الملف الشخصي
-  void _showProfileCompletionDialog(UserProfile userProfile, List<String> missingFields) {
+  void _showProfileCompletionDialog(
+    UserProfile userProfile,
+    List<String> missingFields,
+  ) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false, // منع إغلاق الرسالة بالنقر خارجها
@@ -553,13 +630,16 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                 gradient: LinearGradient(
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
-                  colors: isDarkMode 
-                    ? [const Color(0xFF2D3748), const Color(0xFF1A202C)]
-                    : [Colors.white, const Color(0xFFF7FAFC)],
+                  colors:
+                      isDarkMode
+                          ? [const Color(0xFF2D3748), const Color(0xFF1A202C)]
+                          : [Colors.white, const Color(0xFFF7FAFC)],
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.1), // DIAGNOSTIC: Updated from deprecated withOpacity
+                    color: Colors.black.withValues(
+                      alpha: 0.1,
+                    ), // DIAGNOSTIC: Updated from deprecated withOpacity
                     blurRadius: 10,
                     spreadRadius: 1,
                   ),
@@ -580,7 +660,7 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // عنوان الرسالة
                   Text(
                     "استكمال البيانات مطلوب",
@@ -591,12 +671,12 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // محتوى الرسالة
                   Text(
-                    missingFields.isEmpty 
-                      ? "يجب عليك استكمال بيانات ملفك الشخصي للوصول إلى جميع الخدمات"
-                      : "يجب عليك استكمال البيانات التالية في ملفك الشخصي:\n• ${missingFields.join('\n• ')}",
+                    missingFields.isEmpty
+                        ? "يجب عليك استكمال بيانات ملفك الشخصي للوصول إلى جميع الخدمات"
+                        : "يجب عليك استكمال البيانات التالية في ملفك الشخصي:\n• ${missingFields.join('\n• ')}",
                     textAlign: TextAlign.center,
                     style: theme.textTheme.bodyMedium?.copyWith(
                       height: 1.5,
@@ -604,7 +684,7 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                     ),
                   ),
                   const SizedBox(height: 24),
-                  
+
                   // أزرار الإجراءات
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -613,7 +693,10 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                       TextButton(
                         onPressed: () => Navigator.pop(context),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
                           child: Text(
                             'إلغاء',
                             style: TextStyle(
@@ -624,7 +707,7 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                         ),
                       ),
                       const SizedBox(width: 16),
-                      
+
                       // زر تعديل البيانات
                       ElevatedButton(
                         onPressed: () {
@@ -633,7 +716,10 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                           Navigator.push(
                             context,
                             MaterialPageRoute(
-                              builder: (_) => EditProfileScreen(userProfile: userProfile),
+                              builder:
+                                  (_) => EditProfileScreen(
+                                    userProfile: userProfile,
+                                  ),
                             ),
                           );
                         },
@@ -644,7 +730,10 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
                           ),
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
                         ),
                         child: const Text(
                           "تعديل البيانات",
@@ -696,7 +785,7 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
 
     developer.log(
       "Building MainNavigationScreen - Selected index: ${navigationProvider.selectedIndex}",
-      name: 'MainNavigation'
+      name: 'MainNavigation',
     );
     developer.log("Logo asset: $logoAsset", name: 'MainNavigation');
     developer.log("Dark mode: $isDarkMode", name: 'MainNavigation');
@@ -714,9 +803,7 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
         ),
         centerTitle: true, // Center the logo
         leading: Builder(
-          builder:
-              (context) =>
-                  _buildMenuButton(context, isDarkMode),
+          builder: (context) => _buildMenuButton(context, isDarkMode),
         ),
         actions: [
           // User balance display with wallet animation
@@ -748,10 +835,7 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
       bottomNavigationBar: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0, // Space around the FAB
-        color:
-            isDarkMode
-                ? const Color(0xFF1E1E1E)
-                : const Color(0xFF2C3E50), // Dark background matching image
+        color: isDarkMode ? app_theme.darkSurface : app_theme.lightSurface,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceAround, // Distribute items
           children: <Widget>[
@@ -839,7 +923,9 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                   final balanceInt = userBalance.toInt();
 
                   return Container(
-                    margin: EdgeInsets.zero, // Eliminar el margen para reducir el espacio
+                    margin:
+                        EdgeInsets
+                            .zero, // Eliminar el margen para reducir el espacio
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       crossAxisAlignment: CrossAxisAlignment.center,
@@ -867,7 +953,7 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                   );
                 },
               ),
-              
+
             // Wallet icon on the right (a la derecha)
             SizedBox(
               width: 70, // Aumentar tamaño
@@ -889,123 +975,135 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
   void _showAuthRequiredDialog(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
-      builder: (context) => Dialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
-        elevation: 10,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(20),
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: isDarkMode 
-                ? [const Color(0xFF2D3748), const Color(0xFF1A202C)]
-                : [Colors.white, const Color(0xFFF7FAFC)],
+      builder:
+          (context) => Dialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
             ),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.1), // DIAGNOSTIC: Updated from deprecated withOpacity
-                blurRadius: 10,
-                spreadRadius: 1,
-              ),
-            ],
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Animación de advertencia
-              SizedBox(
-                height: 100,
-                width: 100,
-                child: Lottie.asset(
-                  'assets/animations/warning.json',
-                  repeat: true,
-                  animate: true,
-                  fit: BoxFit.cover,
+            elevation: 10,
+            child: Container(
+              padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 20),
+              decoration: BoxDecoration(
+                borderRadius: BorderRadius.circular(20),
+                gradient: LinearGradient(
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
+                  colors:
+                      isDarkMode
+                          ? [const Color(0xFF2D3748), const Color(0xFF1A202C)]
+                          : [Colors.white, const Color(0xFFF7FAFC)],
                 ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Título
-              Text(
-                'تسجيل الدخول مطلوب',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 16),
-              
-              // Contenido
-              Text(
-                'يجب عليك تسجيل الدخول أو إنشاء حساب للوصول إلى المحفظة وإدارة رصيدك',
-                textAlign: TextAlign.center,
-                style: theme.textTheme.bodyMedium?.copyWith(
-                  height: 1.5,
-                  color: isDarkMode ? Colors.white70 : Colors.black87,
-                ),
-              ),
-              const SizedBox(height: 24),
-              
-              // Botones
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  // Botón de cancelar
-                  TextButton(
-                    onPressed: () => Navigator.pop(context),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      child: Text(
-                        'إلغاء',
-                        style: TextStyle(
-                          color: theme.colorScheme.secondary,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  
-                  // Botón de inicio de sesión
-                  ElevatedButton(
-                    onPressed: () {
-                      Navigator.pop(context); // Cerrar el diálogo
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const LoginScreen()),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: theme.colorScheme.primary,
-                      foregroundColor: Colors.white,
-                      elevation: 2,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                    ),
-                    child: const Text(
-                      'تسجيل الدخول',
-                      style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(
+                      alpha: 0.1,
+                    ), // DIAGNOSTIC: Updated from deprecated withOpacity
+                    blurRadius: 10,
+                    spreadRadius: 1,
                   ),
                 ],
               ),
-            ],
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Animación de advertencia
+                  SizedBox(
+                    height: 100,
+                    width: 100,
+                    child: Lottie.asset(
+                      'assets/animations/warning.json',
+                      repeat: true,
+                      animate: true,
+                      fit: BoxFit.cover,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Título
+                  Text(
+                    'تسجيل الدخول مطلوب',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+
+                  // Contenido
+                  Text(
+                    'يجب عليك تسجيل الدخول أو إنشاء حساب للوصول إلى المحفظة وإدارة رصيدك',
+                    textAlign: TextAlign.center,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      height: 1.5,
+                      color: isDarkMode ? Colors.white70 : Colors.black87,
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  // Botones
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      // Botón de cancelar
+                      TextButton(
+                        onPressed: () => Navigator.pop(context),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 4,
+                          ),
+                          child: Text(
+                            'إلغاء',
+                            style: TextStyle(
+                              color: theme.colorScheme.secondary,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+
+                      // Botón de inicio de sesión
+                      ElevatedButton(
+                        onPressed: () {
+                          Navigator.pop(context); // Cerrar el diálogo
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (_) => const LoginScreen(),
+                            ),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: theme.colorScheme.primary,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(10),
+                          ),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 20,
+                            vertical: 12,
+                          ),
+                        ),
+                        child: const Text(
+                          'تسجيل الدخول',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -1017,7 +1115,9 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
         color: Colors.transparent,
         child: InkWell(
           customBorder: const CircleBorder(),
-          splashColor: Colors.white.withValues(alpha: 0.2), // DIAGNOSTIC: Updated from deprecated withOpacity
+          splashColor: Colors.white.withValues(
+            alpha: 0.2,
+          ), // DIAGNOSTIC: Updated from deprecated withOpacity
           onTap: () {
             Scaffold.of(context).openDrawer();
           },
@@ -1043,12 +1143,13 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
     int index,
   ) {
     final bool isSelected = navigationProvider.selectedIndex == index;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final Color color =
         isSelected
-            ? (Theme.of(context).brightness == Brightness.dark
-                ? Colors.lightBlueAccent
-                : Colors.tealAccent[400]!) // Use theme accent or specific color
-            : Colors.grey[400]!; // Color for unselected items
+            ? (isDarkMode ? app_theme.accentBlue : app_theme.primaryBlue)
+            : (isDarkMode
+                ? app_theme.darkTextTertiary
+                : app_theme.lightTextTertiary);
 
     return Expanded(
       // Use Expanded to ensure equal spacing

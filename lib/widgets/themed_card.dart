@@ -31,7 +31,8 @@ class ThemedCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = context.isDarkMode;
-    final effectiveBorderRadius = borderRadius ?? context.defaultBorderRadius;
+    final effectiveBorderRadius =
+        borderRadius ?? context.defaultBorderRadiusValue;
 
     return GestureDetector(
       onTap: onTap,
@@ -108,7 +109,7 @@ class StatusCard extends StatelessWidget {
                   ),
                   decoration: BoxDecoration(
                     color: ThemeUtils.getStatusColorWithOpacity(status),
-                    borderRadius: BorderRadius.circular(borderRadius),
+                    borderRadius: BorderRadius.circular(smallBorderRadius),
                   ),
                   child: Text(
                     status,

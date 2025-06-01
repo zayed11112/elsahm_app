@@ -89,11 +89,11 @@ class ThemeUtils {
         vertical: defaultPadding,
       ),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: BorderRadius.circular(defaultBorderRadius),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(borderRadius),
+        borderRadius: BorderRadius.circular(defaultBorderRadius),
         borderSide: BorderSide(
           color: isDarkMode ? primarySkyBlue : darkBlue,
           width: 1.5,

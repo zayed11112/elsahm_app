@@ -68,7 +68,8 @@ class HomeScreen extends StatefulWidget {
   State<HomeScreen> createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateMixin {
+class _HomeScreenState extends State<HomeScreen>
+    with SingleTickerProviderStateMixin {
   // المتغيرات الثابتة والخدمات
   final PropertyServiceSupabase _propertyService = PropertyServiceSupabase();
   final CategoryService _categoryService = CategoryService();
@@ -108,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       _setupApartmentsListener();
     });
   }
-  
+
   @override
   void dispose() {
     _apartmentsStreamSubscription?.cancel();
@@ -202,7 +203,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 // Show only if user is not authenticated
                 if (!authProvider.isAuthenticated) {
                   return Container(
-                    margin: const EdgeInsets.only(bottom: 24.0, left: 16.0, right: 16.0),
+                    margin: const EdgeInsets.only(
+                      bottom: 24.0,
+                      left: 16.0,
+                      right: 16.0,
+                    ),
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
@@ -231,7 +236,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             width: 100,
                             height: 100,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha:0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                           ),
@@ -243,12 +248,12 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             width: 80,
                             height: 80,
                             decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha:0.1),
+                              color: Colors.white.withValues(alpha: 0.1),
                               shape: BoxShape.circle,
                             ),
                           ),
                         ),
-                        
+
                         // Content with improved responsive layout
                         Padding(
                           padding: const EdgeInsets.all(24.0),
@@ -256,7 +261,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             builder: (context, constraints) {
                               // Determine if we need a compact layout
                               final bool isCompact = constraints.maxWidth < 350;
-                              
+
                               return Row(
                                 crossAxisAlignment: CrossAxisAlignment.center,
                                 children: [
@@ -265,7 +270,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                     width: isCompact ? 48 : 60,
                                     height: isCompact ? 48 : 60,
                                     decoration: BoxDecoration(
-                                      color: Colors.white.withValues(alpha:0.15),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.15,
+                                      ),
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
@@ -274,21 +281,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       size: isCompact ? 24 : 32,
                                     ),
                                   ),
-                                  
+
                                   SizedBox(width: isCompact ? 12 : 20),
-                                  
+
                                   // Middle section - Text with Expanded to ensure proper wrapping
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
                                         AutoSizeText(
                                           'سجل دخولك الآن',
-                                          style: textTheme.titleMedium?.copyWith(
-                                            color: Colors.white,
-                                            fontWeight: FontWeight.bold,
-                                          ),
+                                          style: textTheme.titleMedium
+                                              ?.copyWith(
+                                                color: Colors.white,
+                                                fontWeight: FontWeight.bold,
+                                              ),
                                           maxLines: 1,
                                           minFontSize: 14,
                                           overflow: TextOverflow.ellipsis,
@@ -297,7 +306,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                         AutoSizeText(
                                           'للوصول إلى مميزات حصرية',
                                           style: textTheme.bodyMedium?.copyWith(
-                                            color: Colors.white.withValues(alpha:0.9),
+                                            color: Colors.white.withValues(
+                                              alpha: 0.9,
+                                            ),
                                           ),
                                           maxLines: 2,
                                           minFontSize: 12,
@@ -306,15 +317,17 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       ],
                                     ),
                                   ),
-                                  
+
                                   SizedBox(width: isCompact ? 10 : 16),
-                                  
+
                                   // Right section - Login Button
                                   ElevatedButton(
                                     onPressed: () {
                                       Navigator.push(
                                         context,
-                                        MaterialPageRoute(builder: (_) => const LoginScreen()),
+                                        MaterialPageRoute(
+                                          builder: (_) => const LoginScreen(),
+                                        ),
                                       );
                                     },
                                     style: ElevatedButton.styleFrom(
@@ -322,30 +335,33 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                                       foregroundColor: colorScheme.primary,
                                       padding: EdgeInsets.symmetric(
                                         horizontal: isCompact ? 8 : 12,
-                                        vertical: isCompact ? 10 : 12
+                                        vertical: isCompact ? 10 : 12,
                                       ),
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(12),
                                       ),
                                       elevation: 2,
                                     ),
-                                    child: isCompact 
-                                      ? const Icon(Icons.login, size: 18)
-                                      : const Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Icon(Icons.login, size: 18),
-                                            SizedBox(width: 6),
-                                            Text(
-                                              'تسجيل الدخول',
-                                              style: TextStyle(fontWeight: FontWeight.bold),
+                                    child:
+                                        isCompact
+                                            ? const Icon(Icons.login, size: 18)
+                                            : const Row(
+                                              mainAxisSize: MainAxisSize.min,
+                                              children: [
+                                                Icon(Icons.login, size: 18),
+                                                SizedBox(width: 6),
+                                                Text(
+                                                  'تسجيل الدخول',
+                                                  style: TextStyle(
+                                                    fontWeight: FontWeight.bold,
+                                                  ),
+                                                ),
+                                              ],
                                             ),
-                                          ],
-                                        ),
                                   ),
                                 ],
                               );
-                            }
+                            },
                           ),
                         ),
                       ],
@@ -432,9 +448,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
             // بناء قسم الشقق - مع التحقق من حالة التحميل
             _buildApartmentsSection(),
-            
+
             const SizedBox(height: 16.0),
-            
+
             // 5. Featured Properties Section (العقارات المميزة)
             Container(
               decoration: BoxDecoration(
@@ -442,7 +458,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   begin: Alignment.topLeft,
                   end: Alignment.bottomRight,
                   colors: [
-                    theme.colorScheme.primary.withValues(alpha:0.05),
+                    theme.colorScheme.primary.withValues(alpha: 0.05),
                     Colors.transparent,
                   ],
                 ),
@@ -464,7 +480,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                builder: (context) => const FeaturedPropertiesScreen(),
+                                builder:
+                                    (context) =>
+                                        const FeaturedPropertiesScreen(),
                               ),
                             );
                           },
@@ -483,11 +501,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         ),
                         Row(
                           children: [
-                            Icon(
-                              Icons.star,
-                              color: Colors.amber,
-                              size: 20,
-                            ),
+                            Icon(Icons.star, color: Colors.amber, size: 20),
                             const SizedBox(width: 8),
                             Text(
                               'العقارات المميزة',
@@ -501,104 +515,129 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                   const SizedBox(height: 12.0),
-                  
+
                   SizedBox(
                     height: 240,
-                    child: !_isFeaturedLoading && _featuredProperties.isNotEmpty
-                      ? ListView.builder(
-                          padding: const EdgeInsets.only(right: 8.0, left: 16.0),
-                          scrollDirection: Axis.horizontal,
-                          itemCount: _featuredProperties.length > 3 ? 3 : _featuredProperties.length,
-                          itemBuilder: (context, index) {
-                            final apartment = _featuredProperties[index];
-                            return Container(
-                              width: MediaQuery.of(context).size.width * 0.85,
-                              margin: const EdgeInsets.only(right: 12.0),
-                              child: Stack(
-                                children: [
-                                  _buildFeaturedPropertyCard(apartment),
-                                  Positioned(
-                                    top: 12,
-                                    right: 12,
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: Colors.amber,
-                                        borderRadius: BorderRadius.circular(6),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withAlpha(77),
-                                            spreadRadius: 1,
-                                            blurRadius: 2,
-                                            offset: const Offset(0, 1),
+                    child:
+                        !_isFeaturedLoading && _featuredProperties.isNotEmpty
+                            ? ListView.builder(
+                              padding: const EdgeInsets.only(
+                                right: 8.0,
+                                left: 16.0,
+                              ),
+                              scrollDirection: Axis.horizontal,
+                              itemCount:
+                                  _featuredProperties.length > 3
+                                      ? 3
+                                      : _featuredProperties.length,
+                              itemBuilder: (context, index) {
+                                final apartment = _featuredProperties[index];
+                                return Container(
+                                  width:
+                                      MediaQuery.of(context).size.width * 0.85,
+                                  margin: const EdgeInsets.only(right: 12.0),
+                                  child: Stack(
+                                    children: [
+                                      _buildFeaturedPropertyCard(apartment),
+                                      Positioned(
+                                        top: 12,
+                                        right: 12,
+                                        child: Container(
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 8,
+                                            vertical: 4,
                                           ),
-                                        ],
-                                      ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(
-                                            Icons.star,
-                                            color: Colors.white,
-                                            size: 14,
-                                          ),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            'مميز',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 12,
+                                          decoration: BoxDecoration(
+                                            color: Colors.amber,
+                                            borderRadius: BorderRadius.circular(
+                                              6,
                                             ),
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withAlpha(
+                                                  77,
+                                                ),
+                                                spreadRadius: 1,
+                                                blurRadius: 2,
+                                                offset: const Offset(0, 1),
+                                              ),
+                                            ],
                                           ),
-                                        ],
+                                          child: const Row(
+                                            mainAxisSize: MainAxisSize.min,
+                                            children: [
+                                              Icon(
+                                                Icons.star,
+                                                color: Colors.white,
+                                                size: 14,
+                                              ),
+                                              SizedBox(width: 4),
+                                              Text(
+                                                'مميز',
+                                                style: TextStyle(
+                                                  color: Colors.white,
+                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 12,
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ),
                                       ),
-                                    ),
+                                    ],
                                   ),
-                                ],
-                              ),
-                            );
-                          },
-                        )
-                      : Center(
-                          child: _isFeaturedLoading 
-                            ? CircularProgressIndicator(
-                                color: theme.colorScheme.primary,
-                              )
-                            : Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(
-                                      Icons.home_outlined,
-                                      size: 48,
-                                      color: theme.colorScheme.primary.withValues(alpha:0.7),
-                                    ),
-                                    const SizedBox(height: 12),
-                                    Text(
-                                      'لا توجد عقارات مميزة متاحة حالياً',
-                                      textAlign: TextAlign.center,
-                                      style: textTheme.titleMedium?.copyWith(
-                                        color: theme.colorScheme.onSurface.withValues(alpha:0.7),
+                                );
+                              },
+                            )
+                            : Center(
+                              child:
+                                  _isFeaturedLoading
+                                      ? CircularProgressIndicator(
+                                        color: theme.colorScheme.primary,
+                                      )
+                                      : Padding(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 16.0,
+                                        ),
+                                        child: Column(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.home_outlined,
+                                              size: 48,
+                                              color: theme.colorScheme.primary
+                                                  .withValues(alpha: 0.7),
+                                            ),
+                                            const SizedBox(height: 12),
+                                            Text(
+                                              'لا توجد عقارات مميزة متاحة حالياً',
+                                              textAlign: TextAlign.center,
+                                              style: textTheme.titleMedium
+                                                  ?.copyWith(
+                                                    color: theme
+                                                        .colorScheme
+                                                        .onSurface
+                                                        .withValues(alpha: 0.7),
+                                                  ),
+                                            ),
+                                            const SizedBox(height: 8),
+                                            TextButton(
+                                              onPressed:
+                                                  _fetchFeaturedProperties,
+                                              child: Text('تحديث'),
+                                            ),
+                                          ],
+                                        ),
                                       ),
-                                    ),
-                                    const SizedBox(height: 8),
-                                    TextButton(
-                                      onPressed: _fetchFeaturedProperties,
-                                      child: Text('تحديث'),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                        ),
+                            ),
                   ),
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 24.0),
-            
+
             // 6. Why Choose Us Section (لماذا نحن الخيار الأفضل)
             Container(
               decoration: BoxDecoration(
@@ -606,13 +645,16 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   begin: Alignment.topRight,
                   end: Alignment.bottomLeft,
                   colors: [
-                    theme.colorScheme.primary.withValues(alpha:0.1),
-                    theme.colorScheme.secondary.withValues(alpha:0.05),
+                    theme.colorScheme.primary.withValues(alpha: 0.1),
+                    theme.colorScheme.secondary.withValues(alpha: 0.05),
                   ],
                 ),
                 borderRadius: BorderRadius.circular(16),
               ),
-              padding: const EdgeInsets.symmetric(vertical: 20.0, horizontal: 16.0),
+              padding: const EdgeInsets.symmetric(
+                vertical: 20.0,
+                horizontal: 16.0,
+              ),
               margin: const EdgeInsets.only(bottom: 24.0),
               child: Column(
                 children: [
@@ -623,7 +665,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       Container(
                         padding: const EdgeInsets.all(8),
                         decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(alpha:0.1),
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
@@ -641,27 +685,28 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 8.0),
-                  
+
                   Text(
                     'نسعى دائماً لتقديم أفضل الخدمات العقارية في مدينة العريش',
                     style: textTheme.bodyMedium?.copyWith(
-                      color: theme.brightness == Brightness.dark 
-                          ? Colors.white70 
-                          : Colors.black87,
+                      color:
+                          theme.brightness == Brightness.dark
+                              ? Colors.white70
+                              : Colors.black87,
                       height: 1.5,
                     ),
                     textAlign: TextAlign.center,
                   ),
-                  
+
                   const SizedBox(height: 20.0),
-                  
+
                   // Features
                   _buildWhyChooseUsFeatures(),
-                  
+
                   const SizedBox(height: 16.0),
-                  
+
                   // View More Button
                   TextButton.icon(
                     onPressed: () {
@@ -688,9 +733,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16.0),
-            
+
             // 7. Contact Us Section (تواصل معنا)
             _buildContactUsSection(context),
           ],
@@ -955,12 +1000,13 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         final crossAxisCount = 2; // عدد الأعمدة ثابت هنا (2)
         final rowIndex = index ~/ crossAxisCount; // صف العنصر الحالي
         final rowStartIndex = rowIndex * crossAxisCount; // بداية الصف الحالي
-        final reverseIndex = rowStartIndex + crossAxisCount - 1 - (index % crossAxisCount);
-        
+        final reverseIndex =
+            rowStartIndex + crossAxisCount - 1 - (index % crossAxisCount);
+
         // التأكد من أن الفهرس المعكوس في نطاق مقبول
         final maxIndex = _categories.length > 6 ? 6 : _categories.length;
         final safeIndex = reverseIndex < maxIndex ? reverseIndex : index;
-        
+
         final category = _categories[safeIndex];
         return _buildCategoryCard(
           context,
@@ -994,8 +1040,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
             BoxShadow(
               color:
                   isDarkMode
-                      ? Colors.black.withValues(alpha:0.2)
-                      : Colors.grey.withValues(alpha:0.1),
+                      ? Colors.black.withValues(alpha: 0.2)
+                      : Colors.grey.withValues(alpha: 0.1),
               spreadRadius: 1,
               blurRadius: 5,
               offset: const Offset(0, 2),
@@ -1012,8 +1058,8 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 decoration: BoxDecoration(
                   color:
                       isDarkMode
-                          ? theme.colorScheme.surface.withValues(alpha:0.1)
-                          : theme.colorScheme.primary.withValues(alpha:0.05),
+                          ? theme.colorScheme.surface.withValues(alpha: 0.1)
+                          : theme.colorScheme.primary.withValues(alpha: 0.05),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -1095,14 +1141,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // --- Helper Widgets --- (Keep existing helpers)
   Widget _buildCategoryCard(BuildContext context, dynamic icon, String label) {
     final theme = Theme.of(context);
-    
+
     // التحقق من طول النص لتحديد ما إذا كان يحتاج إلى تأثير التمرير
     final bool isLongText = label.length > 7;
 
     return Card(
       margin: const EdgeInsets.all(4.0),
       elevation: 2.0,
-      shadowColor: Colors.black.withValues(alpha:0.2),
+      shadowColor: Colors.black.withValues(alpha: 0.2),
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12.0),
@@ -1119,65 +1165,67 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 width: 36.0,
                 height: 36.0,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha:0.1),
+                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8.0),
                 ),
                 child: Center(
-                  child: icon is String && icon.startsWith('http')
-                    ? ClipRRect(
-                        borderRadius: BorderRadius.circular(8.0),
-                        child: Image.network(
-                          icon,
-                          width: 24.0,
-                          height: 24.0,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
+                  child:
+                      icon is String && icon.startsWith('http')
+                          ? ClipRRect(
+                            borderRadius: BorderRadius.circular(8.0),
+                            child: Image.network(
+                              icon,
+                              width: 24.0,
+                              height: 24.0,
+                              errorBuilder:
+                                  (context, error, stackTrace) => const Icon(
+                                    Icons.category,
+                                    size: 24.0,
+                                    color: Colors.blue,
+                                  ),
+                            ),
+                          )
+                          : Icon(
                             Icons.category,
                             size: 24.0,
-                            color: Colors.blue,
+                            color: theme.colorScheme.primary,
                           ),
-                        ),
-                      )
-                    : Icon(
-                        Icons.category,
-                        size: 24.0,
-                        color: theme.colorScheme.primary,
-                      ),
                 ),
               ),
-              
+
               const SizedBox(width: 12.0), // مسافة موحدة بين الأيقونة والنص
-              
               // النص بتنسيق وحجم ثابت
               Expanded(
                 child: Container(
                   height: 22.0, // ارتفاع ثابت للنص
                   alignment: Alignment.centerRight, // دائمًا محاذاة لليمين
-                  child: isLongText
-                    ? Marquee(
-                        animationDuration: const Duration(seconds: 2),
-                        backDuration: const Duration(milliseconds: 1000),
-                        pauseDuration: const Duration(milliseconds: 1000),
-                        direction: Axis.horizontal,
-                        textDirection: TextDirection.rtl,
-                        autoRepeat: true,
-                        child: Text(
-                          label,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15.0, // حجم خط ثابت
+                  child:
+                      isLongText
+                          ? Marquee(
+                            animationDuration: const Duration(seconds: 2),
+                            backDuration: const Duration(milliseconds: 1000),
+                            pauseDuration: const Duration(milliseconds: 1000),
+                            direction: Axis.horizontal,
+                            textDirection: TextDirection.rtl,
+                            autoRepeat: true,
+                            child: Text(
+                              label,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15.0, // حجم خط ثابت
+                              ),
+                            ),
+                          )
+                          : Text(
+                            label,
+                            style: theme.textTheme.bodyLarge?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15.0, // حجم خط ثابت
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
                           ),
-                        ),
-                      )
-                    : Text(
-                        label,
-                        style: theme.textTheme.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15.0, // حجم خط ثابت
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
-                      ),
                 ),
               ),
             ],
@@ -1228,7 +1276,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               color:
                   isDarkMode
                       ? Colors.black.withAlpha(77) // ~0.3 opacity
-                      : Colors.grey.withAlpha(38),  // ~0.15 opacity
+                      : Colors.grey.withAlpha(38), // ~0.15 opacity
               spreadRadius: 2,
               blurRadius: 8,
               offset: const Offset(0, 3),
@@ -1269,7 +1317,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         begin: Alignment.bottomCenter,
                         end: Alignment.topCenter,
                         colors: [
-                          Colors.black.withValues(alpha:0.7),
+                          Colors.black.withValues(alpha: 0.7),
                           Colors.transparent,
                         ],
                       ),
@@ -1357,7 +1405,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
                             // El usuario está autenticado, continuar con la operación
                             try {
-                              final scaffoldMessenger = ScaffoldMessenger.of(context);
+                              final scaffoldMessenger = ScaffoldMessenger.of(
+                                context,
+                              );
                               final isNowFavorite = await favoritesProvider
                                   .toggleFavorite(apartment);
                               if (mounted) {
@@ -1504,7 +1554,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   // وظائف المساعدة للصور
   Widget _buildDefaultPropertyImage(ImageProvider? placeholderImage) {
     return Image.asset(
@@ -1547,7 +1597,6 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           errorWidget: _buildDefaultPropertyImage(placeholderImage),
         );
   }
-
 
   Future<void> _fetchLatestApartments() async {
     if (!mounted) return;
@@ -1802,7 +1851,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     try {
       // مسح التخزين المؤقت للخدمات
       _propertyService.clearCache();
-      
+
       // تحديث العقارات
       await _fetchLatestApartments();
 
@@ -1811,7 +1860,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
 
       // تحديث الفئات
       await _fetchCategories();
-      
+
       // تحديث العقارات المميزة
       await _fetchFeaturedProperties();
 
@@ -1859,7 +1908,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   // Featured property card with improved design
   Widget _buildFeaturedPropertyCard(Apartment apartment) {
     final theme = Theme.of(context);
-    
+
     return Card(
       elevation: 4,
       shadowColor: Colors.black.withAlpha(51),
@@ -1870,10 +1919,11 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           Navigator.push(
             context,
             MaterialPageRoute(
-              builder: (context) => PropertyDetailsScreen(
-                property: apartment,
-                fromCategoriesScreen: false,
-              ),
+              builder:
+                  (context) => PropertyDetailsScreen(
+                    property: apartment,
+                    fromCategoriesScreen: false,
+                  ),
             ),
           );
         },
@@ -1886,31 +1936,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 SizedBox(
                   height: 140,
                   width: double.infinity,
-                  child: apartment.imageUrls.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: apartment.imageUrls[0],
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Center(
-                          child: CircularProgressIndicator(
-                            color: theme.colorScheme.primary,
+                  child:
+                      apartment.imageUrls.isNotEmpty
+                          ? CachedNetworkImage(
+                            imageUrl: apartment.imageUrls[0],
+                            fit: BoxFit.cover,
+                            placeholder:
+                                (context, url) => Center(
+                                  child: CircularProgressIndicator(
+                                    color: theme.colorScheme.primary,
+                                  ),
+                                ),
+                            errorWidget:
+                                (context, url, error) => const Icon(
+                                  Icons.broken_image,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                          )
+                          : Container(
+                            color: Colors.grey[300],
+                            child: const Icon(
+                              Icons.home,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ),
-                        errorWidget: (context, url, error) => const Icon(
-                          Icons.broken_image,
-                          size: 40,
-                          color: Colors.grey,
-                        ),
-                      )
-                    : Container(
-                        color: Colors.grey[300],
-                        child: const Icon(
-                          Icons.home,
-                          size: 40,
-                          color: Colors.grey,
-                        ),
-                      ),
                 ),
-                
+
                 // Gradient overlay for better text readability
                 Positioned.fill(
                   child: Container(
@@ -1927,19 +1980,22 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
-                
+
                 // Price tag
                 Positioned(
                   bottom: 12,
                   right: 12,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: theme.colorScheme.primary,
                       borderRadius: BorderRadius.circular(8),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha:0.3),
+                          color: Colors.black.withValues(alpha: 0.3),
                           blurRadius: 4,
                           offset: const Offset(0, 2),
                         ),
@@ -1955,7 +2011,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     ),
                   ),
                 ),
-                
+
                 // Location
                 Positioned(
                   bottom: 12,
@@ -1983,7 +2039,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 ),
               ],
             ),
-            
+
             // Property details
             Padding(
               padding: const EdgeInsets.all(12),
@@ -1999,9 +2055,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   // Features row - только два элемента: комнаты и кровати
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -2028,7 +2084,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   // Feature chip with improved design
   Widget _buildFeatureChip({
     required IconData icon,
@@ -2045,11 +2101,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            size: 14,
-            color: textColor,
-          ),
+          Icon(icon, size: 14, color: textColor),
           const SizedBox(width: 4),
           Text(
             label,
@@ -2071,13 +2123,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final features = [
       _Feature(
         title: 'خبرة تثق بها',
-        description: 'نعرف سوق العريش من الداخل، ونوجهك بكل دقة نحو الخيار الأنسب لك.',
+        description:
+            'نعرف سوق العريش من الداخل، ونوجهك بكل دقة نحو الخيار الأنسب لك.',
         icon: Icons.verified_user_outlined,
         color: Colors.blue,
       ),
       _Feature(
         title: 'تشكيلة مميزة',
-        description: 'شقق، محلات، ومساحات استثمارية تناسب كل الأذواق والميزانيات.',
+        description:
+            'شقق، محلات، ومساحات استثمارية تناسب كل الأذواق والميزانيات.',
         icon: Icons.apps,
         color: Colors.orange,
       ),
@@ -2090,65 +2144,62 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     ];
 
     return Column(
-      children: features.map((feature) {
-        return Container(
-          margin: const EdgeInsets.only(bottom: 16),
-          decoration: BoxDecoration(
-            color: isDark ? theme.cardColor : Colors.white,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withValues(alpha:0.05),
-                spreadRadius: 0,
-                blurRadius: 10,
-                offset: const Offset(0, 2),
+      children:
+          features.map((feature) {
+            return Container(
+              margin: const EdgeInsets.only(bottom: 16),
+              decoration: BoxDecoration(
+                color: isDark ? theme.cardColor : Colors.white,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.05),
+                    spreadRadius: 0,
+                    blurRadius: 10,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: BoxDecoration(
-                    color: feature.color.withValues(alpha:0.1),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  child: Icon(
-                    feature.icon,
-                    color: feature.color,
-                    size: 24,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        feature.title,
-                        style: theme.textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
+              child: Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(10),
+                      decoration: BoxDecoration(
+                        color: feature.color.withValues(alpha: 0.1),
+                        borderRadius: BorderRadius.circular(10),
                       ),
-                      const SizedBox(height: 6),
-                      Text(
-                        feature.description,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                          height: 1.5,
-                          color: isDark ? Colors.white70 : Colors.black87,
-                        ),
+                      child: Icon(feature.icon, color: feature.color, size: 24),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            feature.title,
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            feature.description,
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              height: 1.5,
+                              color: isDark ? Colors.white70 : Colors.black87,
+                            ),
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
-          ),
-        );
-      }).toList(),
+              ),
+            );
+          }).toList(),
     );
   }
 
@@ -2157,7 +2208,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final theme = Theme.of(context);
     final textTheme = theme.textTheme;
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.only(bottom: 24.0, left: 16.0, right: 16.0),
       decoration: BoxDecoration(
@@ -2165,7 +2216,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 20,
             offset: const Offset(0, 5),
           ),
@@ -2182,7 +2233,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 end: Alignment.bottomLeft,
                 colors: [
                   theme.colorScheme.primary,
-                  theme.colorScheme.primary.withValues(alpha:0.7),
+                  theme.colorScheme.primary.withValues(alpha: 0.7),
                 ],
               ),
               borderRadius: const BorderRadius.only(
@@ -2195,7 +2246,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha:0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: const Icon(
@@ -2219,7 +2270,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Text(
                       'فريقنا جاهز لمساعدتك!',
                       style: textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha:0.9),
+                        color: Colors.white.withValues(alpha: 0.9),
                       ),
                     ),
                   ],
@@ -2227,7 +2278,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ],
             ),
           ),
-          
+
           // Contact options
           Padding(
             padding: const EdgeInsets.all(16.0),
@@ -2241,9 +2292,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   iconColor: Colors.green,
                   onTap: () => _launchURL('tel:01093130120'),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 _buildContactOption(
                   icon: FontAwesomeIcons.whatsapp,
                   title: 'واتساب',
@@ -2251,33 +2302,34 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                   iconColor: const Color(0xFF25D366), // WhatsApp green
                   onTap: () => _launchURL('https://wa.me/201093130120'),
                 ),
-                
+
                 const SizedBox(height: 12),
-                
+
                 _buildContactOption(
                   icon: FontAwesomeIcons.facebook,
                   title: 'فيسبوك',
                   subtitle: 'تابعنا على فيسبوك',
                   iconColor: const Color(0xFF1877F2), // Facebook blue
-                  onTap: () => _launchURL('https://www.facebook.com/elsahm.arish'),
+                  onTap:
+                      () => _launchURL('https://www.facebook.com/elsahm.arish'),
                 ),
               ],
             ),
           ),
-          
+
           // Divider
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Divider(color: Colors.grey.withValues(alpha:0.3)),
+            child: Divider(color: Colors.grey.withValues(alpha: 0.3)),
           ),
-          
+
           // Designer info
           _buildPremiumDesignerCard(),
         ],
       ),
     );
   }
-  
+
   // Method to launch URLs
   Future<void> _launchURL(String url) async {
     final Uri uri = Uri.parse(url);
@@ -2289,7 +2341,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       }
     }
   }
-  
+
   // Contact option card widget
   Widget _buildContactOption({
     required IconData icon,
@@ -2300,14 +2352,14 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
   }) {
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
-    
+
     return Card(
       elevation: 0,
       color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
         side: BorderSide(
-          color: theme.dividerColor.withValues(alpha:0.1),
+          color: theme.dividerColor.withValues(alpha: 0.1),
           width: 1,
         ),
       ),
@@ -2321,14 +2373,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               Container(
                 padding: const EdgeInsets.all(12),
                 decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha:0.1),
+                  color: iconColor.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: Icon(
-                  icon,
-                  color: iconColor,
-                  size: 22,
-                ),
+                child: Icon(icon, color: iconColor, size: 22),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -2344,7 +2392,10 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     Text(
                       subtitle,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: isDark ? Colors.grey.shade400 : Colors.grey.shade700,
+                        color:
+                            isDark
+                                ? Colors.grey.shade400
+                                : Colors.grey.shade700,
                       ),
                     ),
                   ],
@@ -2361,8 +2412,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
-  
+
   // Shimmer loading banner for placeholder
   Widget _shimmerLoadingBanner() {
     return Shimmer.fromColors(
@@ -2378,7 +2428,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       ),
     );
   }
-  
+
   // Shimmer banner image for fallback banners
   Widget _shimmerBannerImage({required String imageAsset}) {
     return Image.asset(
@@ -2397,19 +2447,18 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       },
     );
   }
-  
+
   // Network banner image with shimmer loading effect
   Widget _networkBannerImage({required String imageUrl}) {
     return CachedNetworkImage(
       imageUrl: imageUrl,
       fit: BoxFit.cover,
-      placeholder: (context, url) => Shimmer.fromColors(
-        baseColor: Colors.grey[300]!,
-        highlightColor: Colors.grey[100]!,
-        child: Container(
-          color: Colors.white,
-        ),
-      ),
+      placeholder:
+          (context, url) => Shimmer.fromColors(
+            baseColor: Colors.grey[300]!,
+            highlightColor: Colors.grey[100]!,
+            child: Container(color: Colors.white),
+          ),
       errorWidget: (context, url, error) {
         if (kDebugMode) {
           print('Error loading banner image: $error');
@@ -2417,14 +2466,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
         return Image.asset(
           'assets/images/banners/banner1.png',
           fit: BoxFit.cover,
-          errorBuilder: (context, error, stackTrace) => Container(
-            color: Colors.grey[300],
-            child: const Icon(
-              Icons.image_not_supported,
-              size: 50,
-              color: Colors.grey,
-            ),
-          ),
+          errorBuilder:
+              (context, error, stackTrace) => Container(
+                color: Colors.grey[300],
+                child: const Icon(
+                  Icons.image_not_supported,
+                  size: 50,
+                  color: Colors.grey,
+                ),
+              ),
         );
       },
     );
@@ -2435,35 +2485,31 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     final theme = Theme.of(context);
     final isDark = theme.brightness == Brightness.dark;
     final textTheme = theme.textTheme;
-    
+
     return Container(
       margin: const EdgeInsets.fromLTRB(0, 12, 0, 8),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: isDark 
-              ? [
-                  const Color(0xFF1A1F38),
-                  const Color(0xFF0D1321),
-                ] 
-              : [
-                  const Color(0xFFF8FBFF),
-                  const Color(0xFFF0F7FF),
-                ],
+          colors:
+              isDark
+                  ? [const Color(0xFF1A1F38), const Color(0xFF0D1321)]
+                  : [const Color(0xFFF8FBFF), const Color(0xFFF0F7FF)],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha:0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
         ],
         border: Border.all(
-          color: isDark
-              ? Colors.blue.shade800.withValues(alpha:0.2)
-              : Colors.blue.shade300.withValues(alpha:0.2),
+          color:
+              isDark
+                  ? Colors.blue.shade800.withValues(alpha: 0.2)
+                  : Colors.blue.shade300.withValues(alpha: 0.2),
           width: 1.5,
         ),
       ),
@@ -2477,10 +2523,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  const Color(0xFF0288D1),
-                  const Color(0xFF0277BD),
-                ],
+                colors: [const Color(0xFF0288D1), const Color(0xFF0277BD)],
               ),
               borderRadius: const BorderRadius.only(
                 topLeft: Radius.circular(18),
@@ -2497,7 +2540,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     width: 70, // Reduced from 100
                     height: 70, // Reduced from 100
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha:0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -2509,22 +2552,27 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                     width: 40, // Reduced from 60
                     height: 40, // Reduced from 60
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha:0.1),
+                      color: Colors.white.withValues(alpha: 0.1),
                       shape: BoxShape.circle,
                     ),
                   ),
                 ),
-                
+
                 // Title content - simplified and centered
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 25, 0), // تقليل تباعد الأعلى من 18 إلى 12
+                  padding: const EdgeInsets.fromLTRB(
+                    16,
+                    0,
+                    25,
+                    0,
+                  ), // تقليل تباعد الأعلى من 18 إلى 12
                   child: Center(
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Icon(
                           Icons.code,
-                          color: Colors.white.withValues(alpha:0.9),
+                          color: Colors.white.withValues(alpha: 0.9),
                           size: 16,
                         ),
                         const SizedBox(width: 8),
@@ -2543,7 +2591,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ],
             ),
           ),
-          
+
           // Profile information with reduced spacing
           SizedBox(
             height: 100, // Reduced from 110 to fix overflow
@@ -2561,7 +2609,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0277BD).withValues(alpha:0.3),
+                          color: const Color(0xFF0277BD).withValues(alpha: 0.3),
                           blurRadius: 10,
                           spreadRadius: 1,
                           offset: const Offset(0, 3),
@@ -2575,19 +2623,23 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         width: 70, // Reduced from 90
                         height: 70, // Reduced from 90
                         fit: BoxFit.cover,
-                        errorBuilder: (context, error, stackTrace) => Container(
-                          color: isDark ? Colors.grey.shade800 : Colors.grey.shade200,
-                          child: Icon(
-                            Icons.person,
-                            color: theme.colorScheme.primary,
-                            size: 30,
-                          ),
-                        ),
+                        errorBuilder:
+                            (context, error, stackTrace) => Container(
+                              color:
+                                  isDark
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade200,
+                              child: Icon(
+                                Icons.person,
+                                color: theme.colorScheme.primary,
+                                size: 30,
+                              ),
+                            ),
                       ),
                     ),
                   ),
                 ),
-                
+
                 // Text elements - repositioned
                 Positioned(
                   top: 45,
@@ -2598,15 +2650,19 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                         'م. اسلام زايد',
                         style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
-                          color: isDark ? Colors.white : const Color(0xFF0D47A1),
+                          color:
+                              isDark ? Colors.white : const Color(0xFF0D47A1),
                         ),
                       ),
-                      
+
                       const SizedBox(height: 5),
-                      
+
                       // Badge with profession
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 4,
+                        ),
                         decoration: BoxDecoration(
                           gradient: LinearGradient(
                             colors: [
@@ -2617,7 +2673,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                           borderRadius: BorderRadius.circular(20),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF0277BD).withValues(alpha:0.25),
+                              color: const Color(
+                                0xFF0277BD,
+                              ).withValues(alpha: 0.25),
                               blurRadius: 6,
                               offset: const Offset(0, 2),
                             ),
@@ -2638,7 +2696,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
               ],
             ),
           ),
-          
+
           // Social media buttons - smaller size and closer together
           Padding(
             padding: const EdgeInsets.only(bottom: 12, top: 0),
@@ -2660,13 +2718,15 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
                 _buildCompactSocialButton(
                   icon: FontAwesomeIcons.facebook,
                   gradient: const [Color(0xFF1877F2), Color(0xFF1554AF)],
-                  onTap: () => _launchURL('https://www.facebook.com/eslammosalah'),
+                  onTap:
+                      () => _launchURL('https://www.facebook.com/eslammosalah'),
                 ),
                 const SizedBox(width: 12), // Reduced spacing
                 _buildCompactSocialButton(
                   icon: FontAwesomeIcons.instagram,
                   gradient: const [Color(0xFFE1306C), Color(0xFF833AB4)],
-                  onTap: () => _launchURL('https://www.instagram.com/eslamz11/'),
+                  onTap:
+                      () => _launchURL('https://www.instagram.com/eslamz11/'),
                 ),
               ],
             ),
@@ -2697,7 +2757,7 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
           borderRadius: BorderRadius.circular(14),
           boxShadow: [
             BoxShadow(
-              color: gradient.last.withValues(alpha:0.3),
+              color: gradient.last.withValues(alpha: 0.3),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -2733,7 +2793,9 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
       _propertyService.clearCache(key: 'featured_properties');
 
       // جلب الشقق المميزة من Supabase
-      final properties = await _propertyService.getFeaturedProperties(limit: 10);
+      final properties = await _propertyService.getFeaturedProperties(
+        limit: 10,
+      );
 
       if (!mounted) return;
 
@@ -2768,4 +2830,3 @@ class _HomeScreenState extends State<HomeScreen> with SingleTickerProviderStateM
     }
   }
 }
-                

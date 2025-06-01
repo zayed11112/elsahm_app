@@ -10,13 +10,13 @@ import 'package:onesignal_flutter/onesignal_flutter.dart'; // Import OneSignal
 import 'package:intl/date_symbol_data_local.dart'; // إضافة استيراد جديد
 import 'package:sentry_flutter/sentry_flutter.dart'; // Import Sentry
 import 'package:flutter/foundation.dart'; // For kReleaseMode
-
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/navigation_provider.dart'; // Import NavigationProvider
 import 'providers/category_provider.dart'; // Import CategoryProvider
 import 'providers/favorites_provider.dart'; // Import FavoritesProvider
 import 'services/notification_service.dart'; // Import NotificationService
+import 'constants/theme.dart'; // Import theme constants
 
 // Import the generated file
 import 'firebase_options.dart';
@@ -43,112 +43,124 @@ final Logger _oneSignalLogger = Logger('OneSignal');
 const String oneSignalAppId = '3136dbc6-c09c-4bca-b0aa-fe35421ac513';
 
 // Sentry DSN
-const String sentryDsn = 'https://1ba5f23f8807449a9943d0e4bea7b445@o4509413739266049.ingest.de.sentry.io/4509413740380240';
+const String sentryDsn =
+    'https://1ba5f23f8807449a9943d0e4bea7b445@o4509413739266049.ingest.de.sentry.io/4509413740380240';
 
 // إضافة دالة لعرض مربع حوار الخروج من التطبيق
 Future<bool> showExitConfirmationDialog(BuildContext context) async {
   final ThemeData theme = Theme.of(context);
   final bool isDarkMode = theme.brightness == Brightness.dark;
-  
+
   return await showDialog<bool>(
-    context: context,
-    barrierDismissible: false,
-    builder: (BuildContext context) {
-      return AlertDialog(
-        backgroundColor: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16.0),
-          side: BorderSide(
-            color: isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700]!,
-            width: 1.5,
-          ),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.warning_amber_rounded,
-              color: isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700],
-              size: 28,
+        context: context,
+        barrierDismissible: false,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            backgroundColor:
+                isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16.0),
+              side: BorderSide(
+                color:
+                    isDarkMode
+                        ? Colors.lightBlueAccent
+                        : Colors.lightBlueAccent[700]!,
+                width: 1.5,
+              ),
             ),
-            const SizedBox(width: 10),
-            Text(
-              'تأكيد الخروج',
+            title: Row(
+              children: [
+                Icon(
+                  Icons.warning_amber_rounded,
+                  color:
+                      isDarkMode
+                          ? Colors.lightBlueAccent
+                          : Colors.lightBlueAccent[700],
+                  size: 28,
+                ),
+                const SizedBox(width: 10),
+                Text(
+                  'تأكيد الخروج',
+                  style: GoogleFonts.tajawal(
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.black87,
+                  ),
+                  textAlign: TextAlign.right,
+                ),
+              ],
+            ),
+            content: Text(
+              'هل أنت متأكد من رغبتك في الخروج من التطبيق؟',
               style: GoogleFonts.tajawal(
-                fontWeight: FontWeight.bold,
-                color: isDarkMode ? Colors.white : Colors.black87,
+                fontSize: 16,
+                color: isDarkMode ? Colors.white70 : Colors.black87,
               ),
               textAlign: TextAlign.right,
             ),
-          ],
-        ),
-        content: Text(
-          'هل أنت متأكد من رغبتك في الخروج من التطبيق؟',
-          style: GoogleFonts.tajawal(
-            fontSize: 16,
-            color: isDarkMode ? Colors.white70 : Colors.black87,
-          ),
-          textAlign: TextAlign.right,
-        ),
-        actions: <Widget>[
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    foregroundColor: isDarkMode ? Colors.white70 : Colors.grey[700],
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
+            actions: <Widget>[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Expanded(
+                    child: TextButton(
+                      style: TextButton.styleFrom(
+                        foregroundColor:
+                            isDarkMode ? Colors.white70 : Colors.grey[700],
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(false),
+                      child: Text(
+                        'إلغاء',
+                        style: GoogleFonts.tajawal(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
                   ),
-                  onPressed: () => Navigator.of(context).pop(false),
-                  child: Text(
-                    'إلغاء',
-                    style: GoogleFonts.tajawal(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: ElevatedButton(
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor:
+                            isDarkMode
+                                ? Colors.lightBlueAccent
+                                : Colors.lightBlueAccent[700],
+                        foregroundColor:
+                            isDarkMode ? Colors.black : Colors.white,
+                        padding: const EdgeInsets.symmetric(vertical: 12.0),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(8.0),
+                        ),
+                      ),
+                      onPressed: () => Navigator.of(context).pop(true),
+                      child: Text(
+                        'خروج',
+                        style: GoogleFonts.tajawal(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15,
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: isDarkMode ? Colors.lightBlueAccent : Colors.lightBlueAccent[700],
-                    foregroundColor: isDarkMode ? Colors.black : Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 12.0),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8.0),
-                    ),
-                  ),
-                  onPressed: () => Navigator.of(context).pop(true),
-                  child: Text(
-                    'خروج',
-                    style: GoogleFonts.tajawal(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
+                ],
               ),
             ],
-          ),
-        ],
-      );
-    },
-  ) ?? false;
+          );
+        },
+      ) ??
+      false;
 }
 
 // إضافة رابط لشاشة البداية مع تنبيه الخروج
 class ExitConfirmationWrapper extends StatelessWidget {
   final Widget child;
 
-  const ExitConfirmationWrapper({
-    Key? key,
-    required this.child,
-  }) : super(key: key);
+  const ExitConfirmationWrapper({Key? key, required this.child})
+    : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -165,17 +177,14 @@ class ExitConfirmationWrapper extends StatelessWidget {
 Future<void> main() async {
   if (kReleaseMode) {
     // Initialize Sentry only in release mode
-    await SentryFlutter.init(
-      (options) {
-        options.dsn = sentryDsn;
-        options.sendDefaultPii = true;
-        options.release = 'elsahm-app@1.0.0';
-        options.environment = 'production';
-        options.tracesSampleRate = 0.5;
-        options.debug = false;
-      },
-      appRunner: () => _initializeApp(),
-    );
+    await SentryFlutter.init((options) {
+      options.dsn = sentryDsn;
+      options.sendDefaultPii = true;
+      options.release = 'elsahm-app@1.0.0';
+      options.environment = 'production';
+      options.tracesSampleRate = 0.5;
+      options.debug = false;
+    }, appRunner: () => _initializeApp());
   } else {
     // In debug mode, run without Sentry
     await _initializeApp();
@@ -359,7 +368,7 @@ Future<void> setOneSignalExternalUserId(String userId) async {
     _logger.info('OneSignal Device ID: ${pushStatus.id}');
     _logger.info('OneSignal Device Token: ${pushStatus.token}');
     _logger.info('OneSignal user ID set: $cleanUserId');
-    
+
     // Set user identifier in Sentry in release mode
     if (kReleaseMode) {
       Sentry.configureScope((scope) {
@@ -385,7 +394,7 @@ Future<void> removeOneSignalExternalUserId() async {
     OneSignal.User.removeTags(['user_id']);
 
     _logger.info('OneSignal user ID removed');
-    
+
     // Clear user identifier in Sentry in release mode
     if (kReleaseMode) {
       Sentry.configureScope((scope) {
@@ -485,193 +494,185 @@ class MyApp extends StatelessWidget {
       // Use Consumer to rebuild MaterialApp when theme changes
       child: Consumer<ThemeProvider>(
         builder: (context, themeProvider, child) {
-          // Define Dark Theme Data
+          // Define Enhanced Dark Theme Data
           final darkTheme = ThemeData(
-            fontFamily: GoogleFonts.tajawal().fontFamily, // Apply Tajawal font
+            fontFamily: GoogleFonts.tajawal().fontFamily,
             brightness: Brightness.dark,
             primarySwatch: Colors.blue,
-            scaffoldBackgroundColor: const Color(0xFF1A1A1A), // Updated dark background
-            cardColor: const Color(0xFF2D2D2D), // Updated dark card color
+            scaffoldBackgroundColor: darkBackground,
+            cardColor: darkCard,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.lightBlueAccent,
+              seedColor: primaryBlue,
               brightness: Brightness.dark,
-              primary: const Color(0xFF1976D2), // Updated primary color for dark theme
-              secondary: const Color(0xFF42A5F5),
-              surface: const Color(0xFF252525), // Added surface color
-              background: const Color(0xFF1A1A1A),
+              primary: primaryBlue,
+              secondary: accentBlue,
+              surface: darkSurface,
+              onPrimary: Colors.white,
+              onSecondary: Colors.white,
+              onSurface: darkTextPrimary,
             ),
             appBarTheme: AppBarTheme(
-              backgroundColor: const Color(0xFF252525), // Updated app bar color
-              elevation: 0, // Ensure no elevation in dark mode
+              backgroundColor: darkSurface,
+              elevation: 0,
               titleTextStyle: GoogleFonts.tajawal(
-                // Apply Tajawal font
-                color: Colors.white,
+                color: darkTextPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
-              iconTheme: const IconThemeData(color: Colors.white),
+              iconTheme: IconThemeData(color: darkTextPrimary),
             ),
             textTheme: GoogleFonts.tajawalTextTheme(
               ThemeData.dark().textTheme,
             ).copyWith(
-              // Apply Tajawal font
-              bodyLarge: const TextStyle(color: Color(0xFFE0E0E0)), // Updated text color
-              bodyMedium: const TextStyle(color: Color(0xFFB0B0B0)), // Updated secondary text color
-              titleLarge: const TextStyle(color: Color(0xFFE0E0E0)),
+              bodyLarge: TextStyle(color: darkTextPrimary),
+              bodyMedium: TextStyle(color: darkTextSecondary),
+              titleLarge: TextStyle(color: darkTextPrimary),
+              titleMedium: TextStyle(color: darkTextPrimary),
+              titleSmall: TextStyle(color: darkTextSecondary),
             ),
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: const Color(0xFF2D2D2D), // Updated input field color
-              hintStyle: TextStyle(color: Colors.grey[500]),
-              labelStyle: const TextStyle(color: Color(0xFF81D4FA)), // Updated label color
+              fillColor: darkCard,
+              hintStyle: TextStyle(color: darkTextTertiary),
+              labelStyle: TextStyle(color: accentBlue),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(defaultBorderRadius),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: const BorderSide(color: Color(0xFF29B6F6)), // Updated border color
+                borderRadius: BorderRadius.circular(defaultBorderRadius),
+                borderSide: BorderSide(color: primaryBlue),
               ),
-              prefixIconColor: const Color(0xFF81D4FA), // Updated icon color
-              suffixIconColor: const Color(0xFF81D4FA), // Updated icon color
+              prefixIconColor: accentBlue,
+              suffixIconColor: accentBlue,
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFF1976D2), // Updated button color
+                backgroundColor: primaryBlue,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(buttonBorderRadius),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14.0),
-                textStyle: GoogleFonts.tajawal(
-                  fontWeight: FontWeight.bold,
-                ), // Apply Tajawal font
+                textStyle: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
               ),
             ),
             outlinedButtonTheme: OutlinedButtonThemeData(
-              // Add style for outlined buttons
               style: OutlinedButton.styleFrom(
-                foregroundColor: const Color(0xFF29B6F6), // Updated button text color
-                side: const BorderSide(color: Color(0xFF29B6F6)), // Updated button border color
+                foregroundColor: accentBlue,
+                side: BorderSide(color: accentBlue),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(buttonBorderRadius),
                 ),
-                textStyle: GoogleFonts.tajawal(
-                  fontWeight: FontWeight.bold,
-                ), // Apply Tajawal font
+                textStyle: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
               ),
             ),
             bottomNavigationBarTheme: BottomNavigationBarThemeData(
-              backgroundColor: const Color(0xFF252525), // Updated navigation bar color
-              selectedItemColor: const Color(0xFF29B6F6), // Updated selected item color
-              unselectedItemColor: Colors.grey[600],
+              backgroundColor: darkSurface,
+              selectedItemColor: accentBlue,
+              unselectedItemColor: darkTextTertiary,
               type: BottomNavigationBarType.fixed,
               showUnselectedLabels: true,
               elevation: 0,
             ),
             chipTheme: ChipThemeData(
-              // Style for chips
-              backgroundColor: const Color(0xFF2D2D2D), // Updated chip background color
-              labelStyle: GoogleFonts.tajawal(color: Colors.white),
-              selectedColor: const Color(0xFF29B6F6), // Updated selected chip color
-              secondarySelectedColor:
-                  const Color(0xFF29B6F6), // Ensure consistency
-              checkmarkColor: Colors.black,
-              shape: StadiumBorder(side: BorderSide(color: const Color(0xFF3D3D3D))), // Updated border color
+              backgroundColor: darkCard,
+              labelStyle: GoogleFonts.tajawal(color: darkTextPrimary),
+              selectedColor: accentBlue,
+              secondarySelectedColor: accentBlue,
+              checkmarkColor: Colors.white,
+              shape: StadiumBorder(side: BorderSide(color: darkTextTertiary)),
             ),
           );
 
-          // Define Light Theme Data
+          // Define Enhanced Light Theme Data
           final lightTheme = ThemeData(
-            fontFamily: GoogleFonts.tajawal().fontFamily, // Apply Tajawal font
+            fontFamily: GoogleFonts.tajawal().fontFamily,
             brightness: Brightness.light,
             primarySwatch: Colors.blue,
-            scaffoldBackgroundColor: Colors.grey[100], // Light background
-            cardColor: Colors.white, // White cards
+            scaffoldBackgroundColor: lightBackground,
+            cardColor: lightCard,
             colorScheme: ColorScheme.fromSeed(
-              seedColor: Colors.lightBlueAccent,
+              seedColor: primaryBlue,
               brightness: Brightness.light,
-              primary:
-                  Colors.lightBlueAccent[700]!, // Darker accent for light theme
-              secondary: Colors.lightBlueAccent,
+              primary: primaryBlue,
+              secondary: accentBlue,
+              surface: lightSurface,
+              onPrimary: Colors.white,
+              onSecondary: Colors.white,
+              onSurface: lightTextPrimary,
             ),
             appBarTheme: AppBarTheme(
-              backgroundColor: Colors.white, // White app bar
-              elevation: 0, // Remove elevation in light mode too
+              backgroundColor: lightSurface,
+              elevation: 0,
               titleTextStyle: GoogleFonts.tajawal(
-                // Apply Tajawal font
-                color: Colors.black87,
+                color: lightTextPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
-              iconTheme: IconThemeData(color: Colors.grey[800]),
+              iconTheme: IconThemeData(color: lightTextPrimary),
             ),
             textTheme: GoogleFonts.tajawalTextTheme(
               ThemeData.light().textTheme,
             ).copyWith(
-              // Apply Tajawal font
-              bodyLarge: const TextStyle(color: Colors.black87),
-              bodyMedium: TextStyle(color: Colors.grey[700]),
-              titleLarge: const TextStyle(color: Colors.black87),
+              bodyLarge: TextStyle(color: lightTextPrimary),
+              bodyMedium: TextStyle(color: lightTextSecondary),
+              titleLarge: TextStyle(color: lightTextPrimary),
+              titleMedium: TextStyle(color: lightTextPrimary),
+              titleSmall: TextStyle(color: lightTextSecondary),
             ),
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: Colors.grey[200],
-              hintStyle: TextStyle(color: Colors.grey[500]),
-              labelStyle: TextStyle(color: Colors.lightBlueAccent[700]!),
+              fillColor: lightElevated,
+              hintStyle: TextStyle(color: lightTextTertiary),
+              labelStyle: TextStyle(color: primaryBlue),
               border: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
+                borderRadius: BorderRadius.circular(defaultBorderRadius),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
-                borderRadius: BorderRadius.circular(8.0),
-                borderSide: BorderSide(color: Colors.lightBlueAccent[700]!),
+                borderRadius: BorderRadius.circular(defaultBorderRadius),
+                borderSide: BorderSide(color: primaryBlue),
               ),
-              prefixIconColor: Colors.grey[600],
-              suffixIconColor: Colors.grey[600],
+              prefixIconColor: lightTextSecondary,
+              suffixIconColor: lightTextSecondary,
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlueAccent[700],
+                backgroundColor: primaryBlue,
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(buttonBorderRadius),
                 ),
                 padding: const EdgeInsets.symmetric(vertical: 14.0),
-                textStyle: GoogleFonts.tajawal(
-                  fontWeight: FontWeight.bold,
-                ), // Apply Tajawal font
+                textStyle: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
               ),
             ),
             outlinedButtonTheme: OutlinedButtonThemeData(
-              // Add style for outlined buttons
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.lightBlueAccent[700],
-                side: BorderSide(color: Colors.lightBlueAccent[700]!),
+                foregroundColor: primaryBlue,
+                side: BorderSide(color: primaryBlue),
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8.0),
+                  borderRadius: BorderRadius.circular(buttonBorderRadius),
                 ),
-                textStyle: GoogleFonts.tajawal(
-                  fontWeight: FontWeight.bold,
-                ), // Apply Tajawal font
+                textStyle: GoogleFonts.tajawal(fontWeight: FontWeight.bold),
               ),
             ),
             bottomNavigationBarTheme: BottomNavigationBarThemeData(
-              backgroundColor: Colors.white,
-              selectedItemColor: Colors.lightBlueAccent[700],
-              unselectedItemColor: Colors.grey[500],
+              backgroundColor: lightSurface,
+              selectedItemColor: primaryBlue,
+              unselectedItemColor: lightTextTertiary,
               type: BottomNavigationBarType.fixed,
               showUnselectedLabels: true,
               elevation: 0,
             ),
             chipTheme: ChipThemeData(
-              // Style for chips
-              backgroundColor: Colors.grey[200],
-              labelStyle: GoogleFonts.tajawal(color: Colors.black87),
-              selectedColor: Colors.lightBlueAccent[100],
-              secondarySelectedColor: Colors.lightBlueAccent[100],
-              checkmarkColor: Colors.black,
-              shape: StadiumBorder(side: BorderSide(color: Colors.grey[400]!)),
+              backgroundColor: lightElevated,
+              labelStyle: GoogleFonts.tajawal(color: lightTextPrimary),
+              selectedColor: primaryBlueLight,
+              secondarySelectedColor: primaryBlueLight,
+              checkmarkColor: Colors.white,
+              shape: StadiumBorder(side: BorderSide(color: lightTextTertiary)),
             ),
           );
 
@@ -690,9 +691,10 @@ class MyApp extends StatelessWidget {
             // Add theme animation duration
             builder: (context, child) {
               return AnimatedTheme(
-                data: themeProvider.themeMode == ThemeMode.dark
-                    ? darkTheme
-                    : lightTheme,
+                data:
+                    themeProvider.themeMode == ThemeMode.dark
+                        ? darkTheme
+                        : lightTheme,
                 duration: const Duration(
                   milliseconds: 300,
                 ), // Smooth animation duration
