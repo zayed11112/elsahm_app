@@ -29,8 +29,20 @@ import 'booking_requests_screen.dart'; // استيراد صفحة طلبات ا�
 const Color primarySkyBlue = Color(0xFF4FC3F7); // لون أزرق سماوي
 const Color darkHeaderColor = Color(0xFF1A2025); // لون الهيدر الداكن
 const Color lightBackgroundColor = Color(0xFFF5F7FA); // خلفية رمادية فاتحة
-const Color darkBackgroundColor = Color(0xFF121212); // خلفية داكنة
-const Color darkCardColor = Color(0xFF2C3E50); // لون البطاقة/الزر الداكن
+
+// ألوان الوضع الليلي متوافقة مع more_screen.dart
+const Color darkBackgroundColor = Color(0xFF1A1A1A); // خلفية داكنة محسنة
+const Color darkCardColor = Color(0xFF2D2D2D); // لون البطاقة/الزر الداكن محسن
+const Color darkGradientStart = Color(0xFF1565C0); // بداية التدرج الداكن
+const Color darkGradientEnd = Color(0xFF42A5F5); // نهاية التدرج الداكن
+const Color darkTextPrimary = Color(0xFFE0E0E0); // نص أساسي داكن
+const Color darkTextSecondary = Color(0xFFB0B0B0); // نص ثانوي داكن
+const Color darkIconColor = Color(0xFF81D4FA); // لون الأيقونات في الوضع الليلي
+const Color darkCardBorderColor = Color(0xFF3D3D3D); // لون حدود البطاقات في الوضع الليلي
+const Color darkHighlightColor = Color(0xFF29B6F6); // لون التمييز في الوضع الليلي
+const Color darkSurfaceColor = Color(0xFF252525); // لون خلفية العناصر في الوضع الليلي
+const Color darkPrimaryButtonColor = Color(0xFF1976D2); // لون الأزرار الرئيسية في الوضع الليلي
+
 const Color lightBlue = Color(0xFF81D4FA); // لون أزرق فاتح للمسات إضافية
 const Color accentBlue = Color(0xFF29B6F6); // لون أزرق للتأكيد
 const Color gradientStart = Color(0xFF2196F3); // بداية التدرج
@@ -238,6 +250,7 @@ class _MoreScreenState extends State<MoreScreen> {
   ) {
     final screenWidth = MediaQuery.of(context).size.width;
     const double profileImageSize = 90.0;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     // استخراج البيانات من ملف المستخدم
     final String displayName =
@@ -257,7 +270,15 @@ class _MoreScreenState extends State<MoreScreen> {
           clipper: HeaderCurveClipper(curveDepth: 65.0), // تعديل عمق المنحنى
           child: Container(
             height: 200, // زيادة ارتفاع الهيدر
-            decoration: BoxDecoration(gradient: headerGradient),
+            decoration: BoxDecoration(
+              gradient: isDarkMode
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [darkGradientStart, darkGradientEnd],
+                    )
+                  : headerGradient,
+            ),
             child: Stack(
               children: [
                 // زخارف متحركة في الخلفية
@@ -316,7 +337,7 @@ class _MoreScreenState extends State<MoreScreen> {
                           ).createShader(bounds);
                         },
                         child: Text(
-                          "أهلاً بك", // تحسين النص
+                          "مرحباً بك", // تحسين النص
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: Colors.white,
@@ -380,20 +401,20 @@ class _MoreScreenState extends State<MoreScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDarkMode ? darkSurfaceColor : Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: Colors.black.withOpacity(0.1),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
                       ],
                     ),
                     child: Icon(
-                      Icons.contact_support_outlined, // تغيير الأيقونة إلى أيقونة شكاوى مناسبة
+                      Icons.contact_support_outlined, // أيقونة شكاوى مناسبة
                       size: 30,
-                      color: accentBlue,
+                      color: isDarkMode ? darkIconColor : accentBlue,
                     ),
                   ),
                 ),
@@ -414,13 +435,13 @@ class _MoreScreenState extends State<MoreScreen> {
                                 profileImageSize + 16, // Add padding for frame
                             height: profileImageSize + 16,
                             decoration: BoxDecoration(
-                              color: Colors.white,
+                              color: isDarkMode ? darkSurfaceColor : Colors.white,
                               borderRadius: BorderRadius.circular(
                                 12.0,
                               ), // Slight rounding
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withValues(alpha: 0.15),
+                                  color: Colors.black.withOpacity(0.15),
                                   blurRadius: 10,
                                   spreadRadius: 2,
                                   offset: Offset(0, 4),
@@ -435,7 +456,7 @@ class _MoreScreenState extends State<MoreScreen> {
                                   borderRadius: BorderRadius.circular(
                                     8.0,
                                   ), // Match with outer border radius
-                                  color: Colors.grey.shade100,
+                                  color: isDarkMode ? darkCardColor : Colors.grey.shade100,
                                   image:
                                       profileImageUrl.isNotEmpty
                                           ? DecorationImage(
@@ -452,7 +473,9 @@ class _MoreScreenState extends State<MoreScreen> {
                                           child: Icon(
                                             Icons.person,
                                             size: 45,
-                                            color: accentBlue.withValues(alpha: 0.8),
+                                            color: isDarkMode 
+                                                ? darkIconColor.withOpacity(0.8)
+                                                : accentBlue.withOpacity(0.8),
                                           ),
                                         )
                                         : null,
@@ -465,7 +488,7 @@ class _MoreScreenState extends State<MoreScreen> {
                               width: profileImageSize + 16,
                               height: profileImageSize + 16,
                               decoration: BoxDecoration(
-                                color: Colors.black.withValues(alpha: 0.5),
+                                color: Colors.black.withOpacity(0.5),
                                 borderRadius: BorderRadius.circular(12.0),
                               ),
                               child: const Center(
@@ -501,11 +524,11 @@ class _MoreScreenState extends State<MoreScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(12),
                     decoration: BoxDecoration(
-                      color: Colors.white,
+                      color: isDarkMode ? darkSurfaceColor : Colors.white,
                       shape: BoxShape.circle,
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.1),
+                          color: Colors.black.withOpacity(0.1),
                           blurRadius: 8,
                           spreadRadius: 1,
                         ),
@@ -517,7 +540,7 @@ class _MoreScreenState extends State<MoreScreen> {
                         Icon(
                           Icons.notifications_none_outlined,
                           size: 30,
-                          color: accentBlue,
+                          color: isDarkMode ? darkIconColor : accentBlue,
                         ),
                         // عرض مؤشر للإشعارات غير المقروءة
                         if (unreadNotificationsCount > 0)
@@ -530,12 +553,12 @@ class _MoreScreenState extends State<MoreScreen> {
                                 color: Colors.red,
                                 shape: BoxShape.circle,
                                 border: Border.all(
-                                  color: Colors.white,
+                                  color: isDarkMode ? darkSurfaceColor : Colors.white,
                                   width: 1.5,
                                 ),
                                 boxShadow: [
                                   BoxShadow(
-                                    color: Colors.black.withValues(alpha: 0.1),
+                                    color: Colors.black.withOpacity(0.1),
                                     blurRadius: 2,
                                     spreadRadius: 0,
                                   ),
@@ -651,9 +674,6 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  // Helper for displaying detail items within the header (REMOVED - no longer used)
-  // Widget _buildHeaderDetailItem(...) { ... }
-
   // New section for user details with improved formatting
   Widget _buildUserDetailsSection(
     BuildContext context,
@@ -662,19 +682,17 @@ class _MoreScreenState extends State<MoreScreen> {
     Color cardTextColor,
   ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final detailIconColor =
-        isDarkMode ? primarySkyBlue.withValues(alpha: 0.8) : primarySkyBlue;
-    final detailLabelColor = isDarkMode ? Colors.white70 : Colors.grey[600];
-    final detailValueColor = cardTextColor;
+    final detailIconColor = isDarkMode ? darkIconColor : primarySkyBlue;
+    final detailLabelColor = isDarkMode ? darkTextSecondary : Colors.grey[600];
+    final detailValueColor = isDarkMode ? darkTextPrimary : cardTextColor;
+    final cardBackground = isDarkMode ? darkCardColor : Colors.white;
+    final dividerColor = (isDarkMode ? Colors.white : Colors.black).withOpacity(0.1);
 
     // Helper to create each detail item row
     Widget buildDetailItem(IconData icon, String label, String value) {
-      final displayValue =
-          value.isNotEmpty ? value : "غير محدد"; 
+      final displayValue = value.isNotEmpty ? value : "غير محدد"; 
       return Padding(
-        padding: const EdgeInsets.symmetric(
-          vertical: 6.0,
-        ), // Spacing between items
+        padding: const EdgeInsets.symmetric(vertical: 6.0), // Spacing between items
         child: Row(
           children: [
             Icon(icon, size: 20, color: detailIconColor),
@@ -707,14 +725,17 @@ class _MoreScreenState extends State<MoreScreen> {
 
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 30.0),
-      padding: const EdgeInsets.symmetric(horizontal: 30.0, vertical: 12.0),
+      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 16.0),
       decoration: BoxDecoration(
-        color: cardBgColor,
+        color: cardBackground,
         borderRadius: BorderRadius.circular(12.0),
+        border: isDarkMode 
+            ? Border.all(color: darkCardBorderColor, width: 1.0)
+            : null,
         boxShadow: [
           if (!isDarkMode)
             BoxShadow(
-              color: Colors.grey.withValues(alpha: 0.15),
+              color: Colors.grey.withOpacity(0.15),
               blurRadius: 8,
               offset: const Offset(0, 2),
             ),
@@ -723,30 +744,44 @@ class _MoreScreenState extends State<MoreScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Icon(
+                Icons.person_outline,
+                color: detailIconColor,
+                size: 24,
+              ),
+              Text(
+                "بيانات الحساب",
+                style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: detailValueColor,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+          Divider(color: dividerColor),
           buildDetailItem(
             Icons.verified_user_outlined,
-            "الحالة", //  Localize
+            "الحالة",
             userProfile.status,
           ),
-          Divider(
-            color: (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.1),
-          ),
+          Divider(color: dividerColor),
           buildDetailItem(
             Icons.badge_outlined,
-            "ID   ّ", //  Localize
+            "رقم الطالب",
             userProfile.studentId,
           ),
-          Divider(
-            color: (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.1),
-          ),
+          Divider(color: dividerColor),
           buildDetailItem(
             Icons.school_outlined,
-            "الكلية", //  Localize
+            "الكلية",
             userProfile.faculty,
           ),
-          Divider(
-            color: (isDarkMode ? Colors.white : Colors.black).withValues(alpha: 0.1),
-          ),
+          Divider(color: dividerColor),
           buildDetailItem(
             Icons.location_city_outlined,
             "الفرع", 
@@ -764,10 +799,11 @@ class _MoreScreenState extends State<MoreScreen> {
     Color textColor,
   ) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    final walletCardBg =
-        isDarkMode ? darkCardColor.withValues(alpha: 0.7) : Colors.white;
-    final walletTextColor = isDarkMode ? Colors.white70 : Colors.black87;
+    final walletCardBg = isDarkMode ? darkCardColor : Colors.white;
+    final walletTextColor = isDarkMode ? darkTextPrimary : Colors.black87;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final borderColor = isDarkMode ? darkCardBorderColor : primarySkyBlue.withOpacity(0.15);
+    final walletHighlightColor = isDarkMode ? darkHighlightColor : primarySkyBlue;
 
     // استخدام الرصيد الفعلي للمستخدم بدلاً من القيمة الثابتة
     String currentBalance = "0"; // قيمة افتراضية
@@ -808,58 +844,116 @@ class _MoreScreenState extends State<MoreScreen> {
               color: walletCardBg,
               borderRadius: BorderRadius.circular(18.0),
               boxShadow: [
-                if (Theme.of(context).brightness == Brightness.light)
+                if (!isDarkMode)
                   BoxShadow(
-                    color: primarySkyBlue.withValues(alpha: 0.12),
+                    color: primarySkyBlue.withOpacity(0.12),
                     blurRadius: 15,
                     offset: const Offset(0, 5),
                   ),
               ],
               border: Border.all(
-                color: primarySkyBlue.withValues(alpha: 0.15),
+                color: borderColor,
                 width: 1.5,
               ),
             ),
             child: Column(
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text(
-                      "المحفظة الاساسية", 
+                      "الرصيد المتاح",
                       style: TextStyle(
-                        color: walletTextColor.withValues(alpha: 0.8),
-                        fontSize: 15,
+                        color: walletTextColor.withOpacity(0.8),
+                        fontSize: 14,
                         fontWeight: FontWeight.w500,
                       ),
                     ),
-                    const SizedBox(width: 12),
-                    Icon(
-                      Icons.account_balance_wallet,
-                      color: primarySkyBlue,
-                      size: 24,
+                    Row(
+                      children: [
+                        Text(
+                          "المحفظة الاساسية", 
+                          style: TextStyle(
+                            color: walletTextColor.withOpacity(0.8),
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Icon(
+                          Icons.account_balance_wallet,
+                          color: walletHighlightColor,
+                          size: 22,
+                        ),
+                      ],
                     ),
                   ],
+                ),
+                const SizedBox(height: 20),
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.symmetric(vertical: 25, horizontal: 20),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? darkSurfaceColor : Colors.blue.shade50.withOpacity(0.7),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "جنيه مصري",
+                          style: TextStyle(
+                            color: walletTextColor,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          currentBalance,
+                          style: TextStyle(
+                            color: walletHighlightColor,
+                            fontSize: 24,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(
-                      "جنيه", // Localize currency
-                      style: TextStyle(
-                        color: walletTextColor,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                    Container(
+                      decoration: BoxDecoration(
+                        color: isDarkMode ? darkPrimaryButtonColor : walletHighlightColor,
+                        borderRadius: BorderRadius.circular(8),
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    Text(
-                      currentBalance,
-                      style: TextStyle(
-                        color: primarySkyBlue,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+                      child: TextButton.icon(
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (context) => const WalletScreen()),
+                          );
+                        },
+                        icon: Icon(
+                          Icons.add_circle_outline,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        label: Text(
+                          "شحن محفظتي",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 13,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        style: TextButton.styleFrom(
+                          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                        ),
                       ),
                     ),
                   ],
@@ -879,34 +973,73 @@ class _MoreScreenState extends State<MoreScreen> {
     Color highlightColor,
     bool isLoggedIn,
   ) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
     // قائمة جميع الإجراءات
     final List<Map<String, dynamic>> actions = [
-      {'icon': Icons.wallet, 'text': 'شحن محفظتي', 'highlight': true, 'requiresAuth': true},
-      {'icon': Icons.favorite, 'text': 'المفضلة', 'highlight': false, 'requiresAuth': true},
-      {'icon': Icons.place, 'text': 'الاماكن المتاحة', 'highlight': false, 'requiresAuth': false},
-      {'icon': Icons.category, 'text': ' الاقسام', 'highlight': false, 'requiresAuth': false},
-      {'icon': Icons.support_agent, 'text': 'الشكاوى', 'highlight': false, 'requiresAuth': true},
-      {'icon': Icons.request_page, 'text': 'طلبات الدفع', 'highlight': false, 'requiresAuth': true},
-      {'icon': Icons.bookmark_outlined, 'text': 'طلبات الحجز', 'highlight': false, 'requiresAuth': true},
-      {'icon': Icons.groups, 'text': 'جروبات', 'highlight': false, 'requiresAuth': false},
-      {'icon': Icons.settings, 'text': 'الإعدادات', 'highlight': false, 'requiresAuth': false},
-      {'icon': Icons.info, 'text': 'عن السهم', 'highlight': false, 'requiresAuth': false},
-      {'icon': Icons.key, 'text': 'تغير كلمة المرور', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.credit_card_rounded, 'text': 'شحن محفظتي', 'highlight': true, 'requiresAuth': true},
+      {'icon': Icons.favorite_border, 'text': 'المفضلة', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.place_outlined, 'text': 'الاماكن المتاحة', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.category_outlined, 'text': 'الاقسام', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.support_agent_outlined, 'text': 'الشكاوى', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.request_page_outlined, 'text': 'طلبات الدفع', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.bookmark_outline, 'text': 'طلبات الحجز', 'highlight': false, 'requiresAuth': true},
+      {'icon': Icons.groups_outlined, 'text': 'جروبات', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.settings_outlined, 'text': 'الإعدادات', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.info_outline, 'text': 'عن السهم', 'highlight': false, 'requiresAuth': false},
+      {'icon': Icons.vpn_key_outlined, 'text': 'تغير كلمة المرور', 'highlight': false, 'requiresAuth': true},
       {'icon': Icons.phone_outlined, 'text': 'اتصل بنا', 'highlight': false, 'requiresAuth': false},
     ];
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8.0, bottom: 12.0, top: 4.0),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.apps_outlined,
+                  size: 20,
+                  color: isDarkMode ? darkIconColor : primarySkyBlue,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  "الخدمات المتاحة",
+                  style: TextStyle(
+                    color: isDarkMode ? darkTextPrimary : Colors.black87,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? darkSurfaceColor : Colors.blue.shade50,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    "${actions.length} خدمة",
+                    style: TextStyle(
+                      color: isDarkMode ? darkIconColor : primarySkyBlue,
+                      fontSize: 12,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
-              crossAxisSpacing: 12.0,
-              mainAxisSpacing: 12.0,
-              childAspectRatio: 2.6,
+              crossAxisSpacing: 10.0,
+              mainAxisSpacing: 10.0,
+              childAspectRatio: 2.8,
             ),
             itemCount: actions.length,
             itemBuilder: (context, index) {
@@ -920,13 +1053,15 @@ class _MoreScreenState extends State<MoreScreen> {
                   boxShadow: [
                     if (isHighlighted)
                       BoxShadow(
-                        color: primarySkyBlue.withValues(alpha: 0.3),
+                        color: isDarkMode
+                            ? darkHighlightColor.withOpacity(0.3)
+                            : primarySkyBlue.withOpacity(0.3),
                         blurRadius: 10,
                         offset: const Offset(0, 4),
                       )
-                    else if (Theme.of(context).brightness == Brightness.light)
+                    else if (!isDarkMode)
                       BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.05),
+                        color: Colors.black.withOpacity(0.05),
                         blurRadius: 4,
                         offset: const Offset(0, 2),
                       ),
@@ -936,8 +1071,10 @@ class _MoreScreenState extends State<MoreScreen> {
                   context,
                   action['icon'] as IconData,
                   action['text'] as String,
-                  isHighlighted ? primarySkyBlue : buttonColor,
-                  isHighlighted ? Colors.white : textColor,
+                  isHighlighted 
+                      ? (isDarkMode ? darkHighlightColor : primarySkyBlue)
+                      : (isDarkMode ? darkCardColor : buttonColor),
+                  isHighlighted ? Colors.white : (isDarkMode ? darkTextPrimary : textColor),
                   isHighlighted,
                   requiresAuth,
                   isLoggedIn,
@@ -972,6 +1109,7 @@ class _MoreScreenState extends State<MoreScreen> {
     
     // التحقق من حالة تسجيل الدخول وما إذا كان الإجراء يتطلب المصادقة
     final bool canAccess = !requiresAuth || isLoggedIn;
+    final borderColor = isDarkMode ? darkCardBorderColor : primarySkyBlue.withOpacity(0.1);
     
     return ElevatedButton(
       onPressed: () async {
@@ -1036,7 +1174,7 @@ class _MoreScreenState extends State<MoreScreen> {
             context,
             MaterialPageRoute(builder: (context) => const GroupsScreen()),
           );
-        } else if (text == ' الاقسام') {
+        } else if (text == 'الاقسام') {
           Navigator.push(
             context,
             MaterialPageRoute(
@@ -1076,17 +1214,14 @@ class _MoreScreenState extends State<MoreScreen> {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12.0),
           side: BorderSide(
-            color:
-                isHighlighted
-                    ? Colors.transparent
-                    : (isDarkMode
-                        ? Colors.transparent
-                        : primarySkyBlue.withValues(alpha: 0.1)),
+            color: isHighlighted
+                ? Colors.transparent
+                : (isDarkMode ? borderColor : borderColor),
             width: 1.0,
           ),
         ),
         padding: const EdgeInsets.symmetric(horizontal: 14.0, vertical: 10.0),
-        elevation: 0,
+        elevation: isDarkMode ? 0 : 1,
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -1096,19 +1231,29 @@ class _MoreScreenState extends State<MoreScreen> {
               text,
               textAlign: TextAlign.right,
               style: TextStyle(
-                fontSize: 14,
+                fontSize: 13,
                 fontWeight: isHighlighted ? FontWeight.w600 : FontWeight.w500,
                 color: canAccess ? contentColor : contentColor.withOpacity(0.7),
               ),
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          const SizedBox(width: 10),
-          Icon(icon, size: 22, color: canAccess ? null : contentColor.withOpacity(0.7)),
+          const SizedBox(width: 8),
+          Icon(
+            icon, 
+            size: 20, 
+            color: canAccess 
+                ? (isHighlighted ? Colors.white : (isDarkMode ? darkIconColor : primarySkyBlue))
+                : contentColor.withOpacity(0.5)
+          ),
           if (requiresAuth && !isLoggedIn)
             Padding(
               padding: const EdgeInsets.only(right: 4.0),
-              child: Icon(Icons.lock_outline, size: 14, color: contentColor.withOpacity(0.5)),
+              child: Icon(
+                Icons.lock_outline, 
+                size: 14, 
+                color: contentColor.withOpacity(0.5)
+              ),
             ),
         ],
       ),
@@ -1117,21 +1262,24 @@ class _MoreScreenState extends State<MoreScreen> {
 
   // إضافة زر تسجيل الدخول للمستخدمين غير المسجلين
   Widget _buildLoginButton(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final loginButtonColor = isDarkMode ? darkHighlightColor : accentBlue;
+    final shadowColor = isDarkMode ? darkHighlightColor.withOpacity(0.3) : accentBlue.withOpacity(0.3);
+    
     return Container(
       width: double.infinity,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(15.0),
         gradient: LinearGradient(
-          colors: [
-            accentBlue.withValues(alpha: 0.8),
-            accentBlue,
-          ],
+          colors: isDarkMode
+              ? [darkGradientStart, darkGradientEnd]
+              : [accentBlue.withOpacity(0.8), accentBlue],
           begin: Alignment.centerRight,
           end: Alignment.centerLeft,
         ),
         boxShadow: [
           BoxShadow(
-            color: accentBlue.withValues(alpha: 0.3),
+            color: shadowColor,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1158,7 +1306,7 @@ class _MoreScreenState extends State<MoreScreen> {
                 Container(
                   padding: const EdgeInsets.all(8.0),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -1191,274 +1339,15 @@ class _MoreScreenState extends State<MoreScreen> {
     );
   }
 
-  // إظهار مربع حوار تسجيل الدخول المطلوب
-  void _showLoginRequiredDialog(BuildContext context) {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20.0),
-          ),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(20.0),
-              color: Colors.white,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Icon for attention
-                Container(
-                  width: 70,
-                  height: 70,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFFFFD700),
-                  ),
-                  child: Icon(
-                    Icons.priority_high,
-                    color: Colors.white,
-                    size: 40,
-                  ),
-                ),
-                const SizedBox(height: 16),
-                // Title
-                const Text(
-                  "تسجيل الدخول مطلوب",
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.blue,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                // Message
-                const Text(
-                  "يجب عليك تسجيل الدخول أو إنشاء حساب للوصول إلى المحفظة وإدارة رصيدك",
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.black87,
-                  ),
-                ),
-                const SizedBox(height: 20),
-                // Buttons
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: [
-                    // Cancel button
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
-                      style: TextButton.styleFrom(
-                        foregroundColor: Colors.grey,
-                      ),
-                      child: const Text("إلغاء"),
-                    ),
-                    // Login button
-                    ElevatedButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (_) => const LoginScreen()),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: accentBlue,
-                        foregroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(30),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
-                      ),
-                      child: const Text("تسجيل الدخول"),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
-  }
-
-  // Add a guest header section for non-logged in users
-  Widget _buildGuestHeaderSection(BuildContext context, Gradient headerGradient) {
-    return Stack(
-      clipBehavior: Clip.none,
-      alignment: Alignment.topCenter,
-      children: [
-        // الخلفية المنحنية مع تدرج لوني
-        ClipPath(
-          clipper: HeaderCurveClipper(curveDepth: 65.0),
-          child: Container(
-            height: 200,
-            decoration: BoxDecoration(gradient: headerGradient),
-            child: Stack(
-              children: [
-                // زخارف متحركة في الخلفية
-                Positioned.fill(
-                  child: CustomPaint(painter: HeaderPatternPainter()),
-                ),
-
-                // دوائر زخرفية متوهجة
-                Positioned(
-                  top: -30,
-                  left: -30,
-                  child: Container(
-                    width: 120,
-                    height: 120,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withAlpha(30),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.white.withAlpha(15),
-                          blurRadius: 20,
-                          spreadRadius: 10,
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: 20,
-                  right: -20,
-                  child: Container(
-                    width: 100,
-                    height: 100,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.white.withAlpha(20),
-                    ),
-                  ),
-                ),
-
-                // نص الترحيب للزائر
-                Positioned(
-                  top: 60,
-                  left: 0,
-                  right: 0,
-                  child: Column(
-                    children: [
-                      // تأثير توهج خلف النص
-                      ShaderMask(
-                        shaderCallback: (Rect bounds) {
-                          return RadialGradient(
-                            center: Alignment.center,
-                            radius: 1.0,
-                            colors: [Colors.white, Colors.white.withAlpha(200)],
-                            tileMode: TileMode.mirror,
-                          ).createShader(bounds);
-                        },
-                        child: Text(
-                          "مرحباً بك في السهم",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: 25,
-                            fontWeight: FontWeight.w500,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black.withAlpha(50),
-                                blurRadius: 5,
-                                offset: Offset(0, 2),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      // زر تسجيل الدخول
-                      ElevatedButton.icon(
-                        icon: const Icon(Icons.login, color: Colors.white),
-                        label: const Text(
-                          "تسجيل الدخول",
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (_) => const LoginScreen()),
-                          );
-                        },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Colors.white.withOpacity(0.3),
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 30,
-                            vertical: 10,
-                          ),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            side: BorderSide(color: Colors.white, width: 1),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        
-        // شعار التطبيق في المنتصف
-        Positioned(
-          top: 148, // Moved lower on the screen
-          child: Container(
-            width: 100,
-            height: 100,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.15),
-                  blurRadius: 10,
-                  spreadRadius: 2,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            padding: EdgeInsets.all(10),
-            child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
-              child: CachedNetworkImage(
-                imageUrl: 'https://i.ibb.co/TDGcXVGY/sainai.jpg',
-                fit: BoxFit.cover,
-                placeholder: (context, url) => Center(
-                  child: CircularProgressIndicator(
-                    color: accentBlue,
-                    strokeWidth: 2,
-                  ),
-                ),
-                errorWidget: (context, url, error) => Container(
-                  color: accentBlue,
-                  child: Icon(
-                    Icons.home_work_outlined,
-                    size: 50,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  // New method for the logout button
+  // إضافة زر تسجيل الدخول للمستخدمين غير المسجلين
   Widget _buildLogoutButton(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
+    final logoutGradientStart = isDarkMode ? Color(0xFF7F0000) : Colors.redAccent.shade200;
+    final logoutGradientEnd = isDarkMode ? Color(0xFFC62828) : Colors.redAccent.shade400;
+    final shadowColor = isDarkMode 
+        ? Colors.red.shade900.withOpacity(0.3) 
+        : Colors.redAccent.withOpacity(0.3);
     
     return Container(
       width: double.infinity,
@@ -1466,15 +1355,15 @@ class _MoreScreenState extends State<MoreScreen> {
         borderRadius: BorderRadius.circular(15.0),
         gradient: LinearGradient(
           colors: [
-            Colors.redAccent.shade200,
-            Colors.redAccent.shade400,
+            logoutGradientStart,
+            logoutGradientEnd,
           ],
           begin: Alignment.centerRight,
           end: Alignment.centerLeft,
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.redAccent.withValues(alpha: 0.3),
+            color: shadowColor,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -1505,7 +1394,7 @@ class _MoreScreenState extends State<MoreScreen> {
                 Container(
                   padding: const EdgeInsets.all(8.0),
                   decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
+                    color: Colors.white.withOpacity(0.2),
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
@@ -1541,6 +1430,10 @@ class _MoreScreenState extends State<MoreScreen> {
   // Add logout confirmation dialog
   Future<bool?> _showLogoutConfirmationDialog(BuildContext context) async {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final dialogBgColor = isDarkMode ? darkSurfaceColor : Colors.white;
+    final textColor = isDarkMode ? darkTextPrimary : Colors.black87;
+    final cancelButtonColor = isDarkMode ? darkCardColor : Colors.grey.shade200;
+    final cancelTextColor = isDarkMode ? darkTextSecondary : Colors.grey.shade700;
     
     return showDialog<bool>(
       context: context,
@@ -1550,7 +1443,7 @@ class _MoreScreenState extends State<MoreScreen> {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20),
           ),
-          backgroundColor: isDarkMode ? const Color(0xFF222831) : Colors.white,
+          backgroundColor: dialogBgColor,
           elevation: 24,
           title: Row(
             children: [
@@ -1560,18 +1453,28 @@ class _MoreScreenState extends State<MoreScreen> {
                 size: 28,
               ),
               const SizedBox(width: 10),
-              const Text('تأكيد تسجيل الخروج'),
+              Text(
+                'تأكيد تسجيل الخروج',
+                style: TextStyle(
+                  color: textColor,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
             ],
           ),
           content: Text(
             'هل أنت متأكد من أنك تريد تسجيل الخروج؟',
-            style: TextStyle(fontSize: 16),
+            style: TextStyle(
+              fontSize: 16,
+              color: textColor.withOpacity(0.9),
+            ),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.of(context).pop(false),
               style: TextButton.styleFrom(
-                foregroundColor: Theme.of(context).colorScheme.secondary,
+                foregroundColor: cancelTextColor,
+                backgroundColor: cancelButtonColor,
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
@@ -1686,6 +1589,288 @@ class _MoreScreenState extends State<MoreScreen> {
                 ),
               ),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  // Add a guest header section for non-logged in users
+  Widget _buildGuestHeaderSection(BuildContext context, Gradient headerGradient) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    
+    return Stack(
+      clipBehavior: Clip.none,
+      alignment: Alignment.topCenter,
+      children: [
+        // الخلفية المنحنية مع تدرج لوني
+        ClipPath(
+          clipper: HeaderCurveClipper(curveDepth: 65.0),
+          child: Container(
+            height: 200,
+            decoration: BoxDecoration(
+              gradient: isDarkMode
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [darkGradientStart, darkGradientEnd],
+                    )
+                  : headerGradient,
+            ),
+            child: Stack(
+              children: [
+                // زخارف متحركة في الخلفية
+                Positioned.fill(
+                  child: CustomPaint(painter: HeaderPatternPainter()),
+                ),
+
+                // دوائر زخرفية متوهجة
+                Positioned(
+                  top: -30,
+                  left: -30,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.3),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.white.withOpacity(0.15),
+                          blurRadius: 20,
+                          spreadRadius: 10,
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 20,
+                  right: -20,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.white.withOpacity(0.2),
+                    ),
+                  ),
+                ),
+
+                // نص الترحيب للزائر
+                Positioned(
+                  top: 60,
+                  left: 0,
+                  right: 0,
+                  child: Column(
+                    children: [
+                      // تأثير توهج خلف النص
+                      ShaderMask(
+                        shaderCallback: (Rect bounds) {
+                          return RadialGradient(
+                            center: Alignment.center,
+                            radius: 1.0,
+                            colors: [Colors.white, Colors.white.withOpacity(0.8)],
+                            tileMode: TileMode.mirror,
+                          ).createShader(bounds);
+                        },
+                        child: Text(
+                          "مرحباً بك في السهم",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 25,
+                            fontWeight: FontWeight.w500,
+                            shadows: [
+                              Shadow(
+                                color: Colors.black.withOpacity(0.5),
+                                blurRadius: 5,
+                                offset: Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      // زر تسجيل الدخول
+                      ElevatedButton.icon(
+                        icon: const Icon(Icons.login, color: Colors.white),
+                        label: const Text(
+                          "تسجيل الدخول",
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(builder: (_) => const LoginScreen()),
+                          );
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Colors.white.withOpacity(0.3),
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 30,
+                            vertical: 10,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                            side: BorderSide(color: Colors.white, width: 1),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+        
+        // شعار التطبيق في المنتصف
+        Positioned(
+          top: 148, // Moved lower on the screen
+          child: Container(
+            width: 100,
+            height: 100,
+            decoration: BoxDecoration(
+              color: isDarkMode ? darkSurfaceColor : Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 10,
+                  spreadRadius: 2,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            padding: EdgeInsets.all(10),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(8),
+              child: CachedNetworkImage(
+                imageUrl: 'https://i.ibb.co/TDGcXVGY/sainai.jpg',
+                fit: BoxFit.cover,
+                placeholder: (context, url) => Center(
+                  child: CircularProgressIndicator(
+                    color: isDarkMode ? darkIconColor : accentBlue,
+                    strokeWidth: 2,
+                  ),
+                ),
+                errorWidget: (context, url, error) => Container(
+                  color: isDarkMode ? darkHighlightColor : accentBlue,
+                  child: Icon(
+                    Icons.home_work_outlined,
+                    size: 50,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // إظهار مربع حوار تسجيل الدخول المطلوب
+  void _showLoginRequiredDialog(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final dialogBgColor = isDarkMode ? darkSurfaceColor : Colors.white;
+    final titleColor = isDarkMode ? darkTextPrimary : Colors.blue;
+    final textColor = isDarkMode ? darkTextSecondary : Colors.black87;
+    final iconBgColor = isDarkMode ? darkHighlightColor : const Color(0xFFFFD700);
+    final buttonColor = isDarkMode ? darkHighlightColor : accentBlue;
+    
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return Dialog(
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20.0),
+          ),
+          backgroundColor: dialogBgColor,
+          child: Container(
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20.0),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Icon for attention
+                Container(
+                  width: 70,
+                  height: 70,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: iconBgColor,
+                  ),
+                  child: Icon(
+                    Icons.priority_high,
+                    color: Colors.white,
+                    size: 40,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Title
+                Text(
+                  "تسجيل الدخول مطلوب",
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: titleColor,
+                  ),
+                ),
+                const SizedBox(height: 10),
+                // Message
+                Text(
+                  "يجب عليك تسجيل الدخول أو إنشاء حساب للوصول إلى المحفظة وإدارة رصيدك",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14,
+                    color: textColor,
+                  ),
+                ),
+                const SizedBox(height: 20),
+                // Buttons
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                  children: [
+                    // Cancel button
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                      style: TextButton.styleFrom(
+                        foregroundColor: isDarkMode ? darkTextSecondary : Colors.grey,
+                      ),
+                      child: const Text("إلغاء"),
+                    ),
+                    // Login button
+                    ElevatedButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(builder: (_) => const LoginScreen()),
+                        );
+                      },
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: buttonColor,
+                        foregroundColor: Colors.white,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(30),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 10),
+                      ),
+                      child: const Text("تسجيل الدخول"),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         );
       },

@@ -490,16 +490,18 @@ class MyApp extends StatelessWidget {
             fontFamily: GoogleFonts.tajawal().fontFamily, // Apply Tajawal font
             brightness: Brightness.dark,
             primarySwatch: Colors.blue,
-            scaffoldBackgroundColor: const Color(0xFF121212),
-            cardColor: const Color(0xFF1E1E1E),
+            scaffoldBackgroundColor: const Color(0xFF1A1A1A), // Updated dark background
+            cardColor: const Color(0xFF2D2D2D), // Updated dark card color
             colorScheme: ColorScheme.fromSeed(
               seedColor: Colors.lightBlueAccent,
               brightness: Brightness.dark,
-              primary: Colors.lightBlueAccent,
-              secondary: Colors.lightBlueAccent[100]!,
+              primary: const Color(0xFF1976D2), // Updated primary color for dark theme
+              secondary: const Color(0xFF42A5F5),
+              surface: const Color(0xFF252525), // Added surface color
+              background: const Color(0xFF1A1A1A),
             ),
             appBarTheme: AppBarTheme(
-              backgroundColor: const Color(0xFF1E1E1E),
+              backgroundColor: const Color(0xFF252525), // Updated app bar color
               elevation: 0, // Ensure no elevation in dark mode
               titleTextStyle: GoogleFonts.tajawal(
                 // Apply Tajawal font
@@ -513,30 +515,30 @@ class MyApp extends StatelessWidget {
               ThemeData.dark().textTheme,
             ).copyWith(
               // Apply Tajawal font
-              bodyLarge: const TextStyle(color: Colors.white),
-              bodyMedium: const TextStyle(color: Colors.white70),
-              titleLarge: const TextStyle(color: Colors.white),
+              bodyLarge: const TextStyle(color: Color(0xFFE0E0E0)), // Updated text color
+              bodyMedium: const TextStyle(color: Color(0xFFB0B0B0)), // Updated secondary text color
+              titleLarge: const TextStyle(color: Color(0xFFE0E0E0)),
             ),
             inputDecorationTheme: InputDecorationTheme(
               filled: true,
-              fillColor: Colors.grey[800],
+              fillColor: const Color(0xFF2D2D2D), // Updated input field color
               hintStyle: TextStyle(color: Colors.grey[500]),
-              labelStyle: const TextStyle(color: Colors.lightBlueAccent),
+              labelStyle: const TextStyle(color: Color(0xFF81D4FA)), // Updated label color
               border: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.0),
                 borderSide: BorderSide.none,
               ),
               focusedBorder: OutlineInputBorder(
                 borderRadius: BorderRadius.circular(8.0),
-                borderSide: const BorderSide(color: Colors.lightBlueAccent),
+                borderSide: const BorderSide(color: Color(0xFF29B6F6)), // Updated border color
               ),
-              prefixIconColor: Colors.grey[400],
-              suffixIconColor: Colors.grey[400],
+              prefixIconColor: const Color(0xFF81D4FA), // Updated icon color
+              suffixIconColor: const Color(0xFF81D4FA), // Updated icon color
             ),
             elevatedButtonTheme: ElevatedButtonThemeData(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.lightBlueAccent,
-                foregroundColor: Colors.black,
+                backgroundColor: const Color(0xFF1976D2), // Updated button color
+                foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
@@ -549,8 +551,8 @@ class MyApp extends StatelessWidget {
             outlinedButtonTheme: OutlinedButtonThemeData(
               // Add style for outlined buttons
               style: OutlinedButton.styleFrom(
-                foregroundColor: Colors.lightBlueAccent,
-                side: const BorderSide(color: Colors.lightBlueAccent),
+                foregroundColor: const Color(0xFF29B6F6), // Updated button text color
+                side: const BorderSide(color: Color(0xFF29B6F6)), // Updated button border color
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8.0),
                 ),
@@ -560,8 +562,8 @@ class MyApp extends StatelessWidget {
               ),
             ),
             bottomNavigationBarTheme: BottomNavigationBarThemeData(
-              backgroundColor: const Color(0xFF1E1E1E),
-              selectedItemColor: Colors.lightBlueAccent,
+              backgroundColor: const Color(0xFF252525), // Updated navigation bar color
+              selectedItemColor: const Color(0xFF29B6F6), // Updated selected item color
               unselectedItemColor: Colors.grey[600],
               type: BottomNavigationBarType.fixed,
               showUnselectedLabels: true,
@@ -569,13 +571,13 @@ class MyApp extends StatelessWidget {
             ),
             chipTheme: ChipThemeData(
               // Style for chips
-              backgroundColor: Colors.grey[800],
+              backgroundColor: const Color(0xFF2D2D2D), // Updated chip background color
               labelStyle: GoogleFonts.tajawal(color: Colors.white),
-              selectedColor: Colors.lightBlueAccent,
+              selectedColor: const Color(0xFF29B6F6), // Updated selected chip color
               secondarySelectedColor:
-                  Colors.lightBlueAccent, // Ensure consistency
+                  const Color(0xFF29B6F6), // Ensure consistency
               checkmarkColor: Colors.black,
-              shape: StadiumBorder(side: BorderSide(color: Colors.grey[700]!)),
+              shape: StadiumBorder(side: BorderSide(color: const Color(0xFF3D3D3D))), // Updated border color
             ),
           );
 
