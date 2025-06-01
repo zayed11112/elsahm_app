@@ -4,12 +4,16 @@ import 'package:provider/provider.dart';
 import '../models/user_profile.dart';
 import '../services/firestore_service.dart';
 import '../providers/auth_provider.dart'; // Needed to get UID
+import '../constants/theme.dart';
 import 'package:image_picker/image_picker.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:logging/logging.dart';
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class EditProfileScreen extends StatefulWidget {
   final UserProfile userProfile;
@@ -254,7 +258,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     color: Colors.black.withAlpha(204),
                     child: Center(
                       child: Hero(
-                        tag: 'profileImage',
+                        tag: 'profile_image_view',
                         child: CachedNetworkImage(
                           imageUrl: imageUrl,
                           fit: BoxFit.contain,
@@ -355,7 +359,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        Navigator.pop(context);
+        
+        // Add a small delay to show the success message before popping
+        await Future.delayed(const Duration(milliseconds: 800));
+        
+        // Use Navigator.pop with animated page transition
+        if (mounted) {
+          Navigator.of(context).pop();
+        }
       } catch (e) {
          _logger.severe("Error saving profile: $e");
          
@@ -376,344 +387,176 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // أزيل المتغير المحلي غير المستخدم final theme = Theme.of(context);
-    // Define colors for better design
-    final Color primaryColor = Theme.of(context).primaryColor;
-    final Color accentColor = Theme.of(context).colorScheme.secondary;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    // اكتشاف ما إذا كان الوضع الليلي مفعلا
-    final bool isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    // Define colors based on theme
+    final backgroundColor = isDarkMode ? darkBackground : Colors.grey[100];
+    final cardColor = isDarkMode ? darkCard : Colors.white;
+    final textPrimaryColor = isDarkMode ? darkTextPrimary : Colors.black87;
+    final textSecondaryColor = isDarkMode ? darkTextSecondary : Colors.grey.shade600;
+    final iconColor = isDarkMode ? skyBlue : const Color(0xFF1976d3);
+    final cardBorderColor = isDarkMode ? darkCardColor : Colors.transparent;
+    final accentColor = const Color(0xFF1976d3);
+    final sectionHeaderBgColor = isDarkMode ? darkSurface : const Color(0xFFE3F2FD);
     
-    // ألوان متكيفة بناءً على وضع الشاشة
-    final Color backgroundColor = isDarkMode ? const Color(0xFF121212) : Theme.of(context).scaffoldBackgroundColor;
-    final Color cardBgColor = isDarkMode ? const Color(0xFF1E1E1E) : Colors.white;
-    final Color textColor = isDarkMode ? Colors.white : Colors.black87;
-    final Color fieldBgColor = isDarkMode ? const Color(0xFF2C2C2C) : Colors.grey.shade50;
-    final Color borderColor = isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300;
-    final Color labelColor = isDarkMode ? Colors.blue.shade200 : primaryColor;
-    final Color iconColor = isDarkMode ? Colors.blue.shade200 : primaryColor;
-
-    return Scaffold(
-      backgroundColor: backgroundColor,
-      appBar: AppBar(
-        title: Text(
-          'تعديل الملف الشخصي',
-          style: TextStyle(color: isDarkMode ? Colors.white : Colors.white),
-        ),
-        centerTitle: true,
-        elevation: 0,
-        backgroundColor: isDarkMode ? const Color(0xFF1A1A2E) : null,
-        flexibleSpace: !isDarkMode ? Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [primaryColor, accentColor],
+    return WillPopScope(
+      onWillPop: () async {
+        // Custom back navigation with page transition
+        Navigator.of(context).pop();
+        return false; // We handled the back button
+      },
+      child: Scaffold(
+        backgroundColor: backgroundColor,
+        appBar: AppBar(
+          backgroundColor: const Color(0xFF1976d3),
+          title: const Text(
+            'تعديل الملف الشخصي',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
             ),
           ),
-        ) : null,
-        actions: [
-          IconButton(
-            icon: _isLoading 
-                ? const Text(
-                    "ثانية واحدة",
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: Colors.white,
-                    ),
-                  )
-                : const Icon(Icons.save, color: Colors.white),
-            tooltip: 'حفظ',
-            onPressed: _isLoading ? null : _saveProfile,
+          centerTitle: true,
+          leading: IconButton(
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+            onPressed: () => Navigator.of(context).pop(),
           ),
-        ],
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          child: Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Profile section header
-                  _buildSectionHeader(
-                    title: 'المعلومات الشخصية',
-                    icon: Icons.person,
-                    color: labelColor,
-                  ),
-                  Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.only(bottom: 24),
-                    color: cardBgColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: isDarkMode ? Colors.grey.shade800 : Colors.transparent,
-                        width: isDarkMode ? 1 : 0,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          // صورة المستخدم في الأعلى
-                          Center(
-                            child: Stack(
+          actions: [
+            IconButton(
+              icon: const Icon(Icons.save_outlined, color: Colors.white),
+              onPressed: _isLoading ? null : _saveProfile,
+            ),
+          ],
+        ),
+        body: SafeArea(
+          child: SingleChildScrollView(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    // Personal Information Section
+                    _buildSectionCard(
+                      title: 'المعلومات الشخصية',
+                      icon: Icons.person,
+                      isDarkMode: isDarkMode,
+                      cardColor: cardColor,
+                      textColor: textPrimaryColor,
+                      iconColor: iconColor,
+                      headerBgColor: sectionHeaderBgColor,
+                      borderColor: cardBorderColor,
+                      children: [
+                        _buildProfileImageSection(isDarkMode, iconColor),
+                        const SizedBox(height: 10),
+                        Center(
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? darkSurface : const Color(0xFFE3F2FD),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: accentColor.withOpacity(0.3)),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
-                                // صورة المستخدم
-                                GestureDetector(
-                                  onTap: () => _viewProfileImage(context, _profileImageUrl),
-                                  child: Hero(
-                                    tag: 'profileImage',
-                                    child: Container(
-                                      width: 120,
-                                      height: 120,
-                                      decoration: BoxDecoration(
-                                        color: fieldBgColor,
-                                        borderRadius: BorderRadius.circular(10),
-                                        border: Border.all(
-                                          color: _isUploadingImage ? labelColor : borderColor,
-                                          width: 3,
-                                        ),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Colors.black.withAlpha(26),
-                                            blurRadius: 8,
-                                            offset: Offset(0, 3),
-                                          ),
-                                        ],
-                                      ),
-                                      child: _isUploadingImage
-                                        ? Center(
-                                            child: CircularProgressIndicator(
-                                              valueColor: AlwaysStoppedAnimation<Color>(labelColor),
-                                            ),
-                                          )
-                                        : ClipRRect(
-                                            borderRadius: BorderRadius.circular(7),
-                                            child: _profileImageUrl.isNotEmpty
-                                              ? Image.network(
-                                                  _profileImageUrl,
-                                                  fit: BoxFit.cover,
-                                                  errorBuilder: (context, error, stackTrace) {
-                                                    return Icon(
-                                                      Icons.account_circle,
-                                                      size: 80,
-                                                      color: iconColor.withAlpha(179),
-                                                    );
-                                                  },
-                                                )
-                                              : Icon(
-                                                  Icons.account_circle,
-                                                  size: 80,
-                                                  color: iconColor.withAlpha(179),
-                                                ),
-                                          ),
-                                    ),
+                                Icon(
+                                  Icons.info_outline,
+                                  size: 18,
+                                  color: iconColor,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  "انقر علي أيقونة الكاميرا لتغيير الصورة",
+                                  style: TextStyle(
+                                    color: iconColor,
+                                    fontSize: 13,
                                   ),
                                 ),
                               ],
                             ),
                           ),
-                          const SizedBox(height: 12),
-                          
-                          // زر تغيير الصورة
-                          ElevatedButton.icon(
-                            onPressed: _isUploadingImage ? null : _pickAndUploadImage,
-                            icon: Icon(Icons.camera_alt, size: 16),
-                            label: Text("تغيير الصورة"),
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: isDarkMode ? Colors.blue.shade600 : primaryColor,
-                              foregroundColor: Colors.white,
-                              textStyle: TextStyle(fontSize: 14),
-                              padding: EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 6),
-                          
-                          // نص توضيحي
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            child: Text(
-                              "انقر على الزر لتغيير الصورة الشخصية",
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
-                                fontStyle: FontStyle.italic,
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          
-                          // حقول المعلومات الشخصية
-                          _buildTextFormField(
-                            controller: _nameController,
-                            labelText: 'الاسم الكامل',
-                            icon: Icons.person_outline,
-                            isDarkMode: isDarkMode,
-                            fieldBgColor: fieldBgColor,
-                            borderColor: borderColor,
-                            textColor: textColor,
-                            labelColor: labelColor,
-                            iconColor: iconColor,
-                            maxLength: 40,
-                            validator: (value) => (value == null || value.isEmpty) 
-                                ? 'الرجاء إدخال الاسم' : null,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildDropdownFormField(
-                            value: _selectedStatus,
-                            items: _statusOptions,
-                            labelText: 'الحالة',
-                            hint: 'اختر الحالة',
-                            icon: Icons.verified_user_outlined,
-                            isDarkMode: isDarkMode,
-                            fieldBgColor: fieldBgColor,
-                            borderColor: borderColor,
-                            textColor: textColor,
-                            labelColor: labelColor,
-                            iconColor: iconColor,
-                            onChanged: (value) => setState(() => _selectedStatus = value),
-                            validator: (value) => (value == null) ? 'الرجاء اختيار الحالة' : null,
-                          ),
-                          const SizedBox(height: 16),
-                          _buildTextFormField(
-                            controller: _studentIdController,
-                            labelText: '(ID) الرقم التعريفي  ',
-                            icon: Icons.badge_outlined,
-                            isDarkMode: isDarkMode,
-                            fieldBgColor: fieldBgColor,
-                            borderColor: borderColor,
-                            textColor: textColor,
-                            labelColor: labelColor,
-                            iconColor: iconColor,
-                            keyboardType: TextInputType.text,
-                            maxLength: 15,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-
-                  // Academic section header
-                  _buildSectionHeader(
-                    title: 'المعلومات الأكاديمية',
-                    icon: Icons.school,
-                    color: labelColor,
-                  ),
-                  Card(
-                    elevation: 2,
-                    margin: const EdgeInsets.only(bottom: 24),
-                    color: cardBgColor,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
-                      side: BorderSide(
-                        color: isDarkMode ? Colors.grey.shade800 : Colors.transparent,
-                        width: isDarkMode ? 1 : 0,
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(16.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          // Faculty Dropdown
-                          _buildDropdownFormField(
-                            value: _selectedFaculty,
-                            items: _facultyOptions,
-                            labelText: 'الكلية',
-                            hint: 'اختر الكلية',
-                            icon: Icons.school_outlined,
-                            isDarkMode: isDarkMode,
-                            fieldBgColor: fieldBgColor,
-                            borderColor: borderColor,
-                            textColor: textColor,
-                            labelColor: labelColor,
-                            iconColor: iconColor,
-                            onChanged: (value) => setState(() => _selectedFaculty = value),
-                            validator: (value) => (value == null) ? 'الرجاء اختيار الكلية' : null,
-                          ),
-                          const SizedBox(height: 16),
-                      
-                          // Branch Dropdown
-                          _buildDropdownFormField(
-                            value: _selectedBranch,
-                            items: _branchOptions,
-                            labelText: 'الفرع',
-                            hint: 'اختر الفرع',
-                            icon: Icons.location_city_outlined,
-                            isDarkMode: isDarkMode,
-                            fieldBgColor: fieldBgColor,
-                            borderColor: borderColor,
-                            textColor: textColor,
-                            labelColor: labelColor,
-                            iconColor: iconColor,
-                            onChanged: (value) => setState(() => _selectedBranch = value),
-                            validator: (value) => (value == null) ? 'الرجاء اختيار الفرع' : null,
-                          ),
-                          const SizedBox(height: 16),
-                      
-                          _buildTextFormField(
-                            controller: _batchController,
-                            labelText: 'الدفعة',
-                            icon: Icons.calendar_today_outlined,
-                            isDarkMode: isDarkMode,
-                            fieldBgColor: fieldBgColor,
-                            borderColor: borderColor,
-                            textColor: textColor,
-                            labelColor: labelColor,
-                            iconColor: iconColor,
-                            keyboardType: TextInputType.number,
-                            maxLength: 15,
-                            validator: (value) => (value == null || value.isEmpty) 
-                                ? 'الرجاء إدخال الدفعة' : null,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                  
-                  // Save button at the bottom
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    height: 50,
-                    child: ElevatedButton(
-                      onPressed: _isLoading ? null : _saveProfile,
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isDarkMode ? Colors.blue.shade600 : primaryColor,
-                        foregroundColor: Colors.white,
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
                         ),
-                      ),
-                      child: _isLoading
-                          ? const Text(
-                              "ثانية واحدة",
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                                color: Colors.white,
-                              ),
-                            )
-                          : const Text(
-                              'حفظ التغييرات',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
+                        const SizedBox(height: 20),
+                        _buildPersonalInfoFields(isDarkMode, textPrimaryColor, iconColor),
+                      ],
                     ),
-                  ),
-                ],
+                    
+                    const SizedBox(height: 16),
+                    
+                    // Academic Information Section
+                    _buildSectionCard(
+                      title: 'المعلومات الأكاديمية',
+                      icon: Icons.school,
+                      isDarkMode: isDarkMode,
+                      cardColor: cardColor,
+                      textColor: textPrimaryColor,
+                      iconColor: iconColor,
+                      headerBgColor: sectionHeaderBgColor,
+                      borderColor: cardBorderColor,
+                      children: [
+                        _buildAcademicInfoFields(isDarkMode, textPrimaryColor, iconColor),
+                      ],
+                    ),
+
+                    // Save Button at bottom
+                    const SizedBox(height: 24),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 54,
+                      child: ElevatedButton(
+                        onPressed: _isLoading ? null : _saveProfile,
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: accentColor,
+                          foregroundColor: Colors.white,
+                          elevation: 2,
+                          shadowColor: accentColor.withOpacity(0.4),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                        ),
+                        child: _isLoading
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                const Text(
+                                  "جاري الحفظ...",
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.save, size: 22),
+                                const SizedBox(width: 10),
+                                const Text(
+                                  'حفظ التغييرات',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
             ),
           ),
@@ -722,31 +565,345 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildSectionHeader({
+  Widget _buildSectionCard({
     required String title, 
     required IconData icon,
-    required Color color,
+    required bool isDarkMode,
+    required Color cardColor,
+    required Color textColor,
+    required Color iconColor,
+    required Color headerBgColor,
+    required Color borderColor,
+    required List<Widget> children,
   }) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0, horizontal: 8.0),
-      child: Row(
-        children: [
-          Icon(
-            icon, 
-            color: color,
-            size: 24,
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: cardColor,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: borderColor),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
+            blurRadius: 5,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(width: 8),
-          Text(
-            title,
-            style: TextStyle(
-              color: color,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            decoration: BoxDecoration(
+              color: headerBgColor,
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(16),
+                topRight: Radius.circular(16),
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(
+                  icon, 
+                  color: iconColor,
+                  size: 24,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: iconColor,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: children,
             ),
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildProfileImageSection(bool isDarkMode, Color iconColor) {
+    final bgColor = isDarkMode ? darkSurface : Colors.grey.shade50;
+    
+    return Center(
+      child: Stack(
+        children: [
+          // Profile image
+          GestureDetector(
+            onTap: () => _viewProfileImage(context, _profileImageUrl),
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 500),
+              curve: Curves.easeOutBack,
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: 0.8 + (0.2 * value),
+                  child: Hero(
+                    tag: 'profile_image',
+                    flightShuttleBuilder: (
+                      BuildContext flightContext,
+                      Animation<double> animation,
+                      HeroFlightDirection flightDirection,
+                      BuildContext fromHeroContext,
+                      BuildContext toHeroContext,
+                    ) {
+                      return AnimatedBuilder(
+                        animation: animation,
+                        builder: (context, child) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.2 * animation.value),
+                                  blurRadius: 12 * animation.value,
+                                  spreadRadius: 2 * animation.value,
+                                ),
+                              ],
+                            ),
+                            child: ClipOval(
+                              child: _profileImageUrl.isNotEmpty
+                                ? Image.network(
+                                    _profileImageUrl,
+                                    fit: BoxFit.cover,
+                                    width: 120,
+                                    height: 120,
+                                  )
+                                : Container(
+                                    width: 120,
+                                    height: 120,
+                                    color: bgColor,
+                                    child: Icon(
+                                      Icons.account_circle,
+                                      size: 80,
+                                      color: isDarkMode ? darkTextSecondary : Colors.black87.withAlpha(179),
+                                    ),
+                                  ),
+                            ),
+                          );
+                        },
+                      );
+                    },
+                    child: Container(
+                      width: 120,
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: bgColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isDarkMode ? darkCardColor : Colors.white,
+                          width: 4,
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withAlpha(isDarkMode ? 40 : 26),
+                            blurRadius: 8,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
+                      ),
+                      child: _isUploadingImage
+                        ? Center(
+                            child: CircularProgressIndicator(
+                              valueColor: AlwaysStoppedAnimation<Color>(iconColor),
+                            ),
+                          )
+                        : ClipOval(
+                            child: _profileImageUrl.isNotEmpty
+                              ? Image.network(
+                                  _profileImageUrl,
+                                  fit: BoxFit.cover,
+                                  errorBuilder: (context, error, stackTrace) {
+                                    return Icon(
+                                      Icons.account_circle,
+                                      size: 80,
+                                      color: isDarkMode ? darkTextSecondary : Colors.black87.withAlpha(179),
+                                    );
+                                  },
+                                )
+                              : Icon(
+                                  Icons.account_circle,
+                                  size: 80,
+                                  color: isDarkMode ? darkTextSecondary : Colors.black87.withAlpha(179),
+                                ),
+                          ),
+                    ),
+                  ),
+                );
+              },
+            ),
+          ),
+          
+          // Camera icon overlay with animation
+          Positioned(
+            bottom: 0,
+            right: 0,
+            child: TweenAnimationBuilder<double>(
+              tween: Tween<double>(begin: 0.0, end: 1.0),
+              duration: const Duration(milliseconds: 700),
+              curve: Curves.elasticOut,
+              builder: (context, value, child) {
+                return Transform.scale(
+                  scale: value,
+                  child: child,
+                );
+              },
+              child: GestureDetector(
+                onTap: _pickAndUploadImage,
+                child: Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: iconColor,
+                    boxShadow: [
+                      BoxShadow(
+                        color: iconColor.withOpacity(0.4),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.camera_alt,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPersonalInfoFields(bool isDarkMode, Color textColor, Color iconColor) {
+    final fieldBgColor = isDarkMode ? darkSurface : Colors.grey.shade50;
+    final borderColor = isDarkMode ? darkCardColor : Colors.grey.shade300;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // حقول المعلومات الشخصية
+        _buildTextFormField(
+          controller: _nameController,
+          labelText: 'الاسم الكامل',
+          icon: Icons.person_outline,
+          isDarkMode: isDarkMode,
+          fieldBgColor: fieldBgColor,
+          borderColor: borderColor,
+          textColor: textColor,
+          labelColor: textColor,
+          iconColor: iconColor,
+          maxLength: 40,
+          validator: (value) => (value == null || value.isEmpty) 
+              ? 'الرجاء إدخال الاسم' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildDropdownFormField(
+          value: _selectedStatus,
+          items: _statusOptions,
+          labelText: 'الحالة',
+          hint: 'اختر الحالة',
+          icon: Icons.verified_user_outlined,
+          isDarkMode: isDarkMode,
+          fieldBgColor: fieldBgColor,
+          borderColor: borderColor,
+          textColor: textColor,
+          labelColor: textColor,
+          iconColor: iconColor,
+          onChanged: (value) => setState(() => _selectedStatus = value),
+          validator: (value) => (value == null) ? 'الرجاء اختيار الحالة' : null,
+        ),
+        const SizedBox(height: 16),
+        _buildTextFormField(
+          controller: _studentIdController,
+          labelText: '(ID) الرقم التعريفي  ',
+          icon: Icons.badge_outlined,
+          isDarkMode: isDarkMode,
+          fieldBgColor: fieldBgColor,
+          borderColor: borderColor,
+          textColor: textColor,
+          labelColor: textColor,
+          iconColor: iconColor,
+          keyboardType: TextInputType.text,
+          maxLength: 15,
+        ),
+      ],
+    );
+  }
+
+  Widget _buildAcademicInfoFields(bool isDarkMode, Color textColor, Color iconColor) {
+    final fieldBgColor = isDarkMode ? darkSurface : Colors.grey.shade50;
+    final borderColor = isDarkMode ? darkCardColor : Colors.grey.shade300;
+    
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Faculty Dropdown
+        _buildDropdownFormField(
+          value: _selectedFaculty,
+          items: _facultyOptions,
+          labelText: 'الكلية',
+          hint: 'اختر الكلية',
+          icon: Icons.school_outlined,
+          isDarkMode: isDarkMode,
+          fieldBgColor: fieldBgColor,
+          borderColor: borderColor,
+          textColor: textColor,
+          labelColor: textColor,
+          iconColor: iconColor,
+          onChanged: (value) => setState(() => _selectedFaculty = value),
+          validator: (value) => (value == null) ? 'الرجاء اختيار الكلية' : null,
+        ),
+        const SizedBox(height: 16),
+    
+        // Branch Dropdown
+        _buildDropdownFormField(
+          value: _selectedBranch,
+          items: _branchOptions,
+          labelText: 'الفرع',
+          hint: 'اختر الفرع',
+          icon: Icons.location_city_outlined,
+          isDarkMode: isDarkMode,
+          fieldBgColor: fieldBgColor,
+          borderColor: borderColor,
+          textColor: textColor,
+          labelColor: textColor,
+          iconColor: iconColor,
+          onChanged: (value) => setState(() => _selectedBranch = value),
+          validator: (value) => (value == null) ? 'الرجاء اختيار الفرع' : null,
+        ),
+        const SizedBox(height: 16),
+    
+        _buildTextFormField(
+          controller: _batchController,
+          labelText: 'الدفعة',
+          icon: Icons.calendar_today_outlined,
+          isDarkMode: isDarkMode,
+          fieldBgColor: fieldBgColor,
+          borderColor: borderColor,
+          textColor: textColor,
+          labelColor: textColor,
+          iconColor: iconColor,
+          keyboardType: TextInputType.number,
+          maxLength: 15,
+          validator: (value) => (value == null || value.isEmpty) 
+              ? 'الرجاء إدخال الدفعة' : null,
+        ),
+      ],
     );
   }
 
@@ -765,38 +922,54 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     String? Function(String?)? validator,
     int? maxLength,
   }) {
-    return TextFormField(
-      controller: controller,
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: TextStyle(color: labelColor),
-        prefixIcon: Icon(icon, color: iconColor),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
+    return Row(
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: isDarkMode ? darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: borderColor),
+          ),
+          child: Icon(icon, color: iconColor),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
+        const SizedBox(width: 8),
+        Expanded(
+          child: TextFormField(
+            controller: controller,
+            decoration: InputDecoration(
+              labelText: labelText,
+              labelStyle: TextStyle(color: labelColor),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: borderColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: iconColor, width: 1.5),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.red.shade300),
+              ),
+              filled: true,
+              fillColor: fieldBgColor,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              counterText: maxLength != null ? '' : null,
+            ),
+            maxLength: maxLength,
+            keyboardType: keyboardType,
+            validator: validator,
+            enabled: !_isLoading,
+            style: TextStyle(color: textColor),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: labelColor, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: isDarkMode ? Colors.red.shade300 : Colors.red.shade300),
-        ),
-        filled: true,
-        fillColor: fieldBgColor,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-        counterText: maxLength != null ? '' : null,
-      ),
-      maxLength: maxLength,
-      keyboardType: keyboardType,
-      validator: validator,
-      enabled: !_isLoading,
-      style: TextStyle(color: textColor),
+      ],
     );
   }
 
@@ -816,49 +989,65 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required ValueChanged<String?> onChanged,
     String? Function(String?)? validator,
   }) {
-    return DropdownButtonFormField<String>(
-      value: value,
-      items: items.map((String item) {
-        return DropdownMenuItem<String>(
-          value: item,
-          child: Text(
-            item, 
-            style: TextStyle(color: textColor),
-            overflow: TextOverflow.ellipsis,
+    return Row(
+      children: [
+        Container(
+          width: 50,
+          height: 50,
+          decoration: BoxDecoration(
+            color: isDarkMode ? darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(8),
+            border: Border.all(color: borderColor),
           ),
-        );
-      }).toList(),
-      onChanged: _isLoading ? null : onChanged,
-      validator: validator,
-      decoration: InputDecoration(
-        labelText: labelText,
-        labelStyle: TextStyle(color: labelColor),
-        prefixIcon: Icon(icon, color: iconColor),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
+          child: Icon(icon, color: iconColor),
         ),
-        enabledBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: borderColor),
+        const SizedBox(width: 8),
+        Expanded(
+          child: DropdownButtonFormField<String>(
+            value: value,
+            items: items.map((String item) {
+              return DropdownMenuItem<String>(
+                value: item,
+                child: Text(
+                  item, 
+                  style: TextStyle(color: textColor),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              );
+            }).toList(),
+            onChanged: _isLoading ? null : onChanged,
+            validator: validator,
+            decoration: InputDecoration(
+              labelText: labelText,
+              labelStyle: TextStyle(color: labelColor),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: borderColor),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: borderColor),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: iconColor, width: 1.5),
+              ),
+              errorBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(8),
+                borderSide: BorderSide(color: Colors.red.shade300),
+              ),
+              filled: true,
+              fillColor: fieldBgColor,
+              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            ),
+            dropdownColor: isDarkMode ? darkCard : Colors.white,
+            isExpanded: true,
+            style: TextStyle(color: textColor),
+            hint: Text(hint, style: TextStyle(color: textColor.withAlpha(179))),
+            icon: Icon(Icons.arrow_drop_down, color: iconColor),
+          ),
         ),
-        focusedBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: labelColor, width: 2),
-        ),
-        errorBorder: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide(color: isDarkMode ? Colors.red.shade300 : Colors.red.shade300),
-        ),
-        filled: true,
-        fillColor: fieldBgColor,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
-      ),
-      dropdownColor: isDarkMode ? const Color(0xFF2C2C2C) : Theme.of(context).cardColor,
-      isExpanded: true,
-      style: TextStyle(color: textColor),
-      hint: Text(hint, style: TextStyle(color: textColor.withAlpha(179))),
-      icon: Icon(Icons.arrow_drop_down, color: iconColor),
+      ],
     );
   }
 }

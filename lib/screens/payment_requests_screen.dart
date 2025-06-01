@@ -14,6 +14,9 @@ import 'complaints_screen.dart';
 const Color primarySkyBlue = Color(0xFF4FC3F7);
 const Color accentBlue = Color(0xFF29B6F6);
 
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
+
 // Animation durations
 const Duration kCardAnimationDuration = Duration(milliseconds: 300);
 const Duration kTabAnimationDuration = Duration(milliseconds: 200);
@@ -225,40 +228,29 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
   }
 
   // بناء شريط التطبيق المُحسن
-  PreferredSizeWidget _buildAppBar() {
+  AppBar _buildAppBar() {
     return AppBar(
-      title: const Text('طلبات الدفع'),
-      centerTitle: true,
-      backgroundColor: primarySkyBlue,
-      foregroundColor: Colors.white,
-      elevation: 0,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+      title: const Text(
+        'طلبات الدفع',
+        style: TextStyle(
+          color: Colors.white,
+          fontWeight: FontWeight.bold,
+        ),
       ),
+      centerTitle: true,
+      backgroundColor: appBarBlue,
+      elevation: 2,
+      iconTheme: const IconThemeData(color: Colors.white),
       bottom: TabBar(
         controller: _tabController,
         indicatorColor: Colors.white,
         indicatorWeight: 3,
-        indicatorSize: TabBarIndicatorSize.label,
         labelColor: Colors.white,
-        unselectedLabelColor: Colors.white.withValues(alpha: 0.7),
-        labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-        tabs: [
-          Tab(
-            icon: const Icon(Icons.hourglass_top),
-            text: 'قيد المراجعة',
-            iconMargin: const EdgeInsets.only(bottom: 2),
-          ),
-          Tab(
-            icon: const Icon(Icons.check_circle),
-            text: 'الموافق عليها',
-            iconMargin: const EdgeInsets.only(bottom: 2),
-          ),
-          Tab(
-            icon: const Icon(Icons.cancel),
-            text: 'المرفوضة',
-            iconMargin: const EdgeInsets.only(bottom: 2),
-          ),
+        unselectedLabelColor: Colors.white70,
+        tabs: const [
+          Tab(text: 'قيد المراجعة'),
+          Tab(text: 'تمت الموافقة'),
+          Tab(text: 'تم الرفض'),
         ],
       ),
     );

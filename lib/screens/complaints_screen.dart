@@ -6,6 +6,10 @@ import '../services/complaint_service.dart';
 import '../services/firestore_service.dart';
 import 'complaint_detail_screen.dart';
 import '../models/booking.dart';
+import '../constants/theme.dart';
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class ComplaintsScreen extends StatefulWidget {
   final Booking? bookingToCancel;
@@ -46,6 +50,9 @@ class _ComplaintsScreenState extends State<ComplaintsScreen>
           'تاريخ الحجز: ${booking.startDate.toString().substring(0, 10)}\n'
           'سبب الإلغاء: ';
     }
+    
+    // ضبط علامة التبويب الافتراضية على "قيد المراجعة"
+    _tabController.index = 0;
   }
 
   @override
@@ -396,85 +403,73 @@ class _ComplaintsScreenState extends State<ComplaintsScreen>
   @override
   Widget build(BuildContext context) {
     final authProvider = Provider.of<AuthProvider>(context);
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final userId = authProvider.user?.uid;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     if (userId == null) {
-      return const Scaffold(
-        body: Center(child: Text('يرجى تسجيل الدخول لعرض الشكاوى')),
-      );
+      return _buildNotLoggedInScreen(context);
     }
 
-    return FutureBuilder(
-      future: _firestoreService.getUserProfile(userId),
+    return FutureBuilder<String?>(
+      future: _firestoreService.getUserProfile(userId).then((profile) => profile?.name),
       builder: (context, snapshot) {
         if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Scaffold(
-            body: Center(child: CircularProgressIndicator()),
-          );
-        }
-
-        if (snapshot.hasError || !snapshot.hasData) {
           return Scaffold(
-            body: Center(child: Text('حدث خطأ: ${snapshot.error}')),
-          );
-        }
-
-        final userName = snapshot.data!.name;
-        
-        // Show the complaint form automatically if we have a booking to cancel
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (widget.bookingToCancel != null) {
-            _showAddComplaintBottomSheet(context, userId, userName);
-          }
-        });
-
-        return Scaffold(
-          appBar: AppBar(
-            title: const Text(
-              'الشكاوى',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            centerTitle: true,
-            elevation: 0,
-            bottom: PreferredSize(
-              preferredSize: const Size.fromHeight(50.0),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[900] : Colors.white,
-                  boxShadow: [
-                    BoxShadow(
-                      color: Color.fromRGBO(0, 0, 0, 0.05),
-                      blurRadius: 5,
-                      offset: const Offset(0, 1),
-                    ),
-                  ],
-                ),
-                child: TabBar(
-                  controller: _tabController,
-                  indicatorColor: Theme.of(context).primaryColor,
-                  indicatorWeight: 3,
-                  labelColor: Theme.of(context).primaryColor,
-                  unselectedLabelColor:
-                      isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  labelStyle: const TextStyle(fontWeight: FontWeight.bold),
-                  tabs: [
-                    Tab(icon: Icon(Icons.fiber_new), text: 'مفتوحة'),
-                    Tab(
-                      icon: Icon(Icons.pending_actions),
-                      text: 'قيد المعالجة',
-                    ),
-                    Tab(icon: Icon(Icons.check_circle), text: 'مغلقة'),
-                  ],
+            backgroundColor: isDarkMode ? darkBackground : lightBackground,
+            appBar: AppBar(
+              backgroundColor: appBarBlue,
+              title: const Text(
+                'الشكاوى والمقترحات',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
                 ),
               ),
+              centerTitle: true,
+              elevation: 2,
+              iconTheme: const IconThemeData(color: Colors.white),
+            ),
+            body: const Center(child: CircularProgressIndicator()),
+          );
+        }
+
+        final userName = snapshot.data ?? 'مستخدم';
+
+        return Scaffold(
+          backgroundColor: isDarkMode ? darkBackground : lightBackground,
+          appBar: AppBar(
+            backgroundColor: appBarBlue,
+            title: const Text(
+              'الشكاوى والمقترحات',
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            centerTitle: true,
+            elevation: 2,
+            iconTheme: const IconThemeData(color: Colors.white),
+            bottom: TabBar(
+              controller: _tabController,
+              labelColor: Colors.white,
+              unselectedLabelColor: Colors.white70,
+              indicatorColor: Colors.white,
+              labelStyle: const TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+              tabs: const [
+                Tab(text: 'قيد المراجعة'),
+                Tab(text: 'جديدة'),
+                Tab(text: 'مغلقة'),
+              ],
             ),
           ),
           body: TabBarView(
             controller: _tabController,
             children: [
-              _buildComplaintsList(userId, 'open'),
               _buildComplaintsList(userId, 'in-progress'),
+              _buildComplaintsList(userId, 'open'),
               _buildComplaintsList(userId, 'closed'),
             ],
           ),
@@ -1016,5 +1011,29 @@ class _ComplaintsScreenState extends State<ComplaintsScreen>
       default:
         return Colors.grey;
     }
+  }
+
+  Widget _buildNotLoggedInScreen(BuildContext context) {
+    return Scaffold(
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text(
+              'يرجى تسجيل الدخول لعرض الشكاوى',
+              style: Theme.of(context).textTheme.titleLarge,
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton(
+              onPressed: () {
+                // Implement the login functionality
+              },
+              child: const Text('تسجيل الدخول'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

@@ -2,9 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../services/notification_service.dart';
+import '../constants/theme.dart';
 import 'package:intl/intl.dart';
 import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class NotificationsScreen extends StatefulWidget {
   const NotificationsScreen({super.key});
@@ -262,20 +266,31 @@ class _NotificationsScreenState extends State<NotificationsScreen>
     final emptyMessage = 'لا توجد إشعارات حتى الآن';
 
     return Scaffold(
+      backgroundColor: isDarkMode ? darkBackground : lightBackground,
       appBar: AppBar(
-        title: Text('الإشعارات'),
+        backgroundColor: appBarBlue,
+        title: const Text(
+          'الإشعارات',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
+        elevation: 2,
+        iconTheme: const IconThemeData(color: Colors.white),
         actions: [
-          // زر تعليم الكل كمقروء
           if (hasUnreadNotifications)
-            Padding(
-              padding: const EdgeInsets.only(left: 8.0),
-              child: IconButton(
-                onPressed: _markAllAsRead,
-                icon: const Icon(Icons.done_all),
-                tooltip: 'تحديد الكل كمقروء',
-              ),
+            IconButton(
+              icon: const Icon(Icons.done_all, color: Colors.white),
+              onPressed: _markAllAsRead,
+              tooltip: 'تعيين الكل كمقروء',
             ),
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _loadNotifications,
+            tooltip: 'تحديث',
+          ),
         ],
       ),
       body: Column(

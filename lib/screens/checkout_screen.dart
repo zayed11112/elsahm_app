@@ -4,8 +4,12 @@ import 'package:logging/logging.dart';
 import '../services/checkout_service.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
-import 'package:elsahm_app/screens/wallet_screen.dart';
+import '../screens/wallet_screen.dart';
 import 'booking_requests_screen.dart';
+import '../constants/theme.dart';
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class CheckoutScreen extends StatefulWidget {
   final String propertyId;
@@ -861,162 +865,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
 
   @override
   Widget build(BuildContext context) {
-    final textTheme = Theme.of(context).textTheme;
-    final colorScheme = Theme.of(context).colorScheme;
-
-    // التحقق من المستخدم الحالي في Firebase بدلاً من Supabase
-    final firebaseUser = _firebaseAuth.currentUser;
-    final bool isLoggedIn = firebaseUser != null;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     
-    // سجل معلومات المستخدم للتشخيص
-    if (firebaseUser != null) {
-      _logger.info('المستخدم مسجل الدخول في Firebase - المعرف: ${firebaseUser.uid}, البريد: ${firebaseUser.email}');
-      
-      // تأكد من أن معرف المستخدم محدث في الحالة
-      if (_userId != firebaseUser.uid) {
-        _userId = firebaseUser.uid;
-      }
-    } else {
-      _logger.warning('لا يوجد مستخدم مسجل دخوله في Firebase');
-    }
-
-    if (!isLoggedIn) {
-      // إذا لم يكن المستخدم مسجل دخوله، نعرض شاشة تسجيل الدخول
-      return WillPopScope(
-        onWillPop: () async {
-          // Hide any displayed banners when user presses back button
-          _hideNotificationsOnBack();
-          return true;
-        },
-        child: Scaffold(
-          appBar: AppBar(
-            title: const Text('إتمام الحجز'),
-            centerTitle: true,
-          ),
-          body: Center(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.all(24),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.account_circle_outlined,
-                    size: 80,
-                    color: colorScheme.primary,
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'تسجيل الدخول مطلوب',
-                    style: textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                      color: colorScheme.primary,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'لإتمام عملية الحجز، يرجى تسجيل الدخول أولاً',
-                    style: textTheme.bodyLarge,
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: 32),
-                  // معلومات العقار
-                  if (_propertyDetails != null) ...[
-                    Text(
-                      'معلومات العقار',
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 16),
-                    Card(
-                      elevation: 3,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Padding(
-                        padding: const EdgeInsets.all(16.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              _propertyDetails!['name'] ?? widget.propertyName,
-                              style: textTheme.titleMedium?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const SizedBox(height: 8),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.payments,
-                                  color: Colors.amber,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'العمولة: ${_propertyCommission > 0 ? "${_propertyCommission.toStringAsFixed(2)} جنيه" : "بدون تحديد"}',
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: Colors.amber.shade800,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 4),
-                            Row(
-                              children: [
-                                const Icon(
-                                  Icons.money,
-                                  color: Colors.green,
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  'العربون: ${_propertyDeposit > 0 ? "${_propertyDeposit.toStringAsFixed(2)} جنيه" : "بدون تحديد"}',
-                                  style: textTheme.bodyMedium?.copyWith(
-                                    color: Colors.green.shade800,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                  const SizedBox(height: 32),
-                  ElevatedButton.icon(
-                    onPressed: () {
-                      // التنقل إلى شاشة تسجيل الدخول
-                      Navigator.pushNamed(context, '/login').then((_) {
-                        // بعد العودة من شاشة تسجيل الدخول، نتحقق إذا كان المستخدم قد سجل دخوله
-                        setState(() {
-                          // سيتم إعادة بناء الواجهة وسيتم التحقق من المستخدم مرة أخرى
-                        });
-                      });
-                    },
-                    icon: const Icon(Icons.login),
-                    label: const Text('تسجيل الدخول'),
-                    style: ElevatedButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-        ),
-      );
-    }
-
-    // المستخدم مسجل دخوله، عرض الشاشة الأصلية
     return WillPopScope(
       onWillPop: () async {
         // Hide any displayed banners when user presses back button
@@ -1024,9 +874,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
         return true;
       },
       child: Scaffold(
+        backgroundColor: isDarkMode ? darkBackground : lightBackground,
         appBar: AppBar(
-          title: const Text('إتمام الحجز'),
+          backgroundColor: appBarBlue,
+          title: const Text(
+            'استكمال الحجز',
+            style: TextStyle(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           centerTitle: true,
+          elevation: 2,
+          iconTheme: const IconThemeData(color: Colors.white),
         ),
         body: _isLoading
             ? const Center(child: CircularProgressIndicator())
@@ -1066,9 +926,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                               children: [
                                 Text(
                                   'بيانات الحجز',
-                                  style: textTheme.titleLarge?.copyWith(
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
                                     fontWeight: FontWeight.bold,
-                                    color: colorScheme.primary,
+                                    color: Theme.of(context).colorScheme.primary,
                                   ),
                                 ),
                                 const SizedBox(height: 24),
@@ -1079,7 +939,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                                     borderRadius: BorderRadius.circular(10),
                                     boxShadow: [
                                       BoxShadow(
-                                        color: colorScheme.primary.withOpacity(0.2),
+                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
                                         blurRadius: 4,
                                         offset: const Offset(0, 2),
                                       ),
@@ -1091,34 +951,34 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                                       labelText: 'رقم الهاتف',
                                       prefixIcon: Icon(
                                         Icons.phone_android,
-                                        color: colorScheme.primary,
+                                        color: Theme.of(context).colorScheme.primary,
                                         size: 26,
                                       ),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide(
-                                          color: colorScheme.primary,
+                                          color: Theme.of(context).colorScheme.primary,
                                           width: 2,
                                         ),
                                       ),
                                       enabledBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide(
-                                          color: colorScheme.primary,
+                                          color: Theme.of(context).colorScheme.primary,
                                           width: 2,
                                         ),
                                       ),
                                       focusedBorder: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                         borderSide: BorderSide(
-                                          color: colorScheme.primary,
+                                          color: Theme.of(context).colorScheme.primary,
                                           width: 2,
                                         ),
                                       ),
-                                      fillColor: colorScheme.primary.withOpacity(0.05),
+                                      fillColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
                                       filled: true,
                                       labelStyle: TextStyle(
-                                        color: colorScheme.primary,
+                                        color: Theme.of(context).colorScheme.primary,
                                         fontWeight: FontWeight.bold,
                                       ),
                                     ),
@@ -1152,7 +1012,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                                         child: Text(
                                           'يرجى إدخال رقم هاتف للتواصل معك، ويفضل أن يكون الرقم متاح على واتساب',
                                           style: TextStyle(
-                                            color: colorScheme.primary,
+                                            color: Theme.of(context).colorScheme.primary,
                                             fontSize: 12,
                                             fontWeight: FontWeight.bold,
                                           ),
@@ -1279,14 +1139,14 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                                         children: [
                                           Icon(
                                             Icons.receipt_long,
-                                            color: colorScheme.primary,
+                                            color: Theme.of(context).colorScheme.primary,
                                             size: 24,
                                           ),
                                           const SizedBox(width: 8),
                                           Text(
                                             'ملخص الدفع',
                                             style: TextStyle(
-                                              color: colorScheme.primary,
+                                              color: Theme.of(context).colorScheme.primary,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 18,
                                             ),
@@ -1350,7 +1210,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                                           Text(
                                             'المجموع:',
                                             style: TextStyle(
-                                              color: colorScheme.primary,
+                                              color: Theme.of(context).colorScheme.primary,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 18,
                                             ),
@@ -1358,7 +1218,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                                           Text(
                                             '${formatCurrency(_propertyDeposit + _propertyCommission)} جنيه',
                                             style: TextStyle(
-                                              color: colorScheme.primary,
+                                              color: Theme.of(context).colorScheme.primary,
                                               fontWeight: FontWeight.bold,
                                               fontSize: 20,
                                             ),
@@ -1377,7 +1237,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                                   child: ElevatedButton(
                                     onPressed: _submitForm,
                                     style: ElevatedButton.styleFrom(
-                                      backgroundColor: colorScheme.primary,
+                                      backgroundColor: Theme.of(context).colorScheme.primary,
                                       foregroundColor: Colors.white,
                                       shape: RoundedRectangleBorder(
                                         borderRadius: BorderRadius.circular(8),
@@ -1401,8 +1261,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                   ),
                 ),
               ),
-        ),
-      );
+      ),
+    );
   }
 
   // بناء قسم معلومات العقار

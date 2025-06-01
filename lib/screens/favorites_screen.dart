@@ -7,9 +7,13 @@ import '../providers/auth_provider.dart';
 import '../providers/favorites_provider.dart';
 import '../providers/navigation_provider.dart';
 import '../models/apartment.dart';
+import '../constants/theme.dart';
 import 'property_details_screen.dart';
 // We might need a way to switch tabs programmatically later
 // Potentially pass the MainNavigationScreen's state key or a callback
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class FavoritesScreen extends StatelessWidget {
   const FavoritesScreen({super.key});
@@ -23,41 +27,43 @@ class FavoritesScreen extends StatelessWidget {
     try {
       final authProvider = Provider.of<AuthProvider>(context);
       final theme = Theme.of(context);
-      // ignore: unused_local_variable
       final isDarkMode = theme.brightness == Brightness.dark;
 
       return Scaffold(
+        backgroundColor: isDarkMode ? darkBackground : lightBackground,
         appBar: AppBar(
+          backgroundColor: appBarBlue,
           title: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.favorite,
-                color: theme.colorScheme.primary,
+                color: Colors.white,
                 size: 22,
               ),
               const SizedBox(width: 8),
-              Text(
+              const Text(
                 'المفضلة',
                 style: TextStyle(
                   fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.onSurface,
+                  color: Colors.white,
                 ),
               ),
             ],
           ),
           centerTitle: true,
           automaticallyImplyLeading: false,
-          elevation: 0,
+          elevation: 2,
+          iconTheme: const IconThemeData(color: Colors.white),
           actions: [
             Consumer<FavoritesProvider>(
               builder: (context, favoritesProvider, _) {
                 final hasFavorites = favoritesProvider.favorites.isNotEmpty;
                 return hasFavorites
                     ? IconButton(
-                        icon: Icon(
+                        icon: const Icon(
                           Icons.delete_sweep,
-                          color: theme.colorScheme.primary,
+                          color: Colors.white,
                         ),
                         tooltip: 'مسح الكل',
                         onPressed: () {
@@ -99,12 +105,14 @@ class FavoritesScreen extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 CircularProgressIndicator(
-                  color: theme.colorScheme.primary,
+                  color: appBarBlue,
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'جاري تحميل المفضلات...',
-                  style: theme.textTheme.bodyLarge,
+                  style: TextStyle(
+                    color: isDarkMode ? darkTextPrimary : lightTextPrimary,
+                  ),
                 ),
               ],
             ),
@@ -119,21 +127,23 @@ class FavoritesScreen extends StatelessWidget {
                 Icon(
                   Icons.favorite_border,
                   size: 80,
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[400],
+                  color: isDarkMode ? darkTextSecondary : Colors.grey[400],
                 ),
                 const SizedBox(height: 16),
                 Text(
                   'لا توجد عقارات في المفضلة',
-                  style: theme.textTheme.titleLarge?.copyWith(
+                  style: TextStyle(
+                    fontSize: 18,
                     fontWeight: FontWeight.bold,
+                    color: isDarkMode ? darkTextPrimary : lightTextPrimary,
                   ),
                   textAlign: TextAlign.center,
                 ),
                 const SizedBox(height: 8),
                 Text(
                   'اضغط على أيقونة القلب لإضافة عقار إلى المفضلة',
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  style: TextStyle(
+                    color: isDarkMode ? darkTextSecondary : Colors.grey[600],
                   ),
                   textAlign: TextAlign.center,
                 ),
@@ -145,8 +155,8 @@ class FavoritesScreen extends StatelessWidget {
                   },
                   style: ElevatedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: theme.colorScheme.onPrimary,
+                    backgroundColor: appBarBlue,
+                    foregroundColor: Colors.white,
                     elevation: 0,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(30),
@@ -197,11 +207,12 @@ class FavoritesScreen extends StatelessWidget {
         ],
       ),
       child: Material(
-        color: theme.cardColor,
+        color: isDarkMode ? darkCard : theme.cardColor,
         borderRadius: BorderRadius.circular(16),
         clipBehavior: Clip.antiAlias,
         elevation: 0,
         child: InkWell(
+          borderRadius: BorderRadius.circular(16),
           onTap: () {
             Navigator.push(
               context,

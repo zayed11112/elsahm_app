@@ -2,11 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
 import '../providers/theme_provider.dart';
+import '../constants/theme.dart';
 import 'help_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'notifications_settings_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -21,12 +25,19 @@ class SettingsScreen extends StatelessWidget {
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
 
     return Scaffold(
+      backgroundColor: isDarkMode ? darkBackground : lightBackground,
       appBar: AppBar(
+        backgroundColor: appBarBlue,
         title: const Text(
           'الإعدادات',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
+        elevation: 2,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: ListView(
         padding: const EdgeInsets.symmetric(vertical: 16.0),

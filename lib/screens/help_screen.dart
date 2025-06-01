@@ -2,6 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart'; // إضافة مكتبة لفتح الاتصال الهاتفي
 import 'package:logging/logging.dart';
+import '../constants/theme.dart';
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class HelpScreen extends StatelessWidget {
   const HelpScreen({super.key});
@@ -13,12 +17,19 @@ class HelpScreen extends StatelessWidget {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDarkMode ? darkBackground : lightBackground,
       appBar: AppBar(
+        backgroundColor: appBarBlue,
         title: const Text(
           'المساعدة',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
+        elevation: 2,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Column(
         children: [

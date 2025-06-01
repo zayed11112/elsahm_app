@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:logging/logging.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:math' as math;
 
 // Providers
 import '../providers/auth_provider.dart';
@@ -687,14 +688,10 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Title with right alignment
             Row(
+              mainAxisAlignment: MainAxisAlignment.end, // Align to the right
               children: [
-                Icon(
-                  Icons.person_outline,
-                  color: isDarkMode ? darkTextSecondary : lightTextSecondary,
-                  size: 20,
-                ),
-                const SizedBox(width: smallPadding),
                 Text(
                   'بيانات الحساب',
                   style: context.titleMedium?.copyWith(
@@ -702,36 +699,34 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                     color: isDarkMode ? darkTextPrimary : lightTextPrimary,
                   ),
                 ),
+                const SizedBox(width: smallPadding),
+                Icon(
+                  Icons.person_outline,
+                  color: isDarkMode ? darkTextSecondary : lightTextSecondary,
+                  size: 20,
+                ),
               ],
             ),
             const SizedBox(height: defaultPadding),
-            _buildDetailRow(context, 'الحالة', userProfile.status),
-            _buildDetailRow(context, 'رقم الطالب', userProfile.studentId),
-            _buildDetailRow(context, 'الكلية', userProfile.faculty),
-            _buildDetailRow(context, 'الفرع', userProfile.branch),
+            _buildDetailRow(context, 'الحالة', userProfile.status, Icons.person_pin_circle_outlined),
+            _buildDetailRow(context, 'رقم الطالب', userProfile.studentId, Icons.badge_outlined),
+            _buildDetailRow(context, 'الكلية', userProfile.faculty, Icons.school_outlined),
+            _buildDetailRow(context, 'الفرع', userProfile.branch, Icons.location_city_outlined),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value) {
+  Widget _buildDetailRow(BuildContext context, String label, String value, IconData icon) {
     final isDarkMode = context.isDarkMode;
+    final primaryColor = isDarkMode ? skyBlue : const Color(0xFF1976d3);
 
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: smallPadding),
       child: Row(
         children: [
-          Expanded(
-            flex: 2,
-            child: Text(
-              '$label:',
-              style: context.bodyMedium?.copyWith(
-                color: isDarkMode ? darkTextSecondary : lightTextSecondary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
+          // Value aligned to the left
           Expanded(
             flex: 3,
             child: Text(
@@ -740,7 +735,29 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                 color: isDarkMode ? darkTextPrimary : lightTextPrimary,
                 fontWeight: FontWeight.w600,
               ),
-              textAlign: TextAlign.right,
+            ),
+          ),
+          
+          // Label aligned to the right with icon
+          Expanded(
+            flex: 2,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  '$label:',
+                  style: context.bodyMedium?.copyWith(
+                    color: isDarkMode ? darkTextSecondary : lightTextSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Icon(
+                  icon,
+                  color: primaryColor,
+                  size: 18,
+                ),
+              ],
             ),
           ),
         ],
@@ -752,19 +769,48 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     BuildContext context,
     UserProfile userProfile,
   ) {
+    final isDarkMode = context.isDarkMode;
+    
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
-      child: PrimaryButton(
-        text: 'تعديل بياناتي',
-        icon: Icons.edit_outlined,
-        onPressed:
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder:
-                    (context) => EditProfileScreen(userProfile: userProfile),
-              ),
+      child: Column(
+        children: [
+          PrimaryButton(
+            text: 'تعديل بياناتي',
+            icon: Icons.edit_outlined,
+            onPressed:
+                () => Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder:
+                        (context) => EditProfileScreen(userProfile: userProfile),
+                  ),
+                ),
+          ),
+          // Add note below the button
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.info_outline,
+                  size: 14,
+                  color: isDarkMode ? skyBlue.withOpacity(0.7) : const Color(0xFF1976d3).withOpacity(0.7),
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  "اضغط علي الزر لتغير بياناتك بسهولة",
+                  style: TextStyle(
+                    color: isDarkMode ? darkTextSecondary : Colors.grey.shade600,
+                    fontSize: 12,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
             ),
+          ),
+        ],
       ),
     );
   }
@@ -901,7 +947,9 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        userProfile.balance.toStringAsFixed(2),
+                        userProfile.balance == userProfile.balance.toInt() 
+                            ? userProfile.balance.toInt().toString()
+                            : userProfile.balance.toStringAsFixed(2),
                         style: context.titleLarge?.copyWith(
                           color: primaryBlue,
                           fontWeight: FontWeight.bold,
@@ -975,82 +1023,113 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     required VoidCallback onPressed,
   }) {
     final isDarkMode = context.isDarkMode;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final isWideScreen = screenWidth > 360; // Check if screen is wide enough
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
-      height: 56,
+      height: 65, // Increased height for better touch area
       decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            color.withValues(alpha: 0.12),
-            color.withValues(alpha: 0.08),
-          ],
-        ),
+        color: isDarkMode ? const Color(0xFF1A2A36) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withValues(alpha: 0.25), width: 1.5),
+        border: Border.all(
+          color: color.withAlpha(40),
+          width: 1.0,
+        ),
         boxShadow: [
           BoxShadow(
-            color: color.withValues(alpha: 0.15),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
-            spreadRadius: 0,
-          ),
-          BoxShadow(
-            color:
-                isDarkMode
-                    ? Colors.black.withValues(alpha: 0.1)
-                    : Colors.white.withValues(alpha: 0.8),
-            blurRadius: 8,
-            offset: const Offset(0, -2),
-            spreadRadius: 0,
+            color: color.withOpacity(0.1),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
           ),
         ],
       ),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
+          borderRadius: BorderRadius.circular(16),
           onTap: () {
             HapticFeedback.mediumImpact();
             onPressed();
           },
-          borderRadius: BorderRadius.circular(16),
-          splashColor: color.withValues(alpha: 0.15),
-          highlightColor: color.withValues(alpha: 0.08),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Container(
-                  padding: const EdgeInsets.all(8),
+                  width: 40,
+                  height: 40,
                   decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
+                    color: color,
+                    shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: color.withValues(alpha: 0.1),
-                        blurRadius: 4,
+                        color: color.withOpacity(0.3),
+                        blurRadius: 6,
                         offset: const Offset(0, 2),
+                        spreadRadius: 0,
                       ),
                     ],
                   ),
-                  child: Icon(icon, color: color, size: 20),
+                  child: Icon(
+                    icon,
+                    color: Colors.white,
+                    size: 22,
+                  ),
                 ),
                 const SizedBox(width: 12),
-                Flexible(
-                  child: Text(
-                    title,
-                    style: context.bodyMedium?.copyWith(
-                      color: isDarkMode ? darkTextPrimary : lightTextPrimary,
-                      fontWeight: FontWeight.w700,
-                      fontSize: 14,
-                      letterSpacing: 0.2,
-                    ),
-                    textAlign: TextAlign.center,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                
+                // Use Marquee text for larger screens
+                Expanded(
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Check if text might overflow
+                      final textSpan = TextSpan(
+                        text: title,
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black87,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 15.5,
+                        ),
+                      );
+                      
+                      final textPainter = TextPainter(
+                        text: textSpan,
+                        maxLines: 1,
+                        textDirection: TextDirection.rtl,
+                      );
+                      textPainter.layout(maxWidth: constraints.maxWidth);
+                      
+                      final doesOverflow = textPainter.didExceedMaxLines || 
+                          textPainter.width > constraints.maxWidth;
+                      
+                      // Use marquee for overflow text on wider screens
+                      if (doesOverflow && isWideScreen) {
+                        return MarqueeText(
+                          text: title,
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15.5,
+                          ),
+                          velocity: 30,
+                          showFading: true,
+                        );
+                      } else {
+                        // Standard text with overflow ellipsis
+                        return Text(
+                          title,
+                          style: TextStyle(
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                            fontWeight: FontWeight.w700,
+                            fontSize: 15.5,
+                          ),
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                        );
+                      }
+                    },
                   ),
                 ),
               ],
@@ -1630,31 +1709,208 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
   }
 
   void _showLoginRequiredDialog(BuildContext context) {
+    final isDarkMode = context.isDarkMode;
+    
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('تسجيل الدخول مطلوب'),
-            content: const Text('يجب تسجيل الدخول للوصول إلى هذه الخدمة'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('إلغاء'),
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDarkMode ? const Color(0xFF1A2A36) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+                spreadRadius: 1,
               ),
-              ElevatedButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const LoginScreen(),
+            ],
+            border: Border.all(
+              color: isDarkMode 
+                  ? Colors.grey.shade800
+                  : Colors.grey.shade200,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with icon
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      primaryBlue,
+                      primaryBlue.withOpacity(0.7),
+                    ],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.5),
+                        width: 2,
+                      ),
                     ),
-                  );
-                },
-                child: const Text('تسجيل الدخول'),
+                    child: const Icon(
+                      Icons.lock_outline,
+                      color: Colors.white,
+                      size: 36,
+                    ),
+                  ),
+                ),
+              ),
+              
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Text(
+                      'تسجيل الدخول مطلوب',
+                      style: context.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                        fontSize: 20,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'يجب تسجيل الدخول للوصول إلى هذه الخدمة والاستفادة من جميع مميزات التطبيق',
+                      style: context.bodyMedium?.copyWith(
+                        color: isDarkMode 
+                            ? Colors.grey.shade300
+                            : Colors.grey.shade700,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+                    
+                    // Buttons
+                    Row(
+                      children: [
+                        // Cancel Button
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                Navigator.of(context).pop();
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  color: isDarkMode
+                                      ? Colors.grey.shade800
+                                      : Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'إلغاء',
+                                  style: context.titleSmall?.copyWith(
+                                    color: isDarkMode
+                                        ? Colors.white
+                                        : Colors.black87,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        
+                        // Login Button
+                        Expanded(
+                          flex: 2,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.mediumImpact();
+                                Navigator.of(context).pop();
+                                Navigator.push(
+                                  context,
+                                  MaterialPageRoute(
+                                    builder: (context) => const LoginScreen(),
+                                  ),
+                                );
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(vertical: 12),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [primaryBlue, secondaryTeal],
+                                    begin: Alignment.centerRight,
+                                    end: Alignment.centerLeft,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: primaryBlue.withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.login,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'تسجيل الدخول',
+                                      style: context.titleSmall?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
+        ),
+      ),
     );
   }
 
@@ -1726,4 +1982,137 @@ class _HeaderPatternPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+/// Custom MarqueeText widget for scrolling text
+class MarqueeText extends StatefulWidget {
+  final String text;
+  final TextStyle style;
+  final Axis scrollAxis;
+  final double velocity;
+  final Duration startAfter;
+  final Duration pauseAfterRound;
+  final int roundsBeforePause;
+  final bool showFading;
+
+  const MarqueeText({
+    Key? key,
+    required this.text,
+    required this.style,
+    this.scrollAxis = Axis.horizontal,
+    this.velocity = 40.0,
+    this.startAfter = const Duration(seconds: 1),
+    this.pauseAfterRound = const Duration(seconds: 1),
+    this.roundsBeforePause = 1,
+    this.showFading = true,
+  }) : super(key: key);
+
+  @override
+  State<MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<MarqueeText> with SingleTickerProviderStateMixin {
+  late ScrollController _scrollController;
+  late Animation<double> _animation;
+  late AnimationController _animationController;
+  double _contentSize = 0;
+  double _viewportSize = 0;
+  bool _hasOverflow = false;
+  Timer? _timer;
+
+  @override
+  void initState() {
+    super.initState();
+    
+    _scrollController = ScrollController();
+    _animationController = AnimationController(vsync: this);
+    
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      
+      // Check if text overflows its container
+      _hasOverflow = _scrollController.position.maxScrollExtent > 0;
+      _contentSize = _scrollController.position.extentTotal;
+      _viewportSize = _scrollController.position.extentInside;
+      
+      if (_hasOverflow) {
+        _startMarquee();
+      }
+    });
+  }
+
+  void _startMarquee() {
+    _timer?.cancel();
+    _timer = Timer(widget.startAfter, () {
+      if (mounted && _hasOverflow) {
+        _animationController.stop();
+        _animationController.reset();
+        
+        // Calculate the animation duration based on content size and velocity
+        final totalDistance = _contentSize;
+        final duration = totalDistance / widget.velocity;
+        
+        _animationController.duration = Duration(seconds: duration.ceil());
+        
+        _animation = Tween<double>(
+          begin: 0.0,
+          end: totalDistance,
+        ).animate(_animationController);
+        
+        // Add a listener that will update the scroll position
+        _animation.addListener(() {
+          if (_scrollController.hasClients) {
+            // For RTL text direction, scroll in the opposite direction
+            final scrollValue = _animation.value;
+            _scrollController.jumpTo(scrollValue % _contentSize);
+          }
+        });
+        
+        _animationController.repeat();
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    _animationController.dispose();
+    _timer?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final Widget child = SingleChildScrollView(
+      scrollDirection: widget.scrollAxis,
+      controller: _scrollController,
+      physics: const NeverScrollableScrollPhysics(),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        child: Text(
+          widget.text,
+          style: widget.style,
+          maxLines: 1,
+        ),
+      ),
+    );
+
+    // Add fading effect on the edges if showFading is true
+    if (widget.showFading) {
+      return ShaderMask(
+        shaderCallback: (Rect rect) {
+          return LinearGradient(
+            begin: Alignment.centerLeft,
+            end: Alignment.centerRight,
+            colors: const [Colors.transparent, Colors.white, Colors.white, Colors.transparent],
+            stops: const [0.0, 0.1, 0.9, 1.0],
+          ).createShader(rect);
+        },
+        blendMode: BlendMode.dstIn,
+        child: child,
+      );
+    }
+    
+    return child;
+  }
 }

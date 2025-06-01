@@ -667,6 +667,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "2.0.27"
+  flutter_staggered_animations:
+    dependency: "direct main"
+    description:
+      name: flutter_staggered_animations
+      sha256: "81d3c816c9bb0dca9e8a5d5454610e21ffb068aedb2bde49d2f8d04f75538351"
+      url: "https://pub.dev"
+    source: hosted
+    version: "1.1.1"
   flutter_staggered_grid_view:
     dependency: "direct main"
     description:
@@ -1213,6 +1221,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.1.0"
+  photo_view:
+    dependency: "direct main"
+    description:
+      name: photo_view
+      sha256: "1fc3d970a91295fbd1364296575f854c9863f225505c28c46e0a03e48960c75e"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.15.0"
   platform:
     dependency: transitive
     description:
@@ -1602,6 +1618,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.7.4"
+  timeago:
+    dependency: "direct main"
+    description:
+      name: timeago
+      sha256: b05159406a97e1cbb2b9ee4faa9fb096fe0e2dfcd8b08fcd2a00553450d3422e
+      url: "https://pub.dev"
+    source: hosted
+    version: "3.7.1"
   timing:
     dependency: transitive
     description:

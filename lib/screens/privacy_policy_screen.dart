@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import '../constants/theme.dart';
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class PrivacyPolicyScreen extends StatefulWidget {
   const PrivacyPolicyScreen({super.key});
@@ -28,17 +32,24 @@ class _PrivacyPolicyScreenState extends State<PrivacyPolicyScreen>
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDarkMode ? darkBackground : lightBackground,
       appBar: AppBar(
+        backgroundColor: appBarBlue,
         title: const Text(
           'سياسة الخصوصية والشروط',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         centerTitle: true,
+        elevation: 2,
+        iconTheme: const IconThemeData(color: Colors.white),
         bottom: TabBar(
           controller: _tabController,
-          indicatorColor: Theme.of(context).colorScheme.primary,
-          labelColor: Theme.of(context).colorScheme.primary,
-          unselectedLabelColor: isDarkMode ? Colors.white70 : Colors.black54,
+          indicatorColor: Colors.white,
+          labelColor: Colors.white,
+          unselectedLabelColor: Colors.white70,
           labelStyle: const TextStyle(fontWeight: FontWeight.bold),
           tabs: const [
             Tab(text: 'سياسة الخصوصية'),

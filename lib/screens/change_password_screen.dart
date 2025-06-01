@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import '../providers/auth_provider.dart';
+import '../constants/theme.dart';
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class ChangePasswordScreen extends StatefulWidget {
   const ChangePasswordScreen({super.key});
@@ -76,14 +80,22 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDarkMode ? darkBackground : lightBackground,
       appBar: AppBar(
-        title: const Text('تغيير كلمة المرور'),
-        backgroundColor: primarySkyBlue,
-        foregroundColor: Colors.white,
-        elevation: 0,
+        backgroundColor: appBarBlue,
+        title: const Text(
+          'تغيير كلمة المرور',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
         centerTitle: true,
+        elevation: 2,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Container(
         height: screenHeight,

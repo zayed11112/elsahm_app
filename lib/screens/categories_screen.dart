@@ -372,41 +372,81 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 16.0, 8.0, 16.0),
+                padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 20.0),
                 child: Center(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                        width: 1,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.primary.withValues(alpha: 0.15),
+                          theme.colorScheme.primary.withValues(alpha: 0.08),
+                        ],
                       ),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.25,
+                        ),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.primary.withValues(
+                            alpha: 0.1,
+                          ),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
                     padding: const EdgeInsets.symmetric(
-                      vertical: 10.0,
-                      horizontal: 20.0,
+                      vertical: 16.0,
+                      horizontal: 24.0,
                     ),
-                    child: Text(
-                      'تصفح حسب الأقسام',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.15,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.category_rounded,
+                            color: theme.colorScheme.primary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'تصفح حسب الأقسام',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.primary,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 24.0),
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount:
                       MediaQuery.of(context).size.width > 600 ? 4 : 3,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.0,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.85,
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   // حساب الفهرس المعكوس ليكون الترتيب من اليمين إلى اليسار
@@ -465,41 +505,81 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           slivers: [
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(8.0, 16.0, 8.0, 16.0),
+                padding: const EdgeInsets.fromLTRB(16.0, 20.0, 16.0, 20.0),
                 child: Center(
                   child: Container(
                     decoration: BoxDecoration(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(
-                        color: theme.colorScheme.primary.withValues(alpha: 0.2),
-                        width: 1,
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          theme.colorScheme.secondary.withValues(alpha: 0.15),
+                          theme.colorScheme.secondary.withValues(alpha: 0.08),
+                        ],
                       ),
+                      borderRadius: BorderRadius.circular(24),
+                      border: Border.all(
+                        color: theme.colorScheme.secondary.withValues(
+                          alpha: 0.25,
+                        ),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: theme.colorScheme.secondary.withValues(
+                            alpha: 0.1,
+                          ),
+                          blurRadius: 12,
+                          offset: const Offset(0, 4),
+                          spreadRadius: 1,
+                        ),
+                      ],
                     ),
                     padding: const EdgeInsets.symmetric(
-                      vertical: 10.0,
-                      horizontal: 20.0,
+                      vertical: 16.0,
+                      horizontal: 24.0,
                     ),
-                    child: Text(
-                      'الأماكن المتاحة للإقامة',
-                      style: theme.textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: theme.colorScheme.primary,
-                      ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.secondary.withValues(
+                              alpha: 0.15,
+                            ),
+                            shape: BoxShape.circle,
+                          ),
+                          child: Icon(
+                            Icons.location_city_rounded,
+                            color: theme.colorScheme.secondary,
+                            size: 20,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'الأماكن المتاحة للإقامة',
+                          style: theme.textTheme.titleLarge?.copyWith(
+                            fontWeight: FontWeight.w700,
+                            color: theme.colorScheme.secondary,
+                            fontSize: 18,
+                          ),
+                        ),
+                      ],
                     ),
                   ),
                 ),
               ),
             ),
             SliverPadding(
-              padding: const EdgeInsets.fromLTRB(8.0, 0.0, 8.0, 0.0),
+              padding: const EdgeInsets.fromLTRB(16.0, 0.0, 16.0, 24.0),
               sliver: SliverGrid(
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
                   crossAxisCount:
                       MediaQuery.of(context).size.width > 600 ? 4 : 3,
-                  mainAxisSpacing: 10,
-                  crossAxisSpacing: 10,
-                  childAspectRatio: 1.0,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.85,
                 ),
                 delegate: SliverChildBuilderDelegate((context, index) {
                   // حساب الفهرس المعكوس ليكون الترتيب من اليمين إلى اليسار
@@ -542,9 +622,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            CircularProgressIndicator(
-              color: theme.colorScheme.primary,
-            ),
+            CircularProgressIndicator(color: theme.colorScheme.primary),
             const SizedBox(height: 20),
             Text(
               "جاري تحميل العقارات...",
@@ -593,7 +671,8 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                   ),
                   const SizedBox(height: 8),
                   TextButton.icon(
-                    onPressed: () => _loadApartmentsByCategory(_selectedCategory!),
+                    onPressed:
+                        () => _loadApartmentsByCategory(_selectedCategory!),
                     icon: const Icon(Icons.refresh),
                     label: const Text("إعادة المحاولة"),
                   ),
@@ -607,29 +686,28 @@ class _CategoriesScreenState extends State<CategoriesScreen>
           SliverPadding(
             padding: const EdgeInsets.all(16.0),
             sliver: SliverList(
-              delegate: SliverChildBuilderDelegate(
-                (context, index) {
-                  final apartment = _apartments[index];
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 16.0),
-                    child: _buildApartmentCard(apartment, theme, isDarkMode),
-                  );
-                },
-                childCount: _apartments.length,
-              ),
+              delegate: SliverChildBuilderDelegate((context, index) {
+                final apartment = _apartments[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: _buildApartmentCard(apartment, theme, isDarkMode),
+                );
+              }, childCount: _apartments.length),
             ),
           ),
       ],
     );
   }
 
-  Widget _buildApartmentCard(Apartment apartment, ThemeData theme, bool isDarkMode) {
+  Widget _buildApartmentCard(
+    Apartment apartment,
+    ThemeData theme,
+    bool isDarkMode,
+  ) {
     return Card(
       elevation: 2,
       margin: EdgeInsets.zero,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
@@ -656,33 +734,32 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                   child:
                       apartment.imageUrls.isNotEmpty
                           ? CachedNetworkImage(
-                              imageUrl: apartment.imageUrls[0],
-                              fit: BoxFit.cover,
-                              placeholder:
-                                  (context, url) => Center(
-                                    child: CircularProgressIndicator(
-                                      color:
-                                          theme.colorScheme.primary,
-                                    ),
+                            imageUrl: apartment.imageUrls[0],
+                            fit: BoxFit.cover,
+                            placeholder:
+                                (context, url) => Center(
+                                  child: CircularProgressIndicator(
+                                    color: theme.colorScheme.primary,
                                   ),
-                              errorWidget:
-                                  (context, url, error) => Container(
-                                    color: Colors.grey[300],
-                                    child: Icon(
-                                      Icons.broken_image,
-                                      size: 40,
-                                      color: Colors.grey[500],
-                                    ),
+                                ),
+                            errorWidget:
+                                (context, url, error) => Container(
+                                  color: Colors.grey[300],
+                                  child: Icon(
+                                    Icons.broken_image,
+                                    size: 40,
+                                    color: Colors.grey[500],
                                   ),
-                            )
+                                ),
+                          )
                           : Container(
-                              color: Colors.grey[300],
-                              child: Icon(
-                                Icons.apartment,
-                                size: 40,
-                                color: Colors.grey[500],
-                              ),
+                            color: Colors.grey[300],
+                            child: Icon(
+                              Icons.apartment,
+                              size: 40,
+                              color: Colors.grey[500],
                             ),
+                          ),
                 ),
 
                 // السعر في الأعلى اليمين
@@ -737,9 +814,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                             vertical: 4,
                           ),
                           decoration: BoxDecoration(
-                            color: Colors.white.withValues(
-                              alpha: 0.2,
-                            ),
+                            color: Colors.white.withValues(alpha: 0.2),
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
@@ -782,22 +857,18 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                       Icon(
                         Icons.location_on,
                         size: 16,
-                        color:
-                            isDarkMode
-                                ? Colors.grey[400]
-                                : Colors.grey[700],
+                        color: isDarkMode ? Colors.grey[400] : Colors.grey[700],
                       ),
                       const SizedBox(width: 4),
                       Expanded(
                         child: Text(
                           apartment.location,
-                          style: theme.textTheme.bodyMedium
-                              ?.copyWith(
-                                color:
-                                    isDarkMode
-                                        ? Colors.grey[400]
-                                        : Colors.grey[600],
-                              ),
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color:
+                                isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[600],
+                          ),
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                         ),
@@ -851,22 +922,17 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                     Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color:
-                            isDarkMode
-                                ? Colors.grey[850]
-                                : Colors.grey[100],
+                        color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Column(
-                        crossAxisAlignment:
-                            CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'وصف العقار',
-                            style: theme.textTheme.titleSmall
-                                ?.copyWith(
-                                  fontWeight: FontWeight.bold,
-                                ),
+                            style: theme.textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                           const SizedBox(height: 4),
                           Text(
@@ -889,18 +955,12 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                       Expanded(
                         child: OutlinedButton.icon(
                           onPressed:
-                              () => _navigateToPropertyDetails(
-                                apartment,
-                              ),
+                              () => _navigateToPropertyDetails(apartment),
                           icon: const Icon(Icons.visibility),
                           label: const Text('معلومات اكثر'),
                           style: OutlinedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(
-                              vertical: 12,
-                            ),
-                            side: BorderSide(
-                              color: theme.colorScheme.primary,
-                            ),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
+                            side: BorderSide(color: theme.colorScheme.primary),
                           ),
                         ),
                       ),
@@ -913,8 +973,9 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: theme.colorScheme.primary
-                                  .withValues(alpha: 0.3),
+                              color: theme.colorScheme.primary.withValues(
+                                alpha: 0.3,
+                              ),
                               blurRadius: 8,
                               offset: const Offset(0, 2),
                             ),
@@ -925,27 +986,23 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                           borderRadius: BorderRadius.circular(12),
                           clipBehavior: Clip.antiAlias,
                           child: Consumer<FavoritesProvider>(
-                            builder: (
-                              context,
-                              favoritesProvider,
-                              _,
-                            ) {
-                              final isFavorite = favoritesProvider
-                                  .isFavorite(apartment.id);
+                            builder: (context, favoritesProvider, _) {
+                              final isFavorite = favoritesProvider.isFavorite(
+                                apartment.id,
+                              );
 
                               return InkWell(
                                 onTap: () async {
                                   // احفظ السياق والحالة قبل العملية غير المتزامنة
                                   final scaffoldMessenger =
                                       ScaffoldMessenger.of(context);
-                                  final bool wasFavorite =
-                                      isFavorite;
-                                  final String propertyName =
-                                      apartment.name;
+                                  final bool wasFavorite = isFavorite;
+                                  final String propertyName = apartment.name;
 
                                   // Toggle favorite status
-                                  await favoritesProvider
-                                      .toggleFavorite(apartment);
+                                  await favoritesProvider.toggleFavorite(
+                                    apartment,
+                                  );
 
                                   // تحقق من أن الحالة ما زالت مرتبطة
                                   if (!mounted) return;
@@ -960,11 +1017,8 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                                   scaffoldMessenger.showSnackBar(
                                     SnackBar(
                                       content: Text(message),
-                                      duration: const Duration(
-                                        seconds: 2,
-                                      ),
-                                      behavior:
-                                          SnackBarBehavior.floating,
+                                      duration: const Duration(seconds: 2),
+                                      behavior: SnackBarBehavior.floating,
                                     ),
                                   );
                                 },
@@ -974,9 +1028,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                                         ? Icons.favorite
                                         : Icons.favorite_outline,
                                     color:
-                                        isFavorite
-                                            ? Colors.red
-                                            : Colors.white,
+                                        isFavorite ? Colors.red : Colors.white,
                                     size: 24,
                                   ),
                                 ),
@@ -1094,10 +1146,11 @@ class _CategoriesScreenState extends State<CategoriesScreen>
       Navigator.of(context)
           .push(
             MaterialPageRoute(
-              builder: (context) => PlaceDetailsScreen(
-                place: place, 
-                fromMainScreen: widget.fromMainScreen
-              ),
+              builder:
+                  (context) => PlaceDetailsScreen(
+                    place: place,
+                    fromMainScreen: widget.fromMainScreen,
+                  ),
             ),
           )
           .then((_) {
@@ -1109,7 +1162,7 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     }
   }
 
-  // Build category card
+  // Build category card with enhanced modern design
   Widget _buildCategoryCard(
     BuildContext context,
     String iconUrl,
@@ -1119,134 +1172,217 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
-          width: 0.5,
-        ),
-      ),
-      child: InkWell(
-        onTap: () {
-          if (_isNavigating) return;
-          setState(() => _isNavigating = true);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      child: Material(
+        elevation: 0,
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            if (_isNavigating) return;
+            setState(() => _isNavigating = true);
 
-          onTap();
+            onTap();
 
-          Future.delayed(const Duration(milliseconds: 300), () {
-            if (mounted) setState(() => _isNavigating = false);
-          });
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors:
-                  isDarkMode
-                      ? [Colors.grey[850]!, Colors.grey[900]!]
-                      : [Colors.white, Colors.grey[50]!],
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ],
+            Future.delayed(const Duration(milliseconds: 300), () {
+              if (mounted) setState(() => _isNavigating = false);
+            });
+          },
+          borderRadius: BorderRadius.circular(20),
+          splashColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.05),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors:
+                    isDarkMode
+                        ? [
+                          Colors.grey[850]!.withValues(alpha: 0.95),
+                          Colors.grey[900]!.withValues(alpha: 0.9),
+                        ]
+                        : [
+                          Colors.white,
+                          Colors.grey[50]!.withValues(alpha: 0.8),
+                        ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color:
+                    isDarkMode
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : theme.colorScheme.primary.withValues(alpha: 0.15),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      isDarkMode
+                          ? Colors.black.withValues(alpha: 0.3)
+                          : theme.colorScheme.primary.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
                 ),
-                child: Center(
-                  child:
-                      iconUrl.isNotEmpty
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(25),
-                            child: CachedNetworkImage(
-                              imageUrl: iconUrl,
-                              width: 28,
-                              height: 28,
-                              fit: BoxFit.cover,
-                              placeholder:
-                                  (context, url) => SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: theme.colorScheme.primary,
+                BoxShadow(
+                  color:
+                      isDarkMode
+                          ? Colors.white.withValues(alpha: 0.02)
+                          : Colors.white.withValues(alpha: 0.9),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Enhanced icon container with modern design
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.primary.withValues(alpha: 0.15),
+                        theme.colorScheme.primary.withValues(alpha: 0.08),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.primary.withValues(
+                          alpha: 0.15,
+                        ),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child:
+                        iconUrl.isNotEmpty
+                            ? ClipRRect(
+                              borderRadius: BorderRadius.circular(30),
+                              child: CachedNetworkImage(
+                                imageUrl: iconUrl,
+                                width: 32,
+                                height: 32,
+                                fit: BoxFit.cover,
+                                placeholder:
+                                    (context, url) => Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: theme.colorScheme.primary,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                              errorWidget:
-                                  (context, url, error) => Icon(
-                                    Icons.category,
-                                    size: 24,
-                                    color: theme.colorScheme.primary,
-                                  ),
+                                errorWidget:
+                                    (context, url, error) => Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.primary
+                                            .withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.category_rounded,
+                                        size: 28,
+                                        color: theme.colorScheme.primary,
+                                      ),
+                                    ),
+                              ),
+                            )
+                            : Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.primary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.category_rounded,
+                                size: 28,
+                                color: theme.colorScheme.primary,
+                              ),
+                            ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // Enhanced text with better styling
+                Container(
+                  height: 20,
+                  alignment: Alignment.center,
+                  child:
+                      label.length > 8
+                          ? Marquee(
+                            animationDuration: const Duration(seconds: 3),
+                            backDuration: const Duration(milliseconds: 1200),
+                            pauseDuration: const Duration(milliseconds: 1500),
+                            direction: Axis.horizontal,
+                            textDirection: TextDirection.rtl,
+                            autoRepeat: true,
+                            child: Text(
+                              label,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                                color:
+                                    isDarkMode ? Colors.white : Colors.black87,
+                                height: 1.2,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           )
-                          : Icon(
-                            Icons.category,
-                            size: 24,
-                            color: theme.colorScheme.primary,
-                          ),
-                ),
-              ),
-              const SizedBox(height: 12), // توحيد المسافة
-              Container(
-                height: 20, // تحديد ارتفاع ثابت للنص
-                alignment: Alignment.center,
-                child:
-                    label.length > 6
-                        ? Marquee(
-                          animationDuration: Duration(seconds: 2),
-                          backDuration: Duration(milliseconds: 1000),
-                          pauseDuration: Duration(milliseconds: 1000),
-                          direction: Axis.horizontal,
-                          textDirection: TextDirection.rtl,
-                          autoRepeat: true,
-                          child: Text(
+                          : Text(
                             label,
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: isDarkMode ? Colors.white : Colors.black87,
+                              height: 1.2,
                             ),
                             textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        )
-                        : Text(
-                          label,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),
     );
   }
 
-  // Build place card
+  // Build place card with enhanced modern design
   Widget _buildPlaceCard(
     BuildContext context,
     AvailablePlace place,
@@ -1255,142 +1391,226 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
 
-    return Card(
-      elevation: 2,
-      shadowColor: Colors.black.withValues(alpha: 0.1),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
-          width: 0.5,
-        ),
-      ),
-      child: InkWell(
-        onTap: () {
-          _logger.info('تم الضغط على زر التفاصيل: ${place.name}');
-          if (_isNavigating) return;
-          setState(() => _isNavigating = true);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      child: Material(
+        elevation: 0,
+        borderRadius: BorderRadius.circular(20),
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            _logger.info('تم الضغط على زر التفاصيل: ${place.name}');
+            if (_isNavigating) return;
+            setState(() => _isNavigating = true);
 
-          try {
-            _logger.info('فتح صفحة التفاصيل للمكان: ${place.name}');
-            // Pass the fromMainScreen flag to ensure navigation bars are shown
-            Navigator.of(context)
-                .push(
-                  MaterialPageRoute(
-                    builder: (context) => PlaceDetailsScreen(
-                      place: place,
-                      fromMainScreen: widget.fromMainScreen,
+            try {
+              _logger.info('فتح صفحة التفاصيل للمكان: ${place.name}');
+              // Pass the fromMainScreen flag to ensure navigation bars are shown
+              Navigator.of(context)
+                  .push(
+                    MaterialPageRoute(
+                      builder:
+                          (context) => PlaceDetailsScreen(
+                            place: place,
+                            fromMainScreen: widget.fromMainScreen,
+                          ),
                     ),
-                  ),
-                )
-                .then((_) {
-                  if (mounted) setState(() => _isNavigating = false);
-                });
-          } catch (e) {
-            _logger.severe('خطأ في فتح صفحة التفاصيل: $e');
-            if (mounted) setState(() => _isNavigating = false);
-          }
-        },
-        borderRadius: BorderRadius.circular(12),
-        child: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors:
-                  isDarkMode
-                      ? [Colors.grey[850]!, Colors.grey[900]!]
-                      : [Colors.white, Colors.grey[50]!],
-            ),
-            borderRadius: BorderRadius.circular(12),
-          ),
-          padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              Container(
-                width: 50,
-                height: 50,
-                decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  shape: BoxShape.circle,
-                  boxShadow: [
-                    BoxShadow(
-                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                      blurRadius: 8,
-                      spreadRadius: 2,
-                    ),
-                  ],
+                  )
+                  .then((_) {
+                    if (mounted) setState(() => _isNavigating = false);
+                  });
+            } catch (e) {
+              _logger.severe('خطأ في فتح صفحة التفاصيل: $e');
+              if (mounted) setState(() => _isNavigating = false);
+            }
+          },
+          borderRadius: BorderRadius.circular(20),
+          splashColor: theme.colorScheme.secondary.withValues(alpha: 0.1),
+          highlightColor: theme.colorScheme.secondary.withValues(alpha: 0.05),
+          child: Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors:
+                    isDarkMode
+                        ? [
+                          Colors.grey[850]!.withValues(alpha: 0.95),
+                          Colors.grey[900]!.withValues(alpha: 0.9),
+                        ]
+                        : [
+                          Colors.white,
+                          Colors.grey[50]!.withValues(alpha: 0.8),
+                        ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color:
+                    isDarkMode
+                        ? Colors.white.withValues(alpha: 0.08)
+                        : theme.colorScheme.secondary.withValues(alpha: 0.15),
+                width: 1.5,
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color:
+                      isDarkMode
+                          ? Colors.black.withValues(alpha: 0.3)
+                          : theme.colorScheme.secondary.withValues(alpha: 0.08),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
                 ),
-                child: Center(
-                  child:
-                      place.iconUrl.isNotEmpty
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(25),
-                            child: CachedNetworkImage(
-                              imageUrl: place.iconUrl,
-                              width: 28,
-                              height: 28,
-                              fit: BoxFit.cover,
-                              placeholder:
-                                  (context, url) => SizedBox(
-                                    width: 16,
-                                    height: 16,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      color: theme.colorScheme.primary,
+                BoxShadow(
+                  color:
+                      isDarkMode
+                          ? Colors.white.withValues(alpha: 0.02)
+                          : Colors.white.withValues(alpha: 0.9),
+                  blurRadius: 8,
+                  offset: const Offset(0, -2),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 10),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // Enhanced icon container with modern design
+                Container(
+                  width: 50,
+                  height: 50,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.secondary.withValues(alpha: 0.15),
+                        theme.colorScheme.secondary.withValues(alpha: 0.08),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: theme.colorScheme.secondary.withValues(alpha: 0.2),
+                      width: 1,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: theme.colorScheme.secondary.withValues(
+                          alpha: 0.15,
+                        ),
+                        blurRadius: 8,
+                        spreadRadius: 1,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child:
+                        place.iconUrl.isNotEmpty
+                            ? ClipRRect(
+                              borderRadius: BorderRadius.circular(30),
+                              child: CachedNetworkImage(
+                                imageUrl: place.iconUrl,
+                                width: 32,
+                                height: 32,
+                                fit: BoxFit.cover,
+                                placeholder:
+                                    (context, url) => Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.secondary
+                                            .withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: SizedBox(
+                                        width: 18,
+                                        height: 18,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                          color: theme.colorScheme.secondary,
+                                        ),
+                                      ),
                                     ),
-                                  ),
-                              errorWidget:
-                                  (context, url, error) => Icon(
-                                    Icons.location_city,
-                                    size: 24,
-                                    color: theme.colorScheme.primary,
-                                  ),
+                                errorWidget:
+                                    (context, url, error) => Container(
+                                      width: 32,
+                                      height: 32,
+                                      decoration: BoxDecoration(
+                                        color: theme.colorScheme.secondary
+                                            .withValues(alpha: 0.1),
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: Icon(
+                                        Icons.location_city_rounded,
+                                        size: 28,
+                                        color: theme.colorScheme.secondary,
+                                      ),
+                                    ),
+                              ),
+                            )
+                            : Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                color: theme.colorScheme.secondary.withValues(
+                                  alpha: 0.1,
+                                ),
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                Icons.location_city_rounded,
+                                size: 28,
+                                color: theme.colorScheme.secondary,
+                              ),
+                            ),
+                  ),
+                ),
+
+                const SizedBox(height: 10),
+
+                // Enhanced text with better styling
+                Container(
+                  height: 20,
+                  alignment: Alignment.center,
+                  child:
+                      place.name.length > 8
+                          ? Marquee(
+                            animationDuration: const Duration(seconds: 3),
+                            backDuration: const Duration(milliseconds: 1200),
+                            pauseDuration: const Duration(milliseconds: 1500),
+                            direction: Axis.horizontal,
+                            textDirection: TextDirection.rtl,
+                            autoRepeat: true,
+                            child: Text(
+                              place.name,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.w600,
+                                fontSize: 12,
+                                color:
+                                    isDarkMode ? Colors.white : Colors.black87,
+                                height: 1.2,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
                           )
-                          : Icon(
-                            Icons.location_city,
-                            size: 24,
-                            color: theme.colorScheme.primary,
-                          ),
-                ),
-              ),
-              const SizedBox(height: 12), // توحيد المسافة
-              Container(
-                height: 20, // تحديد ارتفاع ثابت للنص
-                alignment: Alignment.center,
-                child:
-                    place.name.length > 6
-                        ? Marquee(
-                          animationDuration: Duration(seconds: 2),
-                          backDuration: Duration(milliseconds: 1000),
-                          pauseDuration: Duration(milliseconds: 1000),
-                          direction: Axis.horizontal,
-                          textDirection: TextDirection.rtl,
-                          autoRepeat: true,
-                          child: Text(
+                          : Text(
                             place.name,
                             style: theme.textTheme.bodyLarge?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 12,
+                              color: isDarkMode ? Colors.white : Colors.black87,
+                              height: 1.2,
                             ),
                             textAlign: TextAlign.center,
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
                           ),
-                        )
-                        : Text(
-                          place.name,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

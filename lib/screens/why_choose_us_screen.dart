@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:lottie/lottie.dart';
 import 'dart:math' as math;
+import '../constants/theme.dart';
+
+// Define app bar color to match the wallet screen
+const Color appBarBlue = Color(0xFF1976d3);
 
 class WhyChooseUsScreen extends StatefulWidget {
   const WhyChooseUsScreen({super.key});
@@ -73,13 +77,19 @@ class _WhyChooseUsScreenState extends State<WhyChooseUsScreen>
     final isDark = theme.brightness == Brightness.dark;
 
     return Scaffold(
+      backgroundColor: isDark ? darkBackground : lightBackground,
       appBar: AppBar(
-        title: const Text('لماذا تختار شركة السهم؟'),
-        centerTitle: true,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
+        backgroundColor: appBarBlue,
+        title: const Text(
+          'لماذا تختار شركة السهم؟',
+          style: TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
+        centerTitle: true,
+        elevation: 2,
+        iconTheme: const IconThemeData(color: Colors.white),
       ),
       body: Stack(
         children: [
