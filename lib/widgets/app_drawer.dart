@@ -183,16 +183,18 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                           onTap: () => _navigateToTab(context, 4),
                         ),
                         
+                        // إضافة جروبات إلى القائمة الرئيسية لجميع المستخدمين
+                        _buildNavigationItem(
+                          context: context,
+                          svgPath: 'assets/icons/group.svg',
+                          text: 'جروبات',
+                          onTap: () => _navigateToScreen(context, const GroupsScreen()),
+                        ),
+                        
                         // Features Section (only for authenticated users)
                         if (authProvider.isAuthenticated) ...[
                           const SizedBox(height: 16),
                           _buildSectionTitle(context, 'الخدمات'),
-                          _buildNavigationItem(
-                            context: context,
-                            svgPath: 'assets/icons/group.svg',
-                            text: 'جروبات',
-                            onTap: () => _navigateToScreen(context, const GroupsScreen()),
-                          ),
                           _buildNavigationItem(
                             context: context,
                             svgPath: 'assets/icons/money.svg',
