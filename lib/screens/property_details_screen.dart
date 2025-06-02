@@ -536,8 +536,22 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
-                            onPressed:
-                                isAvailable ? () => _showBookingDialog() : null,
+                            onPressed: isAvailable ? () {
+                              // Check if the user is authenticated before showing booking dialog
+                              final authProvider = Provider.of<AuthProvider>(
+                                context,
+                                listen: false,
+                              );
+                              
+                              if (!authProvider.isAuthenticated) {
+                                // Show authentication required dialog if not logged in
+                                AuthUtils.showAuthRequiredDialog(context);
+                                return;
+                              }
+                              
+                              // User is authenticated, show the booking dialog
+                              _showBookingDialog();
+                            } : null,
                             icon: const Icon(
                               Icons.calendar_today,
                               color: Colors.white,
@@ -1183,8 +1197,22 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                   Container(
                     margin: const EdgeInsets.only(bottom: 16),
                     child: ElevatedButton(
-                      onPressed:
-                          isAvailable ? () => _showBookingDialog() : null,
+                      onPressed: isAvailable ? () {
+                        // Check if the user is authenticated before showing booking dialog
+                        final authProvider = Provider.of<AuthProvider>(
+                          context,
+                          listen: false,
+                        );
+                        
+                        if (!authProvider.isAuthenticated) {
+                          // Show authentication required dialog if not logged in
+                          AuthUtils.showAuthRequiredDialog(context);
+                          return;
+                        }
+                        
+                        // User is authenticated, show the booking dialog
+                        _showBookingDialog();
+                      } : null,
                       style: ElevatedButton.styleFrom(
                         backgroundColor: colorScheme.primary,
                         foregroundColor: Colors.white,
@@ -1698,79 +1726,312 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
   void _showBookingDialog() {
     showDialog(
       context: context,
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.6),
       builder: (BuildContext context) {
-        return AlertDialog(
-          title: Column(
-            children: [
-              Icon(
-                Icons.calendar_today,
-                color: Theme.of(context).primaryColor,
-                size: 40,
-              ),
-              const SizedBox(height: 8),
-              const Text('طلب حجز العقار'),
-            ],
-          ),
-          content: const SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'هل تريد طلب حجز هذا العقار؟',
-                  style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'سيتم نقلك لصفحة استكمال بيانات الحجز.',
-                  style: TextStyle(fontSize: 14),
-                ),
-              ],
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              child: const Text('إلغاء'),
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-            ),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).primaryColor,
-                foregroundColor: Colors.white,
-              ),
-              child: const Text('متابعة'),
-              onPressed: () {
-                // إغلاق نافذة الحوار
-                Navigator.of(context).pop();
-
-                // الانتقال إلى صفحة إتمام الحجز
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder:
-                        (context) => CheckoutScreen(
-                          propertyId: property.id,
-                          propertyName:
-                              property is Apartment
-                                  ? property.name
-                                  : property.title,
-                          propertyPrice: property.price,
-                          imageUrl:
-                              property is Apartment &&
-                                      property.images != null &&
-                                      property.images.isNotEmpty
-                                  ? property.images[0]
-                                  : (property.imageUrls != null &&
-                                          property.imageUrls.isNotEmpty
-                                      ? property.imageUrls[0]
-                                      : null),
-                        ),
+        return Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: TweenAnimationBuilder<double>(
+            duration: const Duration(milliseconds: 300),
+            tween: Tween(begin: 0.0, end: 1.0),
+            curve: Curves.easeOutBack,
+            builder: (context, value, child) {
+              return Transform.scale(
+                scale: value,
+                child: child,
+              );
+            },
+            child: Container(
+              width: double.infinity,
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: Theme.of(context).brightness == Brightness.dark 
+                    ? const Color(0xFF262626) 
+                    : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 5),
                   ),
-                );
-              },
+                ],
+                border: Border.all(
+                  color: Theme.of(context).brightness == Brightness.dark
+                      ? Colors.grey[800]!
+                      : Colors.grey[200]!,
+                  width: 1,
+                ),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header with gradient
+                  Container(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          Theme.of(context).primaryColor,
+                          Theme.of(context).primaryColor.withOpacity(0.8),
+                        ],
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
+                      ),
+                    ),
+                    padding: const EdgeInsets.all(20),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(10),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(12),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withOpacity(0.1),
+                                blurRadius: 5,
+                                offset: const Offset(0, 2),
+                              ),
+                            ],
+                          ),
+                          child: Icon(
+                            Icons.calendar_today,
+                            color: Theme.of(context).primaryColor,
+                            size: 28,
+                          ),
+                        ),
+                        const SizedBox(width: 15),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'طلب حجز العقار',
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 18,
+                                ),
+                              ),
+                              const SizedBox(height: 5),
+                              Text(
+                                'نقلك لإتمام عملية الحجز',
+                                style: TextStyle(
+                                  color: Colors.white.withOpacity(0.9),
+                                  fontSize: 13,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Content
+                  Container(
+                    padding: const EdgeInsets.all(20),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // Property info summary
+                        Row(
+                          children: [
+                            Container(
+                              width: 60,
+                              height: 60,
+                              decoration: BoxDecoration(
+                                color: Theme.of(context).primaryColor.withOpacity(0.1),
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                              child: Icon(
+                                Icons.apartment,
+                                size: 30,
+                                color: Theme.of(context).primaryColor,
+                              ),
+                            ),
+                            const SizedBox(width: 15),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    property is Apartment ? property.name : property.title,
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 16,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Text(
+                                    property.location,
+                                    style: TextStyle(
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                      fontSize: 14,
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                        
+                        const SizedBox(height: 20),
+                        Divider(
+                          color: Theme.of(context).brightness == Brightness.dark 
+                              ? Colors.grey[800] 
+                              : Colors.grey[200],
+                        ),
+                        const SizedBox(height: 15),
+                        
+                        // Confirmation text
+                        Row(
+                          children: [
+                            Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: Colors.green.withOpacity(0.1),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.check_circle_outline,
+                                color: Colors.green,
+                                size: 20,
+                              ),
+                            ),
+                            const SizedBox(width: 10),
+                            Expanded(
+                              child: Text(
+                                'هل تريد طلب حجز هذا العقار؟',
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  fontSize: 16,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 10),
+                        Padding(
+                          padding: const EdgeInsets.only(right: 38.0),
+                          child: Text(
+                            'سيتم نقلك لصفحة استكمال بيانات الحجز.',
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: Theme.of(context).brightness == Brightness.dark
+                                  ? Colors.grey[400]
+                                  : Colors.grey[700],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  
+                  // Buttons
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop();
+                            },
+                            style: TextButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                                side: BorderSide(
+                                  color: Theme.of(context).brightness == Brightness.dark
+                                      ? Colors.grey[700]!
+                                      : Colors.grey[300]!,
+                                ),
+                              ),
+                            ),
+                            child: const Text('إلغاء'),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 2,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context).primaryColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(vertical: 12),
+                              elevation: 0,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(10),
+                              ),
+                            ),
+                            onPressed: () {
+                              // إغلاق نافذة الحوار
+                              Navigator.of(context).pop();
+
+                              // الانتقال إلى صفحة إتمام الحجز
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder:
+                                      (context) => CheckoutScreen(
+                                        propertyId: property.id,
+                                        propertyName:
+                                            property is Apartment
+                                                ? property.name
+                                                : property.title,
+                                        propertyPrice: property.price,
+                                        imageUrl:
+                                            property is Apartment &&
+                                                    property.images != null &&
+                                                    property.images.isNotEmpty
+                                                ? property.images[0]
+                                                : (property.imageUrls != null &&
+                                                        property.imageUrls.isNotEmpty
+                                                    ? property.imageUrls[0]
+                                                    : null),
+                                      ),
+                                ),
+                              );
+                            },
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Text(
+                                  'متابعة',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 16,
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Icon(
+                                  Icons.arrow_forward,
+                                  size: 18,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ],
+          ),
         );
       },
     );

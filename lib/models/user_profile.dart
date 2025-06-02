@@ -24,7 +24,7 @@ class UserProfile {
     this.branch = '', // Default to empty
     this.batch = '',
     this.avatarUrl = '',
-    this.status = 'طالب', // Default status
+    this.status = '', // Default status (changed from 'طالب' to empty string)
     this.studentId = '', // Default to empty
     this.balance = 0.0, // قيمة افتراضية للرصيد
     this.fcmTokens = const [], // Default to empty list
@@ -49,7 +49,7 @@ class UserProfile {
       branch: data['branch'] ?? '', // Added Branch
       batch: data['batch'] ?? '',
       avatarUrl: data['avatarUrl'] ?? '',
-      status: data['status'] ?? 'طالب',
+      status: data['status'] ?? '', // Changed from 'طالب' to empty string
       studentId: data['studentId'] ?? '', // Added Student ID
       balance:
           (data['balance'] ?? 0.0)

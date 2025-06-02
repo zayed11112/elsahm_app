@@ -301,11 +301,6 @@ class _SplashScreenState extends State<SplashScreen>
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
     );
-
-    // التحقق من اكتمال الملف الشخصي بعد فترة قصيرة من دخول المستخدم
-    Future.delayed(const Duration(milliseconds: 800), () {
-      MainNavigationScreen.checkProfileCompletion();
-    });
   }
 
   @override

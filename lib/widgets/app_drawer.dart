@@ -681,7 +681,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
               onPressed: () {
                 Navigator.of(context).pop();
                 _closeDrawer(context).then((_) {
-                  authProvider.signOut();
+                  authProvider.signOut(context);
                 });
               },
               style: ElevatedButton.styleFrom(

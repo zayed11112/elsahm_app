@@ -79,10 +79,6 @@
 -keep class creativemaybeno.wakelock.** { *; }
 -dontwarn creativemaybeno.wakelock.**
 
-# Keep Rive animation classes
--keep class app.rive.** { *; }
--dontwarn app.rive.**
-
 # Keep HTTP classes
 -keep class io.flutter.plugins.flutter_plugin_android_lifecycle.** { *; }
 -dontwarn io.flutter.plugins.flutter_plugin_android_lifecycle.**

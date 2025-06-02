@@ -83,8 +83,6 @@ dependencies:
   # Shimmer effect for metallic look
   shimmer: ^3.0.0
 
-  # Rive for interactive animations
-  rive: ^0.12.4
 
   # Font Awesome icons
   font_awesome_flutter: ^10.8.0
@@ -138,7 +136,6 @@ flutter:
   assets:
     - assets/images/ # Main images directory (logos)
     - assets/images/banners/ # Banners directory
-    - assets/animations/ # Directory for animations (Rive)
     - assets/icons/ # Directory for SVG icons
 
   #   - images/a_dot_burr.jpeg

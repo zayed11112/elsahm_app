@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import 'package:logging/logging.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:marquee_widget/marquee_widget.dart';
 
 // Providers
 import '../providers/auth_provider.dart';
@@ -468,18 +469,34 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
   Widget _buildGuestHeader(BuildContext context) {
     return Column(
       children: [
+        // Profile Image - changed from icon to image
         Container(
           width: 100,
           height: 100,
           decoration: BoxDecoration(
             shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.2),
             border: Border.all(color: Colors.white, width: 3),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.2),
+                blurRadius: 10,
+                offset: const Offset(0, 5),
+              ),
+            ],
           ),
-          child: const Icon(
-            Icons.person_outline,
-            size: 50,
-            color: Colors.white,
+          child: ClipOval(
+            child: Image.asset(
+              'assets/images/su.webp',
+              fit: BoxFit.cover,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: Colors.white.withValues(alpha: 0.2),
+                child: const Icon(
+                  Icons.person_outline,
+                  size: 50,
+                  color: Colors.white,
+                ),
+              ),
+            ),
           ),
         ),
 
@@ -522,10 +539,16 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
           context,
           Icons.contact_support_outlined,
           'الشكاوى',
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (context) => const ComplaintsScreen()),
-          ),
+          () {
+            if (isLoggedIn) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const ComplaintsScreen()),
+              );
+            } else {
+              _showLoginRequiredDialog(context);
+            }
+          },
         ),
 
         // Notifications Icon
@@ -533,12 +556,18 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
           context,
           Icons.notifications_outlined,
           'الإشعارات',
-          () => Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder: (context) => const NotificationsScreen(),
-            ),
-          ),
+          () {
+            if (isLoggedIn) {
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const NotificationsScreen(),
+                ),
+              );
+            } else {
+              _showLoginRequiredDialog(context);
+            }
+          },
           badge: unreadNotificationsCount > 0 ? unreadNotificationsCount : null,
         ),
 
@@ -679,7 +708,77 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
 
   Widget _buildUserDetailsCard(BuildContext context, UserProfile userProfile) {
     final isDarkMode = context.isDarkMode;
+    
+    // Check if all user profile fields are empty
+    final bool allFieldsEmpty = userProfile.status.isEmpty &&
+        userProfile.studentId.isEmpty &&
+        userProfile.phoneNumber.isEmpty &&
+        userProfile.faculty.isEmpty &&
+        userProfile.branch.isEmpty;
+    
+    // If all fields are empty, show a prompt message instead of the details card
+    if (allFieldsEmpty) {
+      return EnhancedCard(
+        margin: const EdgeInsets.symmetric(horizontal: defaultPadding),
+        child: Padding(
+          padding: const EdgeInsets.all(defaultPadding),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              // Title with right alignment
+              Row(
+                mainAxisAlignment: MainAxisAlignment.end, // Align to the right
+                children: [
+                  Text(
+                    'بيانات الحساب',
+                    style: context.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? darkTextPrimary : lightTextPrimary,
+                    ),
+                  ),
+                  const SizedBox(width: smallPadding),
+                  Icon(
+                    Icons.person_outline,
+                    color: isDarkMode ? darkTextSecondary : lightTextSecondary,
+                    size: 20,
+                  ),
+                ],
+              ),
+              const SizedBox(height: defaultPadding * 1.5),
+              
+              // Empty profile info icon
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.edit_note_rounded,
+                  size: 32,
+                  color: primaryBlue,
+                ),
+              ),
+              const SizedBox(height: defaultPadding),
+              
+              // Bold message text
+              Text(
+                "اضغط علي زر تعديل بياناتي بالأسفل وادخل بياناتك حتي تتمتع بتجربة مميزة",
+                style: context.titleSmall?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDarkMode ? darkTextPrimary : lightTextPrimary,
+                  height: 1.5,
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ],
+          ),
+        ),
+      );
+    }
 
+    // Otherwise show the normal details card with available information
     return EnhancedCard(
       margin: const EdgeInsets.symmetric(horizontal: defaultPadding),
       child: Padding(
@@ -749,6 +848,11 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     String value,
     IconData icon,
   ) {
+    // If the value is empty, return an empty container (effectively hiding this row)
+    if (value.isEmpty) {
+      return Container();
+    }
+    
     final isDarkMode = context.isDarkMode;
     final primaryColor = isDarkMode ? skyBlue : const Color(0xFF1976d3);
 
@@ -760,7 +864,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
           Expanded(
             flex: 3,
             child: Text(
-              value.isNotEmpty ? value : 'غير محدد',
+              value,
               style: context.bodyMedium?.copyWith(
                 color: isDarkMode ? darkTextPrimary : lightTextPrimary,
                 fontWeight: FontWeight.w600,
@@ -1020,7 +1124,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                 Expanded(
                   child: _buildWalletActionButton(
                     context,
-                    title: 'شحن المحفظة',
+                    title: 'شحن الرصيد',
                     icon: Icons.add_circle_outline,
                     color: primaryBlue,
                     onPressed:
@@ -1036,7 +1140,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                 Expanded(
                   child: _buildWalletActionButton(
                     context,
-                    title: 'تاريخ المعاملات',
+                    title: 'سجل المعاملات',
                     icon: Icons.history_outlined,
                     color: secondaryTeal,
                     onPressed:
@@ -1067,6 +1171,13 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     final isDarkMode = context.isDarkMode;
     final screenWidth = MediaQuery.of(context).size.width;
     final isWideScreen = screenWidth > 360; // Check if screen is wide enough
+
+    // Text style for wallet buttons
+    final TextStyle textStyle = TextStyle(
+      color: isDarkMode ? Colors.white : Colors.black87,
+      fontWeight: FontWeight.w700,
+      fontSize: 15.5,
+    );
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -1115,57 +1226,22 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                 ),
                 const SizedBox(width: 12),
 
-                // Use Marquee text for larger screens
+                // Always use Marquee text for wallet buttons
                 Expanded(
-                  child: LayoutBuilder(
-                    builder: (context, constraints) {
-                      // Check if text might overflow
-                      final textSpan = TextSpan(
-                        text: title,
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black87,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 15.5,
-                        ),
-                      );
-
-                      final textPainter = TextPainter(
-                        text: textSpan,
-                        maxLines: 1,
-                        textDirection: TextDirection.rtl,
-                      );
-                      textPainter.layout(maxWidth: constraints.maxWidth);
-
-                      final doesOverflow =
-                          textPainter.didExceedMaxLines ||
-                          textPainter.width > constraints.maxWidth;
-
-                      // Use marquee for overflow text on wider screens
-                      if (doesOverflow && isWideScreen) {
-                        return MarqueeText(
-                          text: title,
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : Colors.black87,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15.5,
-                          ),
-                          velocity: 30,
-                          showFading: true,
-                        );
-                      } else {
-                        // Standard text with overflow ellipsis
-                        return Text(
-                          title,
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : Colors.black87,
-                            fontWeight: FontWeight.w700,
-                            fontSize: 15.5,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                        );
-                      }
-                    },
+                  child: SizedBox(
+                    height: 24, // Fixed height for consistent animation
+                    child: Marquee(
+                      animationDuration: const Duration(seconds: 2),
+                      backDuration: const Duration(milliseconds: 1000),
+                      pauseDuration: const Duration(milliseconds: 1000),
+                      direction: Axis.horizontal,
+                      textDirection: TextDirection.rtl,
+                      autoRepeat: true,
+                      child: Text(
+                        title,
+                        style: textStyle,
+                      ),
+                    ),
                   ),
                 ),
               ],
@@ -1396,8 +1472,8 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       ServiceItem(
         icon: Icons.favorite_border,
         title: 'المفضلة',
-        subtitle: 'العقارات المحفوظة',
-        color: secondaryPurple,
+        subtitle: '',
+        color: primaryBlue,
         requiresAuth: true,
         onTap:
             () => Navigator.push(
@@ -1407,9 +1483,9 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       ),
       ServiceItem(
         icon: Icons.place_outlined,
-        title: 'الأماكن المتاحة',
-        subtitle: 'استعراض العقارات',
-        color: secondaryTeal,
+        title: 'الاماكن المتاحة',
+        subtitle: '',
+        color: primaryBlue,
         requiresAuth: false,
         onTap:
             () => Navigator.push(
@@ -1425,9 +1501,9 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       ),
       ServiceItem(
         icon: Icons.category_outlined,
-        title: 'الأقسام',
-        subtitle: 'تصفح حسب الفئة',
-        color: secondaryOrange,
+        title: 'الاقسام',
+        subtitle: '',
+        color: primaryBlue,
         requiresAuth: false,
         onTap:
             () => Navigator.push(
@@ -1444,8 +1520,8 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       ServiceItem(
         icon: Icons.support_agent_outlined,
         title: 'الشكاوى',
-        subtitle: 'تقديم شكوى أو استفسار',
-        color: warningColor,
+        subtitle: '',
+        color: primaryBlue,
         requiresAuth: true,
         onTap:
             () => Navigator.push(
@@ -1456,8 +1532,8 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       ServiceItem(
         icon: Icons.request_page_outlined,
         title: 'طلبات الدفع',
-        subtitle: 'متابعة المدفوعات',
-        color: successColor,
+        subtitle: '',
+        color: primaryBlue,
         requiresAuth: true,
         onTap:
             () => Navigator.push(
@@ -1470,7 +1546,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       ServiceItem(
         icon: Icons.bookmark_outline,
         title: 'طلبات الحجز',
-        subtitle: 'إدارة الحجوزات',
+        subtitle: '',
         color: primaryBlue,
         requiresAuth: true,
         onTap:
@@ -1483,9 +1559,9 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       ),
       ServiceItem(
         icon: Icons.groups_outlined,
-        title: 'المجموعات',
-        subtitle: 'انضم للمجموعات',
-        color: secondaryPurple,
+        title: 'جروبات',
+        subtitle: '',
+        color: primaryBlue,
         requiresAuth: false,
         onTap:
             () => Navigator.push(
@@ -1496,8 +1572,8 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       ServiceItem(
         icon: Icons.vpn_key_outlined,
         title: 'تغيير كلمة المرور',
-        subtitle: 'تحديث كلمة المرور',
-        color: errorColor,
+        subtitle: '',
+        color: primaryBlue,
         requiresAuth: true,
         onTap:
             () => Navigator.push(
@@ -1508,21 +1584,9 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
             ),
       ),
       ServiceItem(
-        icon: Icons.phone_outlined,
-        title: 'اتصل بنا',
-        subtitle: 'تواصل مع الدعم',
-        color: infoColor,
-        requiresAuth: false,
-        onTap:
-            () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => const ContactUsScreen()),
-            ),
-      ),
-      ServiceItem(
         icon: Icons.info_outline,
         title: 'عن السهم',
-        subtitle: 'معلومات التطبيق',
+        subtitle: '',
         color: primaryBlue,
         requiresAuth: false,
         onTap:
@@ -1533,64 +1597,90 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
               ),
             ),
       ),
+      ServiceItem(
+        icon: Icons.phone_outlined,
+        title: 'اتصل بنا',
+        subtitle: '',
+        color: primaryBlue,
+        requiresAuth: false,
+        onTap:
+            () => Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const ContactUsScreen()),
+            ),
+      ),
     ];
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
-          child: Row(
-            children: [
-              Icon(
-                Icons.apps_outlined,
-                color: isDarkMode ? darkTextSecondary : lightTextSecondary,
-                size: 20,
-              ),
-              const SizedBox(width: smallPadding),
-              Text(
-                'الخدمات المتاحة',
-                style: context.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: isDarkMode ? darkTextPrimary : lightTextPrimary,
-                ),
-              ),
-              const Spacer(),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: primaryBlue.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  '${services.length} خدمة',
-                  style: context.bodySmall?.copyWith(
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: defaultPadding),
+      decoration: BoxDecoration(
+        color: isDarkMode ? const Color(0xFF1A2A36).withOpacity(0.7) : const Color(0xFFEDF4FC),
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Header section
+          Padding(
+            padding: const EdgeInsets.all(defaultPadding),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Grid view icon
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: isDarkMode ? darkBackground.withOpacity(0.6) : Colors.white,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(
+                    Icons.grid_view_rounded,
+                    size: 18,
                     color: primaryBlue,
-                    fontWeight: FontWeight.w500,
                   ),
                 ),
-              ),
-            ],
+                // Title moved to the right side
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text(
+                      'الخدمات المتاحة',
+                      style: context.titleMedium?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? darkTextPrimary : lightTextPrimary,
+                      ),
+                    ),
+                    Text(
+                      'جميع الخدمات في مكان واحد',
+                      style: context.bodySmall?.copyWith(
+                        color: isDarkMode ? darkTextSecondary : lightTextSecondary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-        const SizedBox(height: defaultPadding),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 2,
-            crossAxisSpacing: defaultPadding,
-            mainAxisSpacing: defaultPadding,
-            childAspectRatio: 1.0, // نسبة مربعة لعرض أفضل للنصوص والأيقونات
+          
+          // Services grid
+          GridView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(defaultPadding, 0, defaultPadding, defaultPadding),
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              crossAxisSpacing: defaultPadding,
+              mainAxisSpacing: defaultPadding,
+              childAspectRatio: 2.8, // Wider card for the new design
+            ),
+            itemCount: services.length,
+            itemBuilder: (context, index) {
+              final service = services[index];
+              return _buildServiceCard(context, service, isLoggedIn);
+            },
           ),
-          itemCount: services.length,
-          itemBuilder: (context, index) {
-            final service = services[index];
-            return _buildServiceCard(context, service, isLoggedIn);
-          },
-        ),
-      ],
+        ],
+      ),
     );
   }
 
@@ -1601,118 +1691,99 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
   ) {
     final isDarkMode = context.isDarkMode;
     final canAccess = !service.requiresAuth || isLoggedIn;
+    // Check if title is long and needs marquee effect
+    final bool isLongText = service.title.length > 10;
 
-    return EnhancedCard(
-      onTap:
-          canAccess
-              ? () {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: canAccess
+            ? () {
                 HapticFeedback.lightImpact();
                 service.onTap();
               }
-              : () => _showLoginRequiredDialog(context),
-      enableHoverEffect: true,
-      enablePressEffect: true,
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            // أيقونة الخدمة
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color:
-                    canAccess
-                        ? service.color.withValues(alpha: 0.12)
-                        : Colors.grey.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(14),
-                border: Border.all(
-                  color:
-                      canAccess
-                          ? service.color.withValues(alpha: 0.2)
-                          : Colors.grey.withValues(alpha: 0.2),
-                  width: 1,
-                ),
-                boxShadow:
-                    canAccess
-                        ? [
-                          BoxShadow(
-                            color: service.color.withValues(alpha: 0.1),
-                            blurRadius: 8,
-                            offset: const Offset(0, 2),
-                          ),
-                        ]
-                        : null,
-              ),
-              child: Icon(
-                service.icon,
-                color: canAccess ? service.color : Colors.grey,
-                size: 24,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // عنوان الخدمة - يظهر دائماً
-            Text(
-              service.title,
-              style: context.bodyMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color:
-                    canAccess
-                        ? (isDarkMode ? darkTextPrimary : lightTextPrimary)
-                        : (isDarkMode ? darkTextSecondary : lightTextSecondary),
-                fontSize: 13,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-            const SizedBox(height: 4),
-
-            // وصف الخدمة - يظهر دائماً
-            Text(
-              service.subtitle,
-              style: context.bodySmall?.copyWith(
-                color:
-                    canAccess
-                        ? (isDarkMode ? darkTextSecondary : lightTextSecondary)
-                        : (isDarkMode
-                            ? darkTextSecondary.withValues(alpha: 0.7)
-                            : lightTextSecondary.withValues(alpha: 0.7)),
-                fontSize: 11,
-              ),
-              textAlign: TextAlign.center,
-              maxLines: 2,
-              overflow: TextOverflow.ellipsis,
-            ),
-
-            // أيقونة القفل للخدمات المحمية
-            if (!canAccess) ...[
-              const SizedBox(height: 6),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                decoration: BoxDecoration(
-                  color: Colors.grey.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(Icons.lock_outline, size: 12, color: Colors.grey),
-                    const SizedBox(width: 4),
-                    Text(
-                      'مطلوب تسجيل دخول',
-                      style: context.bodySmall?.copyWith(
-                        color: Colors.grey,
-                        fontSize: 9,
-                      ),
-                    ),
-                  ],
-                ),
+            : () => _showLoginRequiredDialog(context),
+        borderRadius: BorderRadius.circular(15),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDarkMode ? darkCard : Colors.white,
+            borderRadius: BorderRadius.circular(15),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
               ),
             ],
-          ],
+          ),
+          child: Row(
+            children: [
+              // Service icon
+              Container(
+                width: 36,
+                height: 36,
+                decoration: BoxDecoration(
+                  color: primaryBlue.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(
+                  service.icon,
+                  color: canAccess ? primaryBlue : Colors.grey,
+                  size: 20,
+                ),
+              ),
+              const SizedBox(width: 12),
+              
+              // Service title - using exactly the same approach as in home_screen.dart
+              Expanded(
+                child: Container(
+                  height: 22.0,
+                  alignment: Alignment.centerRight,
+                  child: isLongText
+                    ? Marquee(
+                        animationDuration: const Duration(seconds: 2),
+                        backDuration: const Duration(milliseconds: 1000),
+                        pauseDuration: const Duration(milliseconds: 1000),
+                        direction: Axis.horizontal,
+                        textDirection: TextDirection.rtl,
+                        autoRepeat: true,
+                        child: Text(
+                          service.title,
+                          style: context.bodyMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15.0,
+                            color: canAccess
+                              ? (isDarkMode ? darkTextPrimary : lightTextPrimary)
+                              : (isDarkMode ? darkTextSecondary : lightTextSecondary),
+                          ),
+                        ),
+                      )
+                    : Text(
+                        service.title,
+                        style: context.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 15.0,
+                          color: canAccess
+                            ? (isDarkMode ? darkTextPrimary : lightTextPrimary)
+                            : (isDarkMode ? darkTextSecondary : lightTextSecondary),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textAlign: TextAlign.right,
+                      ),
+                ),
+              ),
+              
+              // Lock icon for auth-required services
+              if (!canAccess)
+                Icon(
+                  Icons.lock_outline,
+                  size: 16,
+                  color: Colors.grey,
+                ),
+            ],
+          ),
         ),
       ),
     );
@@ -1734,12 +1805,63 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
   }
 
   Widget _buildLogoutButton(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
-      child: DangerButton(
-        text: 'تسجيل الخروج',
-        icon: Icons.logout,
-        onPressed: () => _showLogoutDialog(context),
+    final isDarkMode = context.isDarkMode;
+    
+    return Container(
+      margin: const EdgeInsets.symmetric(horizontal: defaultPadding),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => _showLogoutDialog(context),
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                colors: [
+                  const Color(0xFFFF5963),
+                  const Color(0xFFFF7B7B),
+                ],
+                begin: Alignment.centerRight,
+                end: Alignment.centerLeft,
+              ),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFFFF5963).withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                  spreadRadius: 0,
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.logout_rounded,
+                    color: Colors.white,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'تسجيل الخروج',
+                  style: context.titleMedium?.copyWith(
+                    color: Colors.white,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -1956,31 +2078,206 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
   }
 
   void _showLogoutDialog(BuildContext context) {
+    final isDarkMode = context.isDarkMode;
+    
     showDialog(
       context: context,
-      builder:
-          (context) => AlertDialog(
-            title: const Text('تسجيل الخروج'),
-            content: const Text('هل أنت متأكد من أنك تريد تسجيل الخروج؟'),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('إلغاء'),
+      barrierDismissible: true,
+      barrierColor: Colors.black.withOpacity(0.5),
+      builder: (context) => Dialog(
+        backgroundColor: Colors.transparent,
+        elevation: 0,
+        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: isDarkMode ? const Color(0xFF1A2A36) : Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.2),
+                blurRadius: 15,
+                offset: const Offset(0, 8),
+                spreadRadius: 1,
               ),
-              ElevatedButton(
-                onPressed: () async {
-                  Navigator.of(context).pop();
-                  final authProvider = Provider.of<AuthProvider>(
-                    context,
-                    listen: false,
-                  );
-                  await authProvider.signOut();
-                },
-                style: ElevatedButton.styleFrom(backgroundColor: errorColor),
-                child: const Text('تسجيل الخروج'),
+            ],
+            border: Border.all(
+              color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+              width: 1,
+            ),
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              // Header with icon
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 20),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      const Color(0xFFFF5963),
+                      const Color(0xFFFF7B7B),
+                    ],
+                    begin: Alignment.topRight,
+                    end: Alignment.bottomLeft,
+                  ),
+                  borderRadius: const BorderRadius.only(
+                    topLeft: Radius.circular(20),
+                    topRight: Radius.circular(20),
+                  ),
+                ),
+                child: Center(
+                  child: Container(
+                    width: 70,
+                    height: 70,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.2),
+                      shape: BoxShape.circle,
+                      border: Border.all(
+                        color: Colors.white.withOpacity(0.5),
+                        width: 2,
+                      ),
+                    ),
+                    child: const Icon(
+                      Icons.logout_rounded,
+                      color: Colors.white,
+                      size: 36,
+                    ),
+                  ),
+                ),
+              ),
+
+              // Content
+              Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  children: [
+                    Text(
+                      'تسجيل الخروج',
+                      style: context.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                        color: isDarkMode ? Colors.white : Colors.black87,
+                        fontSize: 20,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 12),
+                    Text(
+                      'هل أنت متأكد من أنك تريد تسجيل الخروج؟',
+                      style: context.bodyMedium?.copyWith(
+                        color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
+                        fontSize: 14,
+                        height: 1.5,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Buttons
+                    Row(
+                      children: [
+                        // Cancel Button
+                        Expanded(
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                Navigator.of(context).pop();
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+                                  borderRadius: BorderRadius.circular(12),
+                                ),
+                                alignment: Alignment.center,
+                                child: Text(
+                                  'إلغاء',
+                                  style: context.titleSmall?.copyWith(
+                                    color: isDarkMode ? Colors.white : Colors.black87,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+
+                        // Logout Button
+                        Expanded(
+                          flex: 2,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: () async {
+                                HapticFeedback.mediumImpact();
+                                Navigator.of(context).pop();
+                                final authProvider = Provider.of<AuthProvider>(
+                                  context,
+                                  listen: false,
+                                );
+                                await authProvider.signOut(context);
+                              },
+                              borderRadius: BorderRadius.circular(12),
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 12,
+                                ),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      const Color(0xFFFF5963),
+                                      const Color(0xFFFF7B7B),
+                                    ],
+                                    begin: Alignment.centerRight,
+                                    end: Alignment.centerLeft,
+                                  ),
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: const Color(0xFFFF5963).withOpacity(0.3),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 4),
+                                    ),
+                                  ],
+                                ),
+                                alignment: Alignment.center,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    const Icon(
+                                      Icons.logout,
+                                      color: Colors.white,
+                                      size: 20,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'تسجيل الخروج',
+                                      style: context.titleSmall?.copyWith(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ],
           ),
+        ),
+      ),
     );
   }
 }

@@ -90,12 +90,12 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ? widget.userProfile.branch
             : null; // Default to null if not found or empty
 
-    // Initialize status from existing value or default to first option
+    // Initialize status from existing value or leave as null if empty
     _selectedStatus =
         widget.userProfile.status.isNotEmpty &&
                 _statusOptions.contains(widget.userProfile.status)
             ? widget.userProfile.status
-            : _statusOptions.first; // Default to first option
+            : null; // Default to null instead of first option
   }
 
   @override
@@ -993,20 +993,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         const SizedBox(height: 16),
         _buildTextFormField(
-          controller: _studentIdController,
-          labelText: '(ID) الرقم التعريفي  ',
-          icon: Icons.badge_outlined,
-          isDarkMode: isDarkMode,
-          fieldBgColor: fieldBgColor,
-          borderColor: borderColor,
-          textColor: textColor,
-          labelColor: textColor,
-          iconColor: iconColor,
-          keyboardType: TextInputType.text,
-          maxLength: 15,
-        ),
-        const SizedBox(height: 16),
-        _buildTextFormField(
           controller: _phoneNumberController,
           labelText: 'رقم الهاتف',
           icon: Icons.phone_outlined,
@@ -1030,10 +1016,49 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   ) {
     final fieldBgColor = isDarkMode ? darkSurface : Colors.grey.shade50;
     final borderColor = isDarkMode ? darkCardColor : Colors.grey.shade300;
+    final noteColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
+        // Student ID field (moved from personal info)
+        _buildTextFormField(
+          controller: _studentIdController,
+          labelText: '(ID) الرقم التعريفي  ',
+          icon: Icons.badge_outlined,
+          isDarkMode: isDarkMode,
+          fieldBgColor: fieldBgColor,
+          borderColor: borderColor,
+          textColor: textColor,
+          labelColor: textColor,
+          iconColor: iconColor,
+          keyboardType: TextInputType.text,
+          maxLength: 15,
+        ),
+        // Note for Student ID field
+        Padding(
+          padding: const EdgeInsets.only(top: 4, right: 58),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 14,
+                color: noteColor,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'إذا كنت لا تعرف، اتركه فارغاً',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: noteColor,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+        
         // Faculty Dropdown
         _buildDropdownFormField(
           value: _selectedFaculty,
@@ -1082,11 +1107,28 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           iconColor: iconColor,
           keyboardType: TextInputType.number,
           maxLength: 15,
-          validator:
-              (value) =>
-                  (value == null || value.isEmpty)
-                      ? 'الرجاء إدخال الدفعة'
-                      : null,
+        ),
+        // Note for Batch field
+        Padding(
+          padding: const EdgeInsets.only(top: 4, right: 58),
+          child: Row(
+            children: [
+              Icon(
+                Icons.info_outline,
+                size: 14,
+                color: noteColor,
+              ),
+              const SizedBox(width: 4),
+              Text(
+                'إذا كنت لا تعرف، اتركه فارغاً',
+                style: TextStyle(
+                  fontSize: 12,
+                  color: noteColor,
+                  fontStyle: FontStyle.italic,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

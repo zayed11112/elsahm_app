@@ -5,6 +5,13 @@ import 'package:logging/logging.dart';
 import '../services/firestore_service.dart'; // Import FirestoreService
 import '../services/notification_service.dart'; // Import NotificationService
 import '../main.dart' as main; // Import main.dart for OneSignal functions
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:async';
+import 'dart:convert';
+import 'dart:math';
+import 'package:crypto/crypto.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 enum AuthStatus {
   uninitialized,
@@ -20,9 +27,18 @@ class AuthProvider with ChangeNotifier {
   final NotificationService _notificationService =
       NotificationService(); // Instantiate NotificationService
   final Logger _logger = Logger('AuthProvider');
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final GoogleSignIn _googleSignIn = GoogleSignIn();
   User? _user;
   AuthStatus _status = AuthStatus.uninitialized;
   bool _isNewUser = false;
+  bool _isLoading = false;
+  
+  // Password reset attempt tracking
+  int _passwordResetAttempts = 0;
+  DateTime? _firstResetAttemptTime;
+  final int _maxResetAttempts = 3;
+  final Duration _resetAttemptsWindow = const Duration(hours: 12);
 
   AuthProvider() : _auth = FirebaseAuth.instance {
     // Listen for authentication state changes
@@ -30,12 +46,121 @@ class AuthProvider with ChangeNotifier {
     // Check initial state (useful if the app was closed while logged in)
     _user = _auth.currentUser;
     _onAuthStateChanged(_user);
+    _loadResetAttemptsData();
   }
 
   // Getters
   AuthStatus get status => _status;
   User? get user => _user;
   bool get isAuthenticated => status == AuthStatus.authenticated;
+  bool get isLoading => _isLoading;
+  String? get userId => _user?.uid;
+  
+  // Password reset attempt tracking getters
+  int get passwordResetAttempts => _passwordResetAttempts;
+  int get maxResetAttempts => _maxResetAttempts;
+  DateTime? get firstResetAttemptTime => _firstResetAttemptTime;
+  Duration get resetAttemptsWindow => _resetAttemptsWindow;
+  
+  // Get remaining attempts
+  int get remainingResetAttempts => _maxResetAttempts - _passwordResetAttempts;
+  
+  // Check if reset attempts are allowed
+  bool get canRequestPasswordReset {
+    // If no attempts have been made yet
+    if (_passwordResetAttempts == 0) return true;
+    
+    // If max attempts reached, check if the time window has passed
+    if (_passwordResetAttempts >= _maxResetAttempts) {
+      if (_firstResetAttemptTime == null) return true;
+      
+      final now = DateTime.now();
+      final windowEnd = _firstResetAttemptTime!.add(_resetAttemptsWindow);
+      
+      // If the time window has passed, reset counter and allow
+      if (now.isAfter(windowEnd)) {
+        _resetAttemptsCounter();
+        return true;
+      }
+      
+      return false;
+    }
+    
+    return true;
+  }
+  
+  // Get time remaining until new attempts are allowed
+  Duration? get timeUntilNextAttempt {
+    if (_firstResetAttemptTime == null || _passwordResetAttempts < _maxResetAttempts) {
+      return null;
+    }
+    
+    final now = DateTime.now();
+    final windowEnd = _firstResetAttemptTime!.add(_resetAttemptsWindow);
+    
+    if (now.isAfter(windowEnd)) {
+      return null;
+    }
+    
+    return windowEnd.difference(now);
+  }
+
+  // Load reset attempts data from SharedPreferences
+  Future<void> _loadResetAttemptsData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      _passwordResetAttempts = prefs.getInt('password_reset_attempts') ?? 0;
+      
+      final timestamp = prefs.getInt('first_reset_attempt_time');
+      if (timestamp != null) {
+        _firstResetAttemptTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
+        
+        // Check if the time window has passed
+        final now = DateTime.now();
+        final windowEnd = _firstResetAttemptTime!.add(_resetAttemptsWindow);
+        if (now.isAfter(windowEnd)) {
+          _resetAttemptsCounter();
+        }
+      }
+    } catch (e) {
+      _logger.severe('Failed to load reset attempts data: $e');
+      _resetAttemptsCounter();
+    }
+  }
+  
+  // Save reset attempts data to SharedPreferences
+  Future<void> _saveResetAttemptsData() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt('password_reset_attempts', _passwordResetAttempts);
+      
+      if (_firstResetAttemptTime != null) {
+        await prefs.setInt('first_reset_attempt_time', 
+            _firstResetAttemptTime!.millisecondsSinceEpoch);
+      } else {
+        await prefs.remove('first_reset_attempt_time');
+      }
+    } catch (e) {
+      _logger.severe('Failed to save reset attempts data: $e');
+    }
+  }
+  
+  // Reset the attempts counter
+  void _resetAttemptsCounter() {
+    _passwordResetAttempts = 0;
+    _firstResetAttemptTime = null;
+    _saveResetAttemptsData();
+  }
+  
+  // Track a password reset attempt
+  void _trackResetAttempt() {
+    if (_passwordResetAttempts == 0) {
+      _firstResetAttemptTime = DateTime.now();
+    }
+    
+    _passwordResetAttempts++;
+    _saveResetAttemptsData();
+  }
 
   // Get and reset isNewUser flag
   bool getAndResetIsNewUser() {
@@ -116,11 +241,13 @@ class AuthProvider with ChangeNotifier {
     try {
       _logger.info('Starting sign up for email: $email');
       _isNewUser = true; // Mark as new user before creating account
-      await _auth.createUserWithEmailAndPassword(
+      final userCredential = await _auth.createUserWithEmailAndPassword(
         email: email,
         password: password,
       );
 
+      _user = userCredential.user;
+      _isNewUser = false;
       _logger.info('Sign up successful - User is new: $_isNewUser');
       // State change will be handled by the listener (_onAuthStateChanged)
       return true;
@@ -146,8 +273,10 @@ class AuthProvider with ChangeNotifier {
     _status = AuthStatus.authenticating;
     notifyListeners();
     try {
+      _isLoading = true;
       await _auth.signInWithEmailAndPassword(email: email, password: password);
       // State change will be handled by the listener (_onAuthStateChanged)
+      _isLoading = false;
       return true;
     } on FirebaseAuthException catch (e) {
       _logger.severe('Sign In Error: ${e.message}');
@@ -158,27 +287,87 @@ class AuthProvider with ChangeNotifier {
       // - wrong-password: Show "Incorrect password" message
       // - invalid-email: Show "Invalid email format" message
       // - user-disabled: Show "Account has been disabled" message
+      _isLoading = false;
       return false;
     } catch (e) {
       _logger.severe('Sign In Error: $e');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
+      _isLoading = false;
       return false;
     }
   }
 
   // Sign Out
-  Future<void> signOut() async {
+  Future<void> signOut(BuildContext? context) async {
     try {
+      _isLoading = true;
+      notifyListeners();
+      
       // قم بإزالة ربط OneSignal قبل تسجيل الخروج
       await main.removeOneSignalExternalUserId();
       // تسجيل الخروج من Firebase
       await _auth.signOut();
       // State change will be handled by the listener (_onAuthStateChanged)
+
+      // Clear any locally stored auth data
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove('user_token');
+      
+      _user = null;
+      _status = AuthStatus.unauthenticated;
+      _isLoading = false;
+      notifyListeners();
+      
+      // Show success message if context is provided
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text(
+              'تم تسجيل الخروج بنجاح',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            behavior: SnackBarBehavior.fixed,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     } catch (e) {
       _logger.severe('Error during sign out: $e');
       // تسجيل الخروج من Firebase على أي حال
       await _auth.signOut();
+      _isLoading = false;
+      notifyListeners();
+      
+      // Show error message if context is provided
+      if (context != null && context.mounted) {
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'حدث خطأ أثناء تسجيل الخروج: ${e.toString()}',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.fixed,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            ),
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
     }
   }
 
@@ -213,9 +402,21 @@ class AuthProvider with ChangeNotifier {
     }
   }
 
-  // Reset Password (Forgot Password)
+  // Reset Password (Forgot Password) - Updated with attempt tracking
   Future<void> resetPassword(String email) async {
+    // Check if reset attempts are allowed
+    if (!canRequestPasswordReset) {
+      final timeLeft = timeUntilNextAttempt;
+      final hours = timeLeft?.inHours ?? 0;
+      final minutes = (timeLeft?.inMinutes ?? 0) % 60;
+      
+      throw 'لقد تجاوزت الحد المسموح به من المحاولات، يرجى المحاولة مرة أخرى بعد $hours ساعة و $minutes دقيقة';
+    }
+    
     try {
+      // Track this attempt
+      _trackResetAttempt();
+      
       await _auth.sendPasswordResetEmail(email: email);
       _logger.info('Password reset email sent to $email');
     } on FirebaseAuthException catch (e) {
@@ -233,17 +434,21 @@ class AuthProvider with ChangeNotifier {
     notifyListeners();
 
     try {
+      _isLoading = true;
+      notifyListeners();
+
       _logger.info('Starting Google sign in');
       _isNewUser = true; // Assume new user before authentication
 
       // Trigger the Google sign-in flow
-      final GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
+      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
 
       // If user cancels the sign-in flow
       if (googleUser == null) {
         _status = AuthStatus.unauthenticated;
         notifyListeners();
         _logger.info('Google Sign In cancelled by user');
+        _isLoading = false;
         return false;
       }
 
@@ -262,6 +467,8 @@ class AuthProvider with ChangeNotifier {
         credential,
       );
 
+      _user = userCredential.user;
+      _isNewUser = false;
       _logger.info('Google sign in successful - User is new: $_isNewUser');
       _logger.info(
         'Google user email: ${userCredential.user?.email}, UID: ${userCredential.user?.uid}',
@@ -274,11 +481,13 @@ class AuthProvider with ChangeNotifier {
       _logger.severe('Google Sign In Error: ${e.message}');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
+      _isLoading = false;
       return false;
     } catch (e) {
       _logger.severe('Google Sign In Error: $e');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
+      _isLoading = false;
       return false;
     }
   }
@@ -301,6 +510,21 @@ class AuthProvider with ChangeNotifier {
     } catch (e) {
       _logger.severe('Update User Profile Error: $e');
       return false;
+    }
+  }
+
+  Future<Map<String, dynamic>?> getUserProfile() async {
+    if (_user == null) return null;
+    
+    try {
+      final doc = await _firestore.collection('users').doc(_user!.uid).get();
+      if (doc.exists) {
+        return doc.data() as Map<String, dynamic>;
+      }
+      return null;
+    } catch (e) {
+      _logger.severe('Error getting user profile: $e');
+      return null;
     }
   }
 }

@@ -738,25 +738,24 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
     );
   }
 
-  // Show success snackbar
-
   // Show error snackbar
   void _showErrorSnackBar(String message) {
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Row(
-          children: [
-            const Icon(Icons.error_outline, color: Colors.white),
-            const SizedBox(width: 12),
-            Text(message),
-          ],
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
         ),
-        backgroundColor: Colors.red.shade600,
-        duration: const Duration(seconds: 3),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-        margin: const EdgeInsets.all(16),
-        elevation: 6,
+        backgroundColor: Colors.red,
+        duration: const Duration(seconds: 2),
+        behavior: SnackBarBehavior.fixed,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+        ),
       ),
     );
   }
