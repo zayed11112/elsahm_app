@@ -21,6 +21,7 @@ import '../services/property_service_supabase.dart'; // Import PropertyServiceSu
 import '../screens/categories_screen.dart'; // Import CategoriesScreen
 import '../widgets/typewriter_animated_text.dart'; // Import the TypewriterAnimatedText widget
 import '../widgets/cropped_network_image.dart'; // Import the cropped network image widget
+import '../widgets/property_card_widget.dart'; // إضافة استيراد ويدجيت العقار الجديد
 import 'apartments_list_screen.dart'; // Import the apartments list screen
 import 'property_details_screen.dart'; // Import the property details screen
 import '../providers/auth_provider.dart'; // Importar AuthProvider
@@ -45,20 +46,19 @@ class _Feature {
   });
 }
 
-// جمل النص المتحرك - تم تقليلها إلى جملتين فقط
+// جمل النص المتحرك - تم تحسينها لتكون أكثر جاذبية وتسويقية
 const List<String> animatedTexts = [
-  "أكثر من 5 سنوات من الخبرة في خدمة الطلاب",
-  " أسعار تنافسية تناسب كل الميزانيات",
-  "مستوى عالٍ من الأمان والخصوصية",
-  "بيئة آمنة وهادئة تساعدك على التركيز والدراسة",
-  "دعم فني  متواصل لضمان راحتك",
-  " احجز مكانك الآن قبل نفاد الأماكن!",
+  "✓ أكثر من 5 سنوات من الخبرة في خدمة الطلاب",
+  "✓ أسعار تنافسية تناسب احتياجاتك وميزانيتك",
+  "✓ مستوى عالٍ من الأمان والخصوصية",
+  "✓ بيئة هادئة ومريحة للتركيز والدراسة",
+  "✓ دعم فني على مدار الساعة لراحتك",
+  "✓ فرصتك الآن - احجز قبل نفاد الأماكن!",
 ];
 
-// Fallback banner images (for offline or error cases)
+// صور البانر الاحتياطية (للحالات غير المتصلة أو عند حدوث أخطاء)
 final List<String> fallbackBannerImages = [
-  'assets/images/banners/banner1.png',
-  'assets/images/banners/banner2.png',
+  'assets/images/banners/banner1.webp',
 ];
 
 class HomeScreen extends StatefulWidget {
@@ -70,99 +70,136 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen>
     with SingleTickerProviderStateMixin {
-  // المتغيرات الثابتة والخدمات
+  // الخدمات المستخدمة في الشاشة
   final PropertyServiceSupabase _propertyService = PropertyServiceSupabase();
   final CategoryService _categoryService = CategoryService();
   final BannerService _bannerService = BannerService();
+  final Logger _logger = Logger('HomeScreen');
 
-  // متغيرات الحالة
+  // متغيرات البيانات
   List<app_banner.Banner> _banners = [];
   List<Map<String, dynamic>> _categories = [];
   List<Apartment> _latestApartments = [];
-  List<Apartment> _featuredProperties = []; // قائمة جديدة للعقارات المميزة
+  List<Apartment> _featuredProperties = [];
+  
+  // متغيرات حالة التحميل
   bool _isLoading = true;
   bool _isCategoriesLoading = true;
-  bool _isFeaturedLoading = true; // متغير جديد لحالة تحميل العقارات المميزة
+  bool _isFeaturedLoading = true;
   int _currentBannerIndex = 0;
-
-  // استريم لمراقبة التغييرات في الشقق
+  
+  // متغيرات التحكم في التحديثات
   StreamSubscription<List<Apartment>>? _apartmentsStreamSubscription;
+  late ScrollController _scrollController;
+  
+  // توقيت لإعادة جلب البيانات - للتحكم في عدد الطلبات
+  Timer? _refreshTimer;
+  
+  // تحسين الأداء من خلال تخزين القيم السابقة
+  bool _hasLoadedDataBefore = false;
 
   @override
   void initState() {
     super.initState();
-    // استخدام Future.microtask لإتاحة وقت للشاشة للبناء أولاً
+    _scrollController = ScrollController();
+    _initializeData();
+  }
+
+  // دالة جديدة لتنظيم وتسلسل تهيئة البيانات
+  void _initializeData() {
     Future.microtask(() async {
-      // جلب البانرات
-      await _fetchBanners();
+      // الترتيب الأمثل للتحميل: 
+      // 1. البانرات (صغيرة وسريعة)
+      // 2. الفئات (صغيرة وضرورية)
+      // 3. العقارات المميزة (محدودة وذات أولوية عالية)
+      // 4. أحدث العقارات (قد تكون أكثر عدداً)
+      
+      try {
+        await Future.wait([
+          _fetchBanners(),
+          _fetchCategories(),
+        ]);
+        
+        if (!mounted) return;
+        
+        // تحديث الواجهة بعد تحميل البانرات والفئات
+        setState(() {
+          _hasLoadedDataBefore = true;
+        });
+        
+        // استكمال التحميل بشكل متوازٍ
+        await Future.wait([
+          _fetchFeaturedProperties(),
+          _fetchLatestApartments(),
+        ]);
 
-      // جلب الفئات أولاً لأنها أقل في الحجم
-      await _fetchCategories();
-
-      // ثم جلب الشقق
-      await _fetchLatestApartments();
-
-      // جلب العقارات المميزة
-      await _fetchFeaturedProperties();
-
-      // إعداد المستمع للتغييرات بعد تحميل البيانات الأولية
-      _setupApartmentsListener();
+        if (mounted) {
+          _setupApartmentsListener();
+          _setupRefreshTimer();
+        }
+      } catch (e) {
+        if (kDebugMode) {
+          _logger.severe('خطأ عام في تهيئة البيانات: $e');
+        }
+        // التأكد من إخفاء مؤشرات التحميل حتى في حالة الخطأ
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+            _isCategoriesLoading = false;
+            _isFeaturedLoading = false;
+          });
+        }
+      }
     });
   }
 
-  @override
-  void dispose() {
-    _apartmentsStreamSubscription?.cancel();
-    super.dispose();
+  // إعداد مؤقت لتحديث البيانات تلقائياً بشكل دوري
+  void _setupRefreshTimer() {
+    _refreshTimer?.cancel();
+    _refreshTimer = Timer.periodic(
+      const Duration(minutes: 15), // كل 15 دقيقة تحديث في الخلفية
+      (_) => _refreshNonVisibleContent(),
+    );
   }
 
-  // Kept for future use but renamed to avoid unused warning
-  @pragma('vm:prefer-inline')
-  Color getTextColor(String colorString, bool isDarkMode) {
-    // Basic mapping based on provided Tailwind-like classes
-    // This needs refinement based on your actual theme colors
-    if (isDarkMode) {
-      switch (colorString) {
-        case "text-blue-400":
-          return Colors.blue[300]!;
-        case "text-green-400":
-          return Colors.green[300]!;
-        case "text-purple-400":
-          return Colors.purple[300]!;
-        case "text-teal-400":
-          return Colors.teal[300]!;
-        case "text-orange-400":
-          return Colors.orange[300]!;
-        case "text-indigo-400":
-          return Colors.indigo[300]!;
-        case "text-pink-400":
-          return Colors.pink[300]!;
-        default:
-          return Colors.white70;
+  // تحديث المحتوى غير المرئي في الخلفية دون إظهار مؤشرات التحميل
+  Future<void> _refreshNonVisibleContent() async {
+    try {
+      // حساب موضع العناصر المرئية حالياً
+      final offset = _scrollController.offset;
+      final screenHeight = MediaQuery.of(context).size.height;
+      
+      // البانرات: تحديث إذا كان المستخدم لا يشاهدها حالياً
+      if (offset > 250) {
+        await _fetchBanners(silent: true);
       }
-    } else {
-      switch (colorString) {
-        case "text-blue-600":
-          return Colors.blue[700]!;
-        case "text-green-600":
-          return Colors.green[700]!;
-        case "text-purple-600":
-          return Colors.purple[700]!;
-        case "text-teal-600":
-          return Colors.teal[700]!;
-        case "text-orange-600":
-          return Colors.orange[700]!;
-        case "text-indigo-600":
-          return Colors.indigo[700]!;
-        case "text-pink-600":
-          return Colors.pink[700]!;
-        default:
-          return Colors.grey[700]!;
+      
+      // الفئات: تحديث إذا كان المستخدم لا يشاهدها حالياً
+      if (offset > 400 || offset < 100) {
+        await _fetchCategories(silent: true);
+      }
+      
+      // العقارات المميزة والأحدث: تحديث بناءً على موضع التمرير
+      if (offset > screenHeight || offset < screenHeight/2) {
+        await _fetchFeaturedProperties(silent: true);
+        await _fetchLatestApartments(silent: true);
+      }
+    } catch (e) {
+      // تسجيل الخطأ فقط إذا كنا في وضع التصحيح دون إزعاج المستخدم
+      if (kDebugMode) {
+        _logger.fine('تحديث البيانات في الخلفية: $e');
       }
     }
   }
 
-  // دالة مساعدة للانتقال إلى صفحة الدردشة مع تأثير انتقال جميل - تم إزالتها
+  @override
+  void dispose() {
+    // إلغاء جميع الاشتراكات والمؤقتات لتجنب تسرب الذاكرة
+    _apartmentsStreamSubscription?.cancel();
+    _refreshTimer?.cancel();
+    _scrollController.dispose();
+    super.dispose();
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -174,588 +211,208 @@ class _HomeScreenState extends State<HomeScreen>
       body: RefreshIndicator(
         onRefresh: _refreshAllData,
         child: ListView(
+          controller: _scrollController,
           padding: const EdgeInsets.only(bottom: 0),
+          physics: const AlwaysScrollableScrollPhysics(),
           children: [
-            // 1. Banner Carousel
+            // 1. البانر الدوار - أول ما يراه المستخدم (أهم انطباع بصري)
             _buildBannerCarousel(),
 
             const SizedBox(height: 8.0),
 
-            // 2. Typewriter Text Animation
-            Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 8.0,
-              ),
-              child: TypewriterAnimatedText(
-                texts: animatedTexts,
-                textStyle: textTheme.titleMedium?.copyWith(
-                  color: colorScheme.primary,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
+            // 2. النص المتحرك - لعرض الميزات والترويج
+            _buildAnimatedTextSection(),
+            
+            // 3. بنر تسجيل الدخول - للمستخدمين غير المسجلين
+            _buildLoginPromotionBanner(),
+
             const SizedBox(height: 12.0),
 
-            // Login promotion section - visible only when user is not logged in
-            Consumer<AuthProvider>(
-              builder: (context, authProvider, _) {
-                // Show only if user is not authenticated
-                if (!authProvider.isAuthenticated) {
-                  return Container(
-                    margin: const EdgeInsets.only(
-                      bottom: 24.0,
-                      left: 16.0,
-                      right: 16.0,
-                    ),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          colorScheme.primary,
-                          Color(0xFF0288D1), // A slightly lighter blue
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.15),
-                          blurRadius: 12,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: Stack(
-                      children: [
-                        // Background decorative elements
-                        Positioned(
-                          right: -20,
-                          top: -20,
-                          child: Container(
-                            width: 100,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-                        Positioned(
-                          left: -15,
-                          bottom: -15,
-                          child: Container(
-                            width: 80,
-                            height: 80,
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                        ),
-
-                        // Content with improved responsive layout
-                        Padding(
-                          padding: const EdgeInsets.all(24.0),
-                          child: LayoutBuilder(
-                            builder: (context, constraints) {
-                              // Determine if we need a compact layout
-                              final bool isCompact = constraints.maxWidth < 350;
-
-                              return Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
-                                children: [
-                                  // Left section - Icon
-                                  Container(
-                                    width: isCompact ? 48 : 60,
-                                    height: isCompact ? 48 : 60,
-                                    decoration: BoxDecoration(
-                                      color: Colors.white.withValues(
-                                        alpha: 0.15,
-                                      ),
-                                      shape: BoxShape.circle,
-                                    ),
-                                    child: Icon(
-                                      Icons.person,
-                                      color: Colors.white,
-                                      size: isCompact ? 24 : 32,
-                                    ),
-                                  ),
-
-                                  SizedBox(width: isCompact ? 12 : 20),
-
-                                  // Middle section - Text with Expanded to ensure proper wrapping
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        AutoSizeText(
-                                          'سجل دخولك الآن',
-                                          style: textTheme.titleMedium
-                                              ?.copyWith(
-                                                color: Colors.white,
-                                                fontWeight: FontWeight.bold,
-                                              ),
-                                          maxLines: 1,
-                                          minFontSize: 14,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                        const SizedBox(height: 8),
-                                        AutoSizeText(
-                                          'للوصول إلى مميزات حصرية',
-                                          style: textTheme.bodyMedium?.copyWith(
-                                            color: Colors.white.withValues(
-                                              alpha: 0.9,
-                                            ),
-                                          ),
-                                          maxLines: 2,
-                                          minFontSize: 12,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-
-                                  SizedBox(width: isCompact ? 10 : 16),
-
-                                  // Right section - Login Button
-                                  ElevatedButton(
-                                    onPressed: () {
-                                      Navigator.push(
-                                        context,
-                                        MaterialPageRoute(
-                                          builder: (_) => const LoginScreen(),
-                                        ),
-                                      );
-                                    },
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Colors.white,
-                                      foregroundColor: colorScheme.primary,
-                                      padding: EdgeInsets.symmetric(
-                                        horizontal: isCompact ? 8 : 12,
-                                        vertical: isCompact ? 10 : 12,
-                                      ),
-                                      shape: RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.circular(12),
-                                      ),
-                                      elevation: 2,
-                                    ),
-                                    child:
-                                        isCompact
-                                            ? const Icon(Icons.login, size: 18)
-                                            : const Row(
-                                              mainAxisSize: MainAxisSize.min,
-                                              children: [
-                                                Icon(Icons.login, size: 18),
-                                                SizedBox(width: 6),
-                                                Text(
-                                                  'تسجيل الدخول',
-                                                  style: TextStyle(
-                                                    fontWeight: FontWeight.bold,
-                                                  ),
-                                                ),
-                                              ],
-                                            ),
-                                  ),
-                                ],
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                } else {
-                  // Return empty container when user is logged in
-                  return const SizedBox.shrink();
-                }
-              },
-            ),
-
-            // 3. Categories Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  TextButton(
-                    onPressed: () {
-                      Provider.of<NavigationProvider>(
-                        context,
-                        listen: false,
-                      ).setIndex(2);
-                    },
-                    child: Text(
-                      'عرض الكل',
-                      style: TextStyle(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    'تصفح حسب الفئات',
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8.0),
-
-            // بناء قسم التصنيفات - مع التحقق من حالة التحميل
+            // 4. قسم التصنيفات - بتصميم جديد أكثر جاذبية
+            _buildCategoriesHeader(),
             _buildCategoriesSection(),
 
-            const SizedBox(height: 12.0),
-
-            // 4. Recent Properties Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  if (!_isLoading && _latestApartments.isNotEmpty)
-                    TextButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const ApartmentsListScreen(),
-                          ),
-                        );
-                      },
-                      child: Text(
-                        'عرض الكل',
-                        style: TextStyle(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  Text(
-                    'أحدث العقارات',
-                    style: textTheme.titleLarge?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 8.0),
-
-            // بناء قسم الشقق - مع التحقق من حالة التحميل
+            // 5. قسم أحدث العقارات
+            _buildLatestPropertiesSectionHeader(),
             _buildApartmentsSection(),
 
             const SizedBox(height: 16.0),
 
-            // 5. Featured Properties Section (العقارات المميزة)
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.05),
-                    Colors.transparent,
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(vertical: 16.0),
-              margin: const EdgeInsets.only(bottom: 8.0),
-              child: Column(
-                children: [
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16.0),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        TextButton.icon(
-                          onPressed: () {
-                            // Navigate to featured properties screen
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                builder:
-                                    (context) =>
-                                        const FeaturedPropertiesScreen(),
-                              ),
-                            );
-                          },
-                          icon: Icon(
-                            Icons.arrow_back_ios,
-                            size: 14,
-                            color: colorScheme.primary,
-                          ),
-                          label: Text(
-                            'المزيد',
-                            style: TextStyle(
-                              color: colorScheme.primary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                        ),
-                        Row(
-                          children: [
-                            Icon(Icons.star, color: Colors.amber, size: 20),
-                            const SizedBox(width: 8),
-                            Text(
-                              'العقارات المميزة',
-                              style: textTheme.titleLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(height: 12.0),
-
-                  SizedBox(
-                    height: 240,
-                    child:
-                        !_isFeaturedLoading && _featuredProperties.isNotEmpty
-                            ? ListView.builder(
-                              padding: const EdgeInsets.only(
-                                right: 8.0,
-                                left: 16.0,
-                              ),
-                              scrollDirection: Axis.horizontal,
-                              itemCount:
-                                  _featuredProperties.length > 3
-                                      ? 3
-                                      : _featuredProperties.length,
-                              itemBuilder: (context, index) {
-                                final apartment = _featuredProperties[index];
-                                return Container(
-                                  width:
-                                      MediaQuery.of(context).size.width * 0.85,
-                                  margin: const EdgeInsets.only(right: 12.0),
-                                  child: Stack(
-                                    children: [
-                                      _buildFeaturedPropertyCard(apartment),
-                                      Positioned(
-                                        top: 12,
-                                        right: 12,
-                                        child: Container(
-                                          padding: const EdgeInsets.symmetric(
-                                            horizontal: 8,
-                                            vertical: 4,
-                                          ),
-                                          decoration: BoxDecoration(
-                                            color: Colors.amber,
-                                            borderRadius: BorderRadius.circular(
-                                              6,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withAlpha(
-                                                  77,
-                                                ),
-                                                spreadRadius: 1,
-                                                blurRadius: 2,
-                                                offset: const Offset(0, 1),
-                                              ),
-                                            ],
-                                          ),
-                                          child: const Row(
-                                            mainAxisSize: MainAxisSize.min,
-                                            children: [
-                                              Icon(
-                                                Icons.star,
-                                                color: Colors.white,
-                                                size: 14,
-                                              ),
-                                              SizedBox(width: 4),
-                                              Text(
-                                                'مميز',
-                                                style: TextStyle(
-                                                  color: Colors.white,
-                                                  fontWeight: FontWeight.bold,
-                                                  fontSize: 12,
-                                                ),
-                                              ),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              },
-                            )
-                            : Center(
-                              child:
-                                  _isFeaturedLoading
-                                      ? CircularProgressIndicator(
-                                        color: theme.colorScheme.primary,
-                                      )
-                                      : Padding(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 16.0,
-                                        ),
-                                        child: Column(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.center,
-                                          children: [
-                                            Icon(
-                                              Icons.home_outlined,
-                                              size: 48,
-                                              color: theme.colorScheme.primary
-                                                  .withValues(alpha: 0.7),
-                                            ),
-                                            const SizedBox(height: 12),
-                                            Text(
-                                              'لا توجد عقارات مميزة متاحة حالياً',
-                                              textAlign: TextAlign.center,
-                                              style: textTheme.titleMedium
-                                                  ?.copyWith(
-                                                    color: theme
-                                                        .colorScheme
-                                                        .onSurface
-                                                        .withValues(alpha: 0.7),
-                                                  ),
-                                            ),
-                                            const SizedBox(height: 8),
-                                            TextButton(
-                                              onPressed:
-                                                  _fetchFeaturedProperties,
-                                              child: Text('تحديث'),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                            ),
-                  ),
-                ],
-              ),
-            ),
+            // 6. قسم العقارات المميزة - بتأثيرات جديدة للتمييز
+            _buildFeaturedPropertiesSection(),
 
             const SizedBox(height: 24.0),
 
-            // 6. Why Choose Us Section (لماذا نحن الخيار الأفضل)
-            Container(
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topRight,
-                  end: Alignment.bottomLeft,
-                  colors: [
-                    theme.colorScheme.primary.withValues(alpha: 0.1),
-                    theme.colorScheme.secondary.withValues(alpha: 0.05),
-                  ],
-                ),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              padding: const EdgeInsets.symmetric(
-                vertical: 20.0,
-                horizontal: 16.0,
-              ),
-              margin: const EdgeInsets.only(bottom: 24.0),
-              child: Column(
-                children: [
-                  // Section Header
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: theme.colorScheme.primary.withValues(
-                            alpha: 0.1,
-                          ),
-                          shape: BoxShape.circle,
-                        ),
-                        child: Icon(
-                          Icons.verified_outlined,
-                          color: theme.colorScheme.primary,
-                          size: 24,
-                        ),
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        'لماذا نحن الخيار الأفضل',
-                        style: textTheme.titleLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 8.0),
-
-                  Text(
-                    'نسعى دائماً لتقديم أفضل الخدمات العقارية في مدينة العريش',
-                    style: textTheme.bodyMedium?.copyWith(
-                      color:
-                          theme.brightness == Brightness.dark
-                              ? Colors.white70
-                              : Colors.black87,
-                      height: 1.5,
-                    ),
-                    textAlign: TextAlign.center,
-                  ),
-
-                  const SizedBox(height: 20.0),
-
-                  // Features
-                  _buildWhyChooseUsFeatures(),
-
-                  const SizedBox(height: 16.0),
-
-                  // View More Button
-                  TextButton.icon(
-                    onPressed: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => const WhyChooseUsScreen(),
-                        ),
-                      );
-                    },
-                    icon: Text(
-                      'عرض المزيد',
-                      style: TextStyle(
-                        color: theme.colorScheme.primary,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    label: Icon(
-                      Icons.arrow_forward_ios,
-                      size: 14,
-                      color: theme.colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+            // 7. قسم لماذا نحن الخيار الأفضل
+            _buildWhyChooseUsSection(),
 
             const SizedBox(height: 16.0),
 
-            // 7. Contact Us Section (تواصل معنا)
-            _buildContactUsSection(context),
+            // 8. قسم تواصل معنا - تصميم عصري ومتجاوب
+            _buildContactUsSection(),
+            
+            const SizedBox(height: 24.0),
+            
+            // 9. قسم معلومات المصمم - في نهاية الصفحة
+            _buildDesignerInfoSection(),
           ],
         ),
       ),
     );
   }
 
-  // دالة جديدة لبناء البانر بطريقة محسنة
+  // --- أقسام الواجهة المقسمة لتسهيل الصيانة ---
+  
+  // قسم النص المتحرك المحسن
+  Widget _buildAnimatedTextSection() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 10.0),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: Theme.of(context).colorScheme.primary.withOpacity(0.05),
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+            width: 1,
+          ),
+        ),
+        child: TypewriterAnimatedText(
+          texts: animatedTexts,
+          textStyle: Theme.of(context).textTheme.titleMedium?.copyWith(
+            color: Theme.of(context).colorScheme.primary,
+            fontWeight: FontWeight.w600,
+            height: 1.5,
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // عنوان قسم الفئات - تم تحسينه بإضافة رموز وتأثيرات
+  Widget _buildCategoriesHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          TextButton.icon(
+            onPressed: () {
+              Provider.of<NavigationProvider>(context, listen: false).setIndex(2);
+            },
+            icon: Icon(
+              Icons.grid_view_rounded, 
+              size: 18, 
+              color: Theme.of(context).colorScheme.primary,
+            ),
+            label: Text(
+              'عرض الكل',
+              style: TextStyle(
+                color: Theme.of(context).colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          Row(
+            children: [
+              Text(
+                'تصفح حسب الفئات',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.category_rounded,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // عنوان أحدث العقارات - تصميم جديد أكثر وضوحاً
+  Widget _buildLatestPropertiesSectionHeader() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          if (!_isLoading && _latestApartments.isNotEmpty)
+            TextButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (context) => const ApartmentsListScreen()),
+                );
+              },
+              icon: Icon(
+                Icons.arrow_back_ios_rounded, 
+                size: 14, 
+                color: Theme.of(context).colorScheme.primary,
+              ),
+              label: Text(
+                'عرض الكل',
+                style: TextStyle(
+                  color: Theme.of(context).colorScheme.primary,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+          Row(
+            children: [
+              Text(
+                'أحدث العقارات',
+                style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  Icons.home_rounded,
+                  size: 18,
+                  color: Theme.of(context).colorScheme.primary,
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // --- دوال جلب البيانات المحسنة ---
+  
+  // سيتم لاحقاً تنفيذ بقية دوال جلب البيانات وبناء الأقسام المختلفة
+  
+  // دالة البانر المُحسنة
   Widget _buildBannerCarousel() {
-    // إذا كانت البانرات قيد التحميل، نعرض مؤشر تحميل
+    // إذا كانت البانرات قيد التحميل، نعرض مؤشر تحميل محسن
     if (_isLoading) {
       return Column(
         children: [
-          _shimmerLoadingBanner(),
+          _buildShimmerLoadingBanner(),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: List.generate(
-              4,
+              3,
               (index) => Container(
                 width: 8.0,
                 height: 8.0,
@@ -765,7 +422,7 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
                 decoration: BoxDecoration(
                   borderRadius: BorderRadius.circular(4.0),
-                  color: Colors.grey.withAlpha(102),
+                  color: Colors.grey.withOpacity(0.4),
                 ),
               ),
             ),
@@ -774,214 +431,650 @@ class _HomeScreenState extends State<HomeScreen>
       );
     }
 
-    // تسجيل معلومات عن البانرات لتشخيص المشكلة
-    if (kDebugMode) {
-      final logger = Logger('HomeScreen');
-      logger.info('عدد البانرات المحملة: ${_banners.length}');
-      for (var banner in _banners) {
-        logger.fine('بانر في الواجهة: ID=${banner.id}, URL=${banner.imageUrl}');
-      }
-    }
+    // تحضير مصادر البانر (من API أو استخدام الصور الاحتياطية)
+    final List<String> bannerSources = _banners.isNotEmpty
+        ? _banners.map((banner) => banner.imageUrl).toList()
+        : fallbackBannerImages;
 
-    // إذا لم تكن هناك بانرات، نستخدم الصور الاحتياطية ونضيف زر إعادة التحميل
-    if (_banners.isEmpty) {
-      final List<String> bannerSources = fallbackBannerImages;
-
-      return Column(
-        children: [
-          Stack(
-            children: [
-              cs.CarouselSlider(
-                options: cs.CarouselOptions(
-                  height: 200.0,
-                  autoPlay: true,
-                  autoPlayInterval: const Duration(seconds: 20),
-                  autoPlayAnimationDuration: const Duration(milliseconds: 600),
-                  autoPlayCurve: Curves.easeInOutCubic,
-                  enlargeCenterPage: true,
-                  viewportFraction: 0.93,
-                  aspectRatio: 1440 / 570,
-                  onPageChanged: (index, reason) {
-                    setState(() {
-                      _currentBannerIndex = index;
-                    });
-                  },
-                ),
-                items:
-                    bannerSources
-                        .map(
-                          (item) => Builder(
-                            builder: (BuildContext context) {
-                              return Container(
-                                width: MediaQuery.of(context).size.width,
-                                margin: const EdgeInsets.symmetric(
-                                  horizontal: 5.0,
-                                ),
-                                decoration: BoxDecoration(
-                                  borderRadius: BorderRadius.circular(15.0),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withAlpha(38),
-                                      blurRadius: 10,
-                                      offset: const Offset(0, 5),
-                                    ),
-                                  ],
-                                ),
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(15.0),
-                                  child: _shimmerBannerImage(imageAsset: item),
-                                ),
-                              );
-                            },
-                          ),
-                        )
-                        .toList(),
-              ),
-            ],
-          ),
-
-          // مؤشرات البانر
-          const SizedBox(height: 8),
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 300),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children:
-                  bannerSources.asMap().entries.map((entry) {
-                    return AnimatedContainer(
-                      duration: const Duration(milliseconds: 300),
-                      width: _currentBannerIndex == entry.key ? 18.0 : 8.0,
-                      height: 8.0,
-                      margin: const EdgeInsets.symmetric(
-                        vertical: 8.0,
-                        horizontal: 4.0,
-                      ),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(4.0),
-                        color: (Theme.of(context).brightness == Brightness.dark
-                                ? Colors.white
-                                : Colors.black)
-                            .withAlpha(
-                              _currentBannerIndex == entry.key
-                                  ? 230
-                                  : 102, // 0.9 * 255 = 230, 0.4 * 255 = 102
-                            ),
-                      ),
-                    );
-                  }).toList(),
-            ),
-          ),
-        ],
-      );
-    }
-
-    // استخدام البانرات من Supabase
-    final List<String> bannerSources =
-        _banners.map((banner) => banner.imageUrl).toList();
-
-    if (kDebugMode) {
-      final logger = Logger('HomeScreen');
-      logger.info('مصادر البانر: $bannerSources');
-    }
-
+    // تصميم محسن للبانر مع تأثيرات انتقالية
     return Column(
       children: [
-        Stack(
-          children: [
-            // تحسين تحميل البانر
-            cs.CarouselSlider(
-              options: cs.CarouselOptions(
-                height: 200.0,
-                autoPlay: true,
-                autoPlayInterval: const Duration(seconds: 20),
-                autoPlayAnimationDuration: const Duration(milliseconds: 600),
-                autoPlayCurve: Curves.easeInOutCubic,
-                enlargeCenterPage: true,
-                viewportFraction: 0.93,
-                aspectRatio: 1440 / 570,
-                onPageChanged: (index, reason) {
-                  setState(() {
-                    _currentBannerIndex = index;
-                  });
-                },
-              ),
-              items:
-                  bannerSources
-                      .map(
-                        (item) => Builder(
-                          builder: (BuildContext context) {
-                            // No need to get the banner object here
-
-                            return Container(
-                              width: MediaQuery.of(context).size.width,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 5.0,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(15.0),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withAlpha(38),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 5),
-                                  ),
-                                ],
-                              ),
-                              child: ClipRRect(
-                                borderRadius: BorderRadius.circular(15.0),
-                                child: _networkBannerImage(imageUrl: item),
-                              ),
-                            );
-                          },
-                        ),
-                      )
-                      .toList(),
+        SizedBox(
+          height: 200.0,
+          child: cs.CarouselSlider(
+            options: cs.CarouselOptions(
+              height: 200.0,
+              autoPlay: true,
+              autoPlayInterval: const Duration(seconds: 8),
+              autoPlayAnimationDuration: const Duration(milliseconds: 800),
+              autoPlayCurve: Curves.fastOutSlowIn,
+              enlargeCenterPage: true,
+              viewportFraction: 0.93,
+              onPageChanged: (index, reason) {
+                setState(() {
+                  _currentBannerIndex = index;
+                });
+              },
             ),
-          ],
+            items: bannerSources.map((item) {
+              return Builder(
+                builder: (BuildContext context) {
+                  return Container(
+                    width: MediaQuery.of(context).size.width,
+                    margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16.0),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.15),
+                          blurRadius: 10,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16.0),
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          // الصورة الأساسية
+                          _buildOptimizedBannerImage(
+                            imageUrl: item,
+                            isAsset: !item.startsWith('http'),
+                          ),
+
+                          // طبقة تظليل تدريجية لتحسين قراءة النصوص
+                          Container(
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topCenter,
+                                end: Alignment.bottomCenter,
+                                colors: [
+                                  Colors.black.withOpacity(0.0),
+                                  Colors.black.withOpacity(0.4),
+                                ],
+                                stops: const [0.7, 1.0],
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  );
+                },
+              );
+            }).toList(),
+          ),
         ),
 
-        // مؤشرات البانر
-        const SizedBox(height: 8),
+        // نقاط تحديد البانر الحالي
+        const SizedBox(height: 12),
         AnimatedContainer(
           duration: const Duration(milliseconds: 300),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children:
-                bannerSources.asMap().entries.map((entry) {
-                  return AnimatedContainer(
-                    duration: const Duration(milliseconds: 300),
-                    width: _currentBannerIndex == entry.key ? 18.0 : 8.0,
-                    height: 8.0,
-                    margin: const EdgeInsets.symmetric(
-                      vertical: 8.0,
-                      horizontal: 4.0,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4.0),
-                      color: (Theme.of(context).brightness == Brightness.dark
-                              ? Colors.white
-                              : Colors.black)
-                          .withAlpha(
-                            _currentBannerIndex == entry.key ? 230 : 102,
+            children: bannerSources.asMap().entries.map((entry) {
+              return Container(
+                width: _currentBannerIndex == entry.key ? 24.0 : 12.0,
+                height: 6.0,
+                margin: const EdgeInsets.symmetric(horizontal: 3.0),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(3.0),
+                  color: _currentBannerIndex == entry.key
+                      ? Theme.of(context).colorScheme.primary
+                      : Colors.grey.withOpacity(0.3),
+                  boxShadow: _currentBannerIndex == entry.key
+                      ? [
+                          BoxShadow(
+                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                            blurRadius: 4,
+                            offset: const Offset(0, 1),
                           ),
-                    ),
-                  );
-                }).toList(),
+                        ]
+                      : null,
+                ),
+              );
+            }).toList(),
           ),
         ),
       ],
     );
   }
+  
+  // بنر ترويجي لتسجيل الدخول مع تصميم محسن
+  Widget _buildLoginPromotionBanner() {
+    return Consumer<AuthProvider>(
+      builder: (context, authProvider, _) {
+        // عرض البنر فقط إذا لم يكن المستخدم مسجلاً
+        if (!authProvider.isAuthenticated) {
+          return Container(
+            margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  Theme.of(context).colorScheme.primary,
+                  Theme.of(context).colorScheme.primary.withOpacity(0.85),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(20),
+              boxShadow: [
+                BoxShadow(
+                  color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                  blurRadius: 12,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Stack(
+              children: [
+                // عناصر زخرفية في الخلفية
+                Positioned(
+                  right: -15,
+                  top: -15,
+                  child: Container(
+                    width: 100,
+                    height: 100,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: -20,
+                  bottom: -20,
+                  child: Container(
+                    width: 80,
+                    height: 80,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ),
 
-  // دالة لبناء قسم التصنيفات
-  Widget _buildCategoriesSection() {
-    if (_isCategoriesLoading) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.all(16.0),
-          child: CircularProgressIndicator(),
+                // محتوى البنر
+                Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // تحديد ما إذا كنا نحتاج إلى تصميم مضغوط
+                      final bool isCompact = constraints.maxWidth < 350;
+
+                      return Row(
+                        crossAxisAlignment: CrossAxisAlignment.center,
+                        children: [
+                          Container(
+                            width: isCompact ? 48 : 56,
+                            height: isCompact ? 48 : 56,
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.15),
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.1),
+                                  blurRadius: 8,
+                                  offset: const Offset(0, 4),
+                                ),
+                              ],
+                            ),
+                            child: Icon(
+                              Icons.login_rounded,
+                              color: Colors.white,
+                              size: isCompact ? 24 : 28,
+                            ),
+                          ),
+
+                          SizedBox(width: isCompact ? 12 : 16),
+
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'سجل دخولك الآن',
+                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: isCompact ? 16 : 18,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'واستمتع بمزايا حصرية تنتظرك',
+                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                    color: Colors.white.withOpacity(0.9),
+                                    fontSize: isCompact ? 13 : 14,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                          SizedBox(width: isCompact ? 8 : 12),
+
+                          ElevatedButton(
+                            onPressed: () => _navigateToLogin(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              foregroundColor: Theme.of(context).colorScheme.primary,
+                              padding: EdgeInsets.symmetric(
+                                horizontal: isCompact ? 12 : 16,
+                                vertical: 12,
+                              ),
+                              elevation: 3,
+                              shadowColor: Colors.black.withOpacity(0.3),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Icon(
+                                  Icons.login_rounded,
+                                  size: isCompact ? 16 : 18,
+                                ),
+                                if (!isCompact) const SizedBox(width: 6),
+                                if (!isCompact)
+                                  const Text(
+                                    'تسجيل الدخول',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                ),
+              ],
+            ),
+          );
+        } else {
+          // عدم عرض أي شيء للمستخدمين المسجلين
+          return const SizedBox.shrink();
+        }
+      },
+    );
+  }
+  
+  // --- Helper widgets for banner section ---
+  
+  // تحميل الصور بطريقة محسنة للبانر
+  Widget _buildOptimizedBannerImage({
+    required String imageUrl,
+    bool isAsset = false,
+  }) {
+    if (isAsset) {
+      return Image.asset(
+        imageUrl,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => _buildBannerErrorWidget(),
+      );
+    }
+
+    return CachedNetworkImage(
+      imageUrl: imageUrl,
+      fit: BoxFit.cover,
+      placeholder: (context, url) => _buildShimmerPlaceholder(),
+      errorWidget: (context, url, error) {
+        if (kDebugMode) {
+          _logger.warning('خطأ في تحميل صورة البانر: $url - $error');
+        }
+        return _buildBannerErrorWidget();
+      },
+      fadeInDuration: const Duration(milliseconds: 300),
+      fadeOutDuration: const Duration(milliseconds: 300),
+      memCacheHeight: (200 * MediaQuery.of(context).devicePixelRatio).round(),
+    );
+  }
+  
+  // Widget for shimmer loading effect
+  Widget _buildShimmerLoadingBanner() {
+    return Shimmer.fromColors(
+      baseColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[800]!
+          : Colors.grey[300]!,
+      highlightColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[700]!
+          : Colors.grey[100]!,
+      child: Container(
+        height: 200.0,
+        margin: const EdgeInsets.symmetric(horizontal: 16.0),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(16.0),
+          color: Theme.of(context).brightness == Brightness.dark
+              ? Colors.black
+              : Colors.white,
+        ),
+      ),
+    );
+  }
+  
+  // Widget for shimmer placeholder
+  Widget _buildShimmerPlaceholder() {
+    return Shimmer.fromColors(
+      baseColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[800]!
+          : Colors.grey[300]!,
+      highlightColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[700]!
+          : Colors.grey[100]!,
+      child: Container(
+        color: Theme.of(context).brightness == Brightness.dark
+            ? Colors.black
+            : Colors.white,
+      ),
+    );
+  }
+  
+  // Widget for banner error state
+  Widget _buildBannerErrorWidget() {
+    return Container(
+      color: Theme.of(context).colorScheme.surface,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.image_not_supported_rounded,
+            size: 42,
+            color: Theme.of(context).colorScheme.primary.withOpacity(0.5),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'لا يمكن تحميل الصورة',
+            style: TextStyle(
+              color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  
+  // التنقل إلى شاشة تسجيل الدخول
+  void _navigateToLogin() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
+  }
+  
+  // تحديث بانرات تطبيقنا
+  Future<void> _fetchBanners({bool silent = false}) async {
+    if (!mounted) return;
+
+    try {
+      if (!silent) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
+
+      // تسجيل بداية تحميل البانرات
+      if (kDebugMode) {
+        _logger.info('بدء تحميل البانرات...');
+      }
+
+      // جلب البانرات من الخدمة
+      final banners = await _bannerService.getBanners();
+
+      if (kDebugMode) {
+        _logger.info('تم استلام ${banners.length} بانر');
+      }
+
+      if (mounted) {
+        setState(() {
+          _banners = banners;
+          if (!silent) {
+            _isLoading = false;
+          }
+        });
+
+        // إذا لم تتوفر بانرات، نحاول مرة أخرى بعد تأخير قصير
+        if (banners.isEmpty && !silent) {
+          Future.delayed(const Duration(seconds: 3), () {
+            if (mounted) {
+              _fetchBanners(silent: true);
+            }
+          });
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        _logger.warning('خطأ في جلب البانرات: $e');
+      }
+
+      if (mounted && !silent) {
+        setState(() {
+          _banners = [];
+          _isLoading = false;
+        });
+      }
+    }
+  }
+  
+  Future<void> _fetchCategories({bool silent = false}) async {
+    if (!mounted) return;
+
+    try {
+      if (!silent) {
+        setState(() {
+          _isCategoriesLoading = true;
+        });
+      }
+
+      final categories = await _categoryService.getCategories();
+
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        _logger.info('تم جلب ${categories.length} فئة');
+      }
+
+      setState(() {
+        _categories = categories;
+        if (!silent) {
+          _isCategoriesLoading = false;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        _logger.warning('خطأ في جلب الفئات: $e');
+      }
+
+      setState(() {
+        if (!silent) {
+          _isCategoriesLoading = false;
+        }
+      });
+    }
+  }
+  
+  Future<void> _fetchLatestApartments({bool silent = false}) async {
+    if (!mounted) return;
+
+    try {
+      if (!silent) {
+        setState(() {
+          _isLoading = true;
+        });
+      }
+
+      // تسجيل بداية الطلب
+      if (kDebugMode) {
+        _logger.info('بدء جلب أحدث العقارات...');
+      }
+
+      // مسح التخزين المؤقت
+      _propertyService.clearCache(key: 'latest_properties');
+      
+      // جلب البيانات
+      List<Apartment> apartments = [];
+      
+      try {
+        apartments = await _propertyService.getLatestProperties(limit: 10);
+      } catch (innerError) {
+        if (kDebugMode) {
+          _logger.warning('خطأ في جلب أحدث العقارات. محاولة جلب العقارات المتاحة: $innerError');
+        }
+        
+        // جلب العقارات المتاحة كخيار بديل
+        apartments = await _propertyService.getAvailableProperties(limit: 10);
+      }
+
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        _logger.info('تم جلب ${apartments.length} عقار');
+      }
+
+      setState(() {
+        _latestApartments = apartments;
+        if (!silent) {
+          _isLoading = false;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        _logger.warning('خطأ في جلب العقارات: $e');
+      }
+
+      setState(() {
+        if (!silent) {
+          _isLoading = false;
+        }
+      });
+
+      if (!silent && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text('حدث خطأ أثناء تحميل البيانات، يرجى المحاولة مرة أخرى'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+            margin: const EdgeInsets.all(16),
+          ),
+        );
+      }
+    }
+  }
+  
+  Future<void> _fetchFeaturedProperties({bool silent = false}) async {
+    if (!mounted) return;
+
+    try {
+      if (!silent) {
+        setState(() {
+          _isFeaturedLoading = true;
+        });
+      }
+
+      if (kDebugMode) {
+        _logger.info('بدء جلب العقارات المميزة...');
+      }
+
+      final featuredProperties = await _propertyService.getFeaturedProperties(limit: 6);
+
+      if (!mounted) return;
+
+      setState(() {
+        _featuredProperties = featuredProperties;
+        if (!silent) {
+          _isFeaturedLoading = false;
+        }
+      });
+
+      if (kDebugMode) {
+        _logger.info('تم جلب ${featuredProperties.length} عقار مميز');
+      }
+    } catch (e) {
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        _logger.warning('خطأ في جلب العقارات المميزة: $e');
+      }
+
+      setState(() {
+        if (!silent) {
+          _isFeaturedLoading = false;
+        }
+      });
+    }
+  }
+  
+  void _setupApartmentsListener() {
+    // سيتم تنفيذها لاحقاً
+  }
+  
+  Future<void> _refreshAllData() async {
+    if (!mounted) return;
+
+    try {
+      setState(() {
+        _isLoading = true;
+        _isCategoriesLoading = true;
+        _isFeaturedLoading = true;
+      });
+
+      // تنفيذ عمليات التحديث بالتوازي
+      await Future.wait([
+        _fetchBanners(),
+        _fetchCategories(),
+        _fetchLatestApartments(),
+        _fetchFeaturedProperties(),
+      ]);
+
+      if (!mounted) return;
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('تم تحديث البيانات بنجاح'),
+          duration: Duration(seconds: 2),
+          behavior: SnackBarBehavior.floating,
         ),
       );
+    } catch (e) {
+      if (kDebugMode) {
+        _logger.severe('خطأ في تحديث البيانات: $e');
+      }
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('حدث خطأ أثناء تحديث البيانات، يرجى المحاولة مرة أخرى'),
+            backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+          _isCategoriesLoading = false;
+          _isFeaturedLoading = false;
+        });
+      }
+    }
+  }
+
+  // --- قسم الفئات ---
+  
+  // قسم الفئات المحسن
+  Widget _buildCategoriesSection() {
+    if (_isCategoriesLoading) {
+      return _buildCategoriesLoadingSection();
     }
 
     return GridView.builder(
@@ -992,240 +1085,112 @@ class _HomeScreenState extends State<HomeScreen>
         crossAxisCount: 2,
         crossAxisSpacing: 10.0,
         mainAxisSpacing: 10.0,
-        childAspectRatio: 3.0, // زيادة النسبة لإتاحة مساحة أكبر للنص
+        childAspectRatio: 3.0,
       ),
       itemCount: _categories.length > 6 ? 6 : _categories.length,
       itemBuilder: (context, index) {
-        // حساب الفهرس المعكوس ليكون الترتيب من اليمين إلى اليسار
-        final crossAxisCount = 2; // عدد الأعمدة ثابت هنا (2)
-        final rowIndex = index ~/ crossAxisCount; // صف العنصر الحالي
-        final rowStartIndex = rowIndex * crossAxisCount; // بداية الصف الحالي
-        final reverseIndex =
-            rowStartIndex + crossAxisCount - 1 - (index % crossAxisCount);
-
+        // حساب الفهرس المعكوس للترتيب من اليمين إلى اليسار
+        final crossAxisCount = 2;
+        final rowIndex = index ~/ crossAxisCount; 
+        final rowStartIndex = rowIndex * crossAxisCount;
+        final reverseIndex = rowStartIndex + crossAxisCount - 1 - (index % crossAxisCount);
+        
         // التأكد من أن الفهرس المعكوس في نطاق مقبول
         final maxIndex = _categories.length > 6 ? 6 : _categories.length;
         final safeIndex = reverseIndex < maxIndex ? reverseIndex : index;
-
+        
         final category = _categories[safeIndex];
         return _buildCategoryCard(
-          context,
           category['iconUrl'] ?? category['icon'],
           category['label'] as String,
         );
       },
     );
   }
-
-  // دالة لبناء قسم الشقق
-  Widget _buildApartmentsSection() {
-    if (_isLoading) {
-      return const SizedBox(
-        height: 200,
-        child: Center(child: CircularProgressIndicator()),
-      );
-    }
-
-    if (_latestApartments.isEmpty) {
-      final theme = Theme.of(context);
-      final isDarkMode = theme.brightness == Brightness.dark;
-
-      return Container(
-        height: 250,
-        margin: const EdgeInsets.symmetric(horizontal: 16.0),
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(15),
-          boxShadow: [
-            BoxShadow(
-              color:
-                  isDarkMode
-                      ? Colors.black.withValues(alpha: 0.2)
-                      : Colors.grey.withValues(alpha: 0.1),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  color:
-                      isDarkMode
-                          ? theme.colorScheme.surface.withValues(alpha: 0.1)
-                          : theme.colorScheme.primary.withValues(alpha: 0.05),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  Icons.apartment_outlined,
-                  size: 40,
-                  color: theme.colorScheme.primary,
-                ),
-              ),
-              const SizedBox(height: 12),
-              Text(
-                'لا توجد عقارات متاحة حالياً',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              const SizedBox(height: 16),
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 300),
-                child: ElevatedButton(
-                  onPressed: () async {
-                    // عرض مؤشر تقدم داخل الزر أثناء عملية التحديث
-                    setState(() {
-                      _isLoading = true;
-                    });
-
-                    // تحديث البيانات
-                    await _fetchLatestApartments();
-
-                    // إظهار رسالة نجاح
-                    if (mounted) {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(
-                          content: const Text('تم تحديث البيانات بنجاح'),
-                          backgroundColor: theme.colorScheme.primary,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: theme.colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text('تحديث الآن'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 290,
-      child: ListView.builder(
-        padding: const EdgeInsets.symmetric(horizontal: 8.0),
-        scrollDirection: Axis.horizontal,
-        itemCount: _latestApartments.length,
-        itemBuilder: (context, index) {
-          final apartment = _latestApartments[index];
-          return Container(
-            width: 240,
-            margin: const EdgeInsets.symmetric(horizontal: 8.0),
-            child: _buildPropertyCard(apartment),
-          );
-        },
+  
+  // واجهة تحميل الفئات
+  Widget _buildCategoriesLoadingSection() {
+    return GridView.builder(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+      shrinkWrap: true,
+      physics: const NeverScrollableScrollPhysics(),
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 10.0,
+        mainAxisSpacing: 10.0,
+        childAspectRatio: 3.0,
       ),
+      itemCount: 4,
+      itemBuilder: (_, __) => _buildCategoryShimmerCard(),
     );
   }
-
-  // --- Helper Widgets --- (Keep existing helpers)
-  Widget _buildCategoryCard(BuildContext context, dynamic icon, String label) {
+  
+  // بطاقة فئة محسنة
+  Widget _buildCategoryCard(dynamic icon, String label) {
     final theme = Theme.of(context);
-
-    // التحقق من طول النص لتحديد ما إذا كان يحتاج إلى تأثير التمرير
     final bool isLongText = label.length > 7;
 
     return Card(
       margin: const EdgeInsets.all(4.0),
       elevation: 2.0,
-      shadowColor: Colors.black.withValues(alpha: 0.2),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      shadowColor: Colors.black.withOpacity(0.15),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0)),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12.0),
-        onTap: () {
-          _selectCategory(label);
-        },
+        borderRadius: BorderRadius.circular(14.0),
+        onTap: () => _navigateToCategory(label),
+        splashColor: theme.colorScheme.primary.withOpacity(0.1),
+        highlightColor: theme.colorScheme.primary.withOpacity(0.05),
         child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8.0, horizontal: 12.0),
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              // الأيقونة بحجم ثابت وموحد
+              // أيقونة الفئة
               Container(
-                width: 36.0,
-                height: 36.0,
+                width: 40.0,
+                height: 40.0,
                 decoration: BoxDecoration(
-                  color: theme.colorScheme.primary.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(8.0),
+                  color: theme.colorScheme.primary.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(10.0),
                 ),
                 child: Center(
-                  child:
-                      icon is String && icon.startsWith('http')
-                          ? ClipRRect(
-                            borderRadius: BorderRadius.circular(8.0),
-                            child: Image.network(
-                              icon,
-                              width: 24.0,
-                              height: 24.0,
-                              errorBuilder:
-                                  (context, error, stackTrace) => const Icon(
-                                    Icons.category,
-                                    size: 24.0,
-                                    color: Colors.blue,
-                                  ),
-                            ),
-                          )
-                          : Icon(
-                            Icons.category,
-                            size: 24.0,
-                            color: theme.colorScheme.primary,
-                          ),
+                  child: _buildCategoryIcon(icon),
                 ),
               ),
 
-              const SizedBox(width: 12.0), // مسافة موحدة بين الأيقونة والنص
-              // النص بتنسيق وحجم ثابت
+              const SizedBox(width: 12.0),
+
+              // نص الفئة
               Expanded(
                 child: Container(
-                  height: 22.0, // ارتفاع ثابت للنص
-                  alignment: Alignment.centerRight, // دائمًا محاذاة لليمين
-                  child:
-                      isLongText
-                          ? Marquee(
-                            animationDuration: const Duration(seconds: 2),
-                            backDuration: const Duration(milliseconds: 1000),
-                            pauseDuration: const Duration(milliseconds: 1000),
-                            direction: Axis.horizontal,
-                            textDirection: TextDirection.rtl,
-                            autoRepeat: true,
-                            child: Text(
-                              label,
-                              style: theme.textTheme.bodyLarge?.copyWith(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15.0, // حجم خط ثابت
-                              ),
-                            ),
-                          )
-                          : Text(
+                  height: 22.0,
+                  alignment: Alignment.centerRight,
+                  child: isLongText
+                      ? Marquee(
+                          animationDuration: const Duration(seconds: 2),
+                          backDuration: const Duration(milliseconds: 1000),
+                          pauseDuration: const Duration(milliseconds: 1000),
+                          direction: Axis.horizontal,
+                          textDirection: TextDirection.rtl,
+                          autoRepeat: true,
+                          child: Text(
                             label,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.bold,
-                              fontSize: 15.0, // حجم خط ثابت
+                              fontSize: 15.0,
                             ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            textAlign: TextAlign.right,
                           ),
+                        )
+                      : Text(
+                          label,
+                          style: theme.textTheme.bodyLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15.0,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.right,
+                        ),
                 ),
               ),
             ],
@@ -1234,14 +1199,81 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-
-  // دالة لاختيار قسم معين
-  void _selectCategory(String category) {
-    if (kDebugMode) {
-      print('تم اختيار القسم: $category');
+  
+  // تحميل بطاقة فئة
+  Widget _buildCategoryShimmerCard() {
+    return Shimmer.fromColors(
+      baseColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[800]!
+          : Colors.grey[300]!,
+      highlightColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[700]!
+          : Colors.grey[100]!,
+      child: Card(
+        margin: const EdgeInsets.all(4.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0)),
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Container(
+                width: 40.0,
+                height: 40.0,
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(10.0),
+                ),
+              ),
+              const SizedBox(width: 12.0),
+              Expanded(
+                child: Container(
+                  height: 22.0,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+  
+  // أيقونة الفئة
+  Widget _buildCategoryIcon(dynamic icon) {
+    if (icon is String && icon.startsWith('http')) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(8.0),
+        child: CachedNetworkImage(
+          imageUrl: icon,
+          width: 24.0,
+          height: 24.0,
+          fit: BoxFit.cover,
+          placeholder: (context, url) => const Center(
+            child: SizedBox(
+              width: 16,
+              height: 16,
+              child: CircularProgressIndicator(strokeWidth: 2),
+            ),
+          ),
+          errorWidget: (context, url, error) => Icon(
+            Icons.category_rounded,
+            size: 24.0,
+            color: Theme.of(context).colorScheme.primary,
+          ),
+        ),
+      );
     }
-
-    // الانتقال مباشرة إلى شاشة القسم بدون تطبيق الفلتر في الصفحة الرئيسية
+    
+    return Icon(
+      Icons.category_rounded,
+      size: 24.0,
+      color: Theme.of(context).colorScheme.primary,
+    );
+  }
+  
+  // التنقل إلى فئة محددة
+  void _navigateToCategory(String category) {
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -1250,831 +1282,208 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  Widget _buildPropertyCard(Apartment apartment) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-
-    return GestureDetector(
-      onTap: () {
-        Navigator.push(
-          context,
-          MaterialPageRoute(
-            builder:
-                (context) => PropertyDetailsScreen(
-                  property: apartment,
-                  fromCategoriesScreen: false,
-                ),
-          ),
-        );
-      },
-      child: Container(
-        decoration: BoxDecoration(
-          color: theme.cardColor,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-              color:
-                  isDarkMode
-                      ? Colors.black.withAlpha(77) // ~0.3 opacity
-                      : Colors.grey.withAlpha(38), // ~0.15 opacity
-              spreadRadius: 2,
-              blurRadius: 8,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // صورة العقار - بعرض كامل للبطاقة
-            Stack(
-              children: [
-                // صورة العقار
-                ClipRRect(
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(12),
-                  ),
-                  child: SizedBox(
-                    width: double.infinity,
-                    height: 180,
-                    child: _buildOptimizedImageCarousel(
-                      apartment.imageUrls.isNotEmpty
-                          ? apartment.imageUrls[0]
-                          : '',
-                    ),
-                  ),
-                ),
-
-                // شريط السعر
-                Positioned(
-                  bottom: 0,
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(vertical: 8),
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Colors.black.withValues(alpha: 0.7),
-                          Colors.transparent,
-                        ],
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 12),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // سعر العقار بالجنيه المصري
-                          Text(
-                            '${apartment.price.toStringAsFixed(0)} ج.م',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontWeight: FontWeight.bold,
-                              fontSize: 18,
-                            ),
-                          ),
-
-                          // حالة العقار
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 10,
-                              vertical: 5,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  apartment.isAvailable
-                                      ? Colors.green
-                                      : Colors.red,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: Text(
-                              apartment.isAvailable ? 'متاح' : 'غير متاح',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 12,
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // نوع العقار
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.all(6),
-                    decoration: BoxDecoration(
-                      color:
-                          isDarkMode
-                              ? const Color(0xFF2A2A2A)
-                              : Colors.white.withAlpha(230), // 0.9 opacity
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withAlpha(26), // 0.1 opacity
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Consumer<FavoritesProvider>(
-                      builder: (context, favoritesProvider, _) {
-                        final isFavorite = favoritesProvider.isFavorite(
-                          apartment.id,
-                        );
-                        return InkWell(
-                          onTap: () async {
-                            // Verificar si el usuario está autenticado
-                            final authProvider = Provider.of<AuthProvider>(
-                              context,
-                              listen: false,
-                            );
-                            if (!authProvider.isAuthenticated) {
-                              // Mostrar diálogo de autenticación requerida si no está autenticado
-                              AuthUtils.showAuthRequiredDialog(context);
-                              return;
-                            }
-
-                            // El usuario está autenticado, continuar con la operación
-                            try {
-                              final scaffoldMessenger = ScaffoldMessenger.of(
-                                context,
-                              );
-                              final isNowFavorite = await favoritesProvider
-                                  .toggleFavorite(apartment);
-                              if (mounted) {
-                                scaffoldMessenger.showSnackBar(
-                                  SnackBar(
-                                    content: Text(
-                                      isNowFavorite
-                                          ? 'تم إضافة ${apartment.name} إلى المفضلة'
-                                          : 'تم إزالة ${apartment.name} من المفضلة',
-                                    ),
-                                    duration: const Duration(seconds: 2),
-                                  ),
-                                );
-                              }
-                            } catch (e) {
-                              if (kDebugMode) {
-                                final logger = Logger('HomeScreen');
-                                logger.warning('Error toggling favorite: $e');
-                              }
-                            }
-                          },
-                          child: Icon(
-                            isFavorite ? Icons.favorite : Icons.favorite_border,
-                            size: 20,
-                            color:
-                                isFavorite
-                                    ? Colors.red
-                                    : isDarkMode
-                                    ? Colors.white
-                                    : Theme.of(context).primaryColor,
-                          ),
-                        );
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            ),
-
-            // معلومات العقار
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // اسم العقار
-                  Text(
-                    apartment.name,
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: theme.textTheme.titleMedium?.color,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-
-                  const SizedBox(height: 8),
-
-                  // العنوان
-                  Row(
-                    children: [
-                      Icon(
-                        Icons.location_on,
-                        size: 16,
-                        color: theme.colorScheme.secondary,
-                      ),
-                      const SizedBox(width: 4),
-                      Expanded(
-                        child: Text(
-                          apartment.location,
-                          style: theme.textTheme.bodySmall,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // مواصفات العقار
-                  Container(
-                    decoration: BoxDecoration(
-                      color:
-                          isDarkMode
-                              ? theme.colorScheme.surface.withValues(alpha: 0.3)
-                              : Colors.grey[50],
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      vertical: 8,
-                      horizontal: 12,
-                    ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        // عدد الغرف
-                        _buildFeatureWithCard(
-                          Icons.bedroom_parent_outlined,
-                          '${apartment.rooms} غرفة',
-                        ),
-
-                        // عدد الأسرّة
-                        _buildFeatureWithCard(
-                          Icons.king_bed_outlined,
-                          '${apartment.bedrooms} سرير',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // دالة لإنشاء وحدة معلومات بشكل أكثر جاذبية
-  Widget _buildFeatureWithCard(IconData icon, String text) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      child: Row(
-        children: [
-          Icon(icon, size: 18, color: theme.colorScheme.primary),
-          const SizedBox(width: 4),
-          Text(
-            text,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w500,
-              color:
-                  isDarkMode
-                      ? theme.textTheme.bodyMedium?.color
-                      : Colors.grey[800],
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // وظائف المساعدة للصور
-  Widget _buildDefaultPropertyImage(ImageProvider? placeholderImage) {
-    return Image.asset(
-      'assets/images/placeholder_property.png',
-      fit: BoxFit.cover,
-      height: 220.0,
-      errorBuilder:
-          (context, error, stackTrace) => Container(
-            color: Colors.grey[300],
-            child: const Icon(
-              Icons.home_outlined,
-              size: 50,
-              color: Colors.grey,
-            ),
-          ),
-    );
-  }
-
-  Widget _buildImagePlaceholder(ImageProvider? placeholderImage) {
-    return Container(
-      color: Colors.grey[200],
-      height: 220.0,
-      child: const Center(child: CircularProgressIndicator()),
-    );
-  }
-
-  // وظيفة بناء عرض الصور بطريقة محسنة
-  Widget _buildOptimizedImageCarousel(
-    String imageUrl, {
-    ImageProvider? placeholderImage,
-  }) {
-    return imageUrl.isEmpty
-        ? _buildDefaultPropertyImage(placeholderImage)
-        : CroppedNetworkImage(
-          imageUrl: imageUrl,
-          fit: BoxFit.cover,
-          bottomCropPercentage: 0.08,
-          height: 220.0,
-          placeholder: _buildImagePlaceholder(placeholderImage),
-          errorWidget: _buildDefaultPropertyImage(placeholderImage),
-        );
-  }
-
-  Future<void> _fetchLatestApartments() async {
-    if (!mounted) return;
-
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      // تسجيل حالة الاتصال الحالية
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.info('بدء جلب العقارات الأخيرة...');
-      }
-
-      // محاولة مسح التخزين المؤقت قبل جلب البيانات الجديدة
-      _propertyService.clearCache(key: 'latest_properties');
-      _propertyService.clearCache(key: 'available_properties');
-
-      // جلب الشقق من Supabase
-      List<Apartment> apartments = [];
-
-      try {
-        // جلب أحدث العقارات بدون أي فلتر
-        apartments = await _propertyService.getLatestProperties(limit: 10);
-      } catch (innerError) {
-        if (kDebugMode) {
-          final logger = Logger('HomeScreen');
-          logger.severe('خطأ في جلب العقارات: $innerError');
-        }
-        // في حالة الفشل، نحاول مرة أخرى بطريقة أخرى
-        apartments = await _propertyService.getAvailableProperties(limit: 10);
-      }
-
-      if (!mounted) return;
-
-      // تسجيل معلومات الشقق للتشخيص
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        if (apartments.isEmpty) {
-          logger.warning('لم يتم جلب أي شقق!');
-        } else {
-          logger.info('تم جلب ${apartments.length} شقة');
-
-          for (var apartment in apartments) {
-            logger.fine(
-              'شقة: ${apartment.name}, صور: ${apartment.imageUrls.length}, متاحة: ${apartment.isAvailable}',
-            );
-          }
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _latestApartments.clear();
-          _latestApartments = apartments;
-          _isLoading = false;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.severe('خطأ عام في جلب الشقق: $e');
-      }
-
-      // حتى في حالة الخطأ، نريد إنهاء حالة التحميل
-      setState(() {
-        _isLoading = false;
-      });
-
-      // عرض رسالة خطأ للمستخدم
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-              'حدث خطأ أثناء تحميل البيانات، يرجى المحاولة مرة أخرى لاحقًا',
-            ),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> _fetchCategories() async {
-    if (!mounted) return;
-
-    try {
-      setState(() {
-        _isCategoriesLoading = true;
-      });
-
-      final categories = await _categoryService.getCategories();
-
-      if (!mounted) return;
-
-      setState(() {
-        _categories = categories;
-        _isCategoriesLoading = false;
-      });
-    } catch (e) {
-      if (!mounted) return;
-
-      setState(() {
-        _isCategoriesLoading = false;
-      });
-
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.severe('خطأ في جلب الفئات: $e');
-      }
-    }
-  }
-
-  void _setupApartmentsListener() {
-    // إلغاء الاشتراك السابق إن وجد
-    _apartmentsStreamSubscription?.cancel();
-
-    // استخدام منطق تأخير ديناميكي بناءً على توفر العقارات
-    final Duration updateInterval =
-        _latestApartments.isEmpty
-            ? const Duration(
-              minutes: 1,
-            ) // إذا لم تكن هناك عقارات، نحاول تحديثها كل دقيقة
-            : const Duration(
-              minutes: 10,
-            ); // إذا كانت هناك عقارات، نحاول تحديثها كل 10 دقائق
-
-    if (kDebugMode) {
-      final logger = Logger('HomeScreen');
-      logger.info(
-        'إعداد مستمع تحديث العقارات مع فاصل زمني: ${updateInterval.inMinutes} دقيقة',
-      );
+  // قسم أحدث العقارات
+  Widget _buildApartmentsSection() {
+    if (_isLoading) {
+      return _buildApartmentsLoadingSection();
     }
 
-    Timer.periodic(updateInterval, (timer) async {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-
-      try {
-        await _fetchLatestApartments();
-
-        // تكييف الفاصل الزمني بناءً على النتائج
-        if (_latestApartments.isNotEmpty && updateInterval.inMinutes < 10) {
-          timer.cancel();
-          // إعادة إعداد المستمع بفاصل زمني أطول
-          _setupApartmentsListener();
-        }
-      } catch (e) {
-        if (kDebugMode) {
-          final logger = Logger('HomeScreen');
-          logger.warning('فشل التحديث التلقائي للعقارات: $e');
-        }
-        // لا نقوم بإلغاء المؤقت، دعه يحاول مرة أخرى في المرة القادمة
-      }
-    });
-  }
-
-  // دالة لجلب البانرات من Supabase
-  Future<void> _fetchBanners() async {
-    try {
-      setState(() {
-        _isLoading = true;
-      });
-
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.info('بدء تحميل البانرات من Supabase...');
-      }
-
-      final banners = await _bannerService.getBanners();
-
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.info('تم استلام ${banners.length} بانرات من Supabase');
-      }
-
-      if (mounted) {
-        setState(() {
-          _banners = banners;
-          _isLoading = false;
-        });
-
-        // إذا كانت البانرات فارغة، نحاول مرة أخرى بعد تأخير قصير
-        if (banners.isEmpty) {
-          if (kDebugMode) {
-            final logger = Logger('HomeScreen');
-            logger.warning('لم يتم العثور على بانرات، محاولة إعادة التحميل...');
-          }
-          Future.delayed(const Duration(seconds: 2), () {
-            if (mounted) {
-              _tryFetchBannersAgain();
-            }
-          });
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.severe('خطأ في جلب البانرات: $e');
-      }
-
-      if (mounted) {
-        setState(() {
-          _banners = [];
-          _isLoading = false;
-        });
-      }
-    }
-  }
-
-  // محاولة جلب البانرات مرة أخرى
-  Future<void> _tryFetchBannersAgain() async {
-    if (kDebugMode) {
-      final logger = Logger('HomeScreen');
-      logger.info('محاولة جلب البانرات مرة أخرى...');
+    if (_latestApartments.isEmpty) {
+      return _buildEmptyApartmentsSection();
     }
 
-    try {
-      final banners = await _bannerService.getBanners();
-
-      if (mounted) {
-        setState(() {
-          _banners = banners;
-        });
-        if (kDebugMode) {
-          final logger = Logger('HomeScreen');
-          logger.info('نتيجة المحاولة الثانية: ${banners.length} بانرات');
-        }
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.severe('فشلت المحاولة الثانية: $e');
-      }
-    }
-  }
-
-  // تحديث جميع البيانات بما في ذلك بيانات المستخدم
-  Future<void> _refreshAllData() async {
-    if (!mounted) return;
-
-    // Store context and providers before any async operations
-    final scaffoldMessenger = ScaffoldMessenger.of(context);
-    final authProvider = Provider.of<AuthProvider>(context, listen: false);
-
-    try {
-      // مسح التخزين المؤقت للخدمات
-      _propertyService.clearCache();
-
-      // تحديث العقارات
-      await _fetchLatestApartments();
-
-      // تحديث البانرات
-      await _fetchBanners();
-
-      // تحديث الفئات
-      await _fetchCategories();
-
-      // تحديث العقارات المميزة
-      await _fetchFeaturedProperties();
-
-      // تحديث بيانات المستخدم (سيؤدي إلى تحديث الرصيد في AppBar)
-      if (authProvider.isAuthenticated) {
-        // تحديث بيانات المستخدم من Firestore
-        final firestoreService = FirestoreService();
-        await firestoreService.refreshUserData(authProvider.user!.uid);
-
-        if (kDebugMode) {
-          final logger = Logger('HomeScreen');
-          logger.info('تم تحديث بيانات المستخدم بما في ذلك الرصيد');
-        }
-      }
-
-      // إعلام المستخدم بنجاح التحديث
-      if (mounted) {
-        scaffoldMessenger.showSnackBar(
-          const SnackBar(
-            content: Text('تم تحديث البيانات بنجاح'),
-            backgroundColor: Colors.green,
-            duration: Duration(seconds: 2),
-          ),
-        );
-      }
-    } catch (e) {
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.severe('خطأ أثناء تحديث البيانات: $e');
-      }
-
-      // إعلام المستخدم بفشل التحديث
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('حدث خطأ أثناء تحديث البيانات'),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 3),
-          ),
-        );
-      }
-    }
-  }
-
-  // Featured property card with improved design
-  Widget _buildFeaturedPropertyCard(Apartment apartment) {
-    final theme = Theme.of(context);
-
-    return Card(
-      elevation: 4,
-      shadowColor: Colors.black.withAlpha(51),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () {
-          Navigator.push(
-            context,
-            MaterialPageRoute(
-              builder:
-                  (context) => PropertyDetailsScreen(
-                    property: apartment,
-                    fromCategoriesScreen: false,
-                  ),
+    return SizedBox(
+      height: 300,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+        scrollDirection: Axis.horizontal,
+        itemCount: _latestApartments.length,
+        itemBuilder: (context, index) {
+          final apartment = _latestApartments[index];
+          return Container(
+            width: 260,
+            margin: const EdgeInsets.only(left: 6.0, right: 6.0, bottom: 10.0),
+            child: PropertyCardWidget(
+              apartment: apartment,
+              showFavoriteButton: true,
             ),
           );
         },
+      ),
+    );
+  }
+
+  // واجهة تحميل العقارات
+  Widget _buildApartmentsLoadingSection() {
+    return SizedBox(
+      height: 300,
+      child: ListView.builder(
+        padding: const EdgeInsets.symmetric(horizontal: 12.0),
+        scrollDirection: Axis.horizontal,
+        itemCount: 3,
+        itemBuilder: (context, index) {
+          return Container(
+            width: 260,
+            margin: const EdgeInsets.only(left: 6.0, right: 6.0, bottom: 10.0),
+            child: _buildPropertyShimmerCard(),
+          );
+        },
+      ),
+    );
+  }
+
+  // واجهة عندما لا توجد عقارات
+  Widget _buildEmptyApartmentsSection() {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return Container(
+      height: 280,
+      margin: const EdgeInsets.symmetric(horizontal: 16.0),
+      decoration: BoxDecoration(
+        color: theme.cardColor,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: isDarkMode 
+                ? Colors.black.withOpacity(0.2)
+                : Colors.black.withOpacity(0.07),
+            blurRadius: 15,
+            offset: const Offset(0, 5),
+          ),
+        ],
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDarkMode 
+              ? [
+                  theme.colorScheme.surface.withOpacity(0.8),
+                  theme.colorScheme.surface,
+                ] 
+              : [
+                  Colors.white,
+                  theme.colorScheme.surface.withOpacity(0.05),
+                ],
+        ),
+      ),
+      child: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 86,
+              height: 86,
+              decoration: BoxDecoration(
+                color: isDarkMode
+                    ? theme.colorScheme.primary.withOpacity(0.12)
+                    : theme.colorScheme.primary.withOpacity(0.06),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.home_work_outlined,
+                size: 46,
+                color: theme.colorScheme.primary,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              'لا توجد عقارات متاحة حالياً',
+              style: theme.textTheme.titleMedium?.copyWith(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                fontWeight: FontWeight.w500,
+              ),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 16),
+            ElevatedButton.icon(
+              onPressed: () async {
+                setState(() {
+                  _isLoading = true;
+                });
+                await _fetchLatestApartments();
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: theme.colorScheme.primary,
+                foregroundColor: Colors.white,
+                elevation: 3,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+              icon: const Icon(Icons.refresh, size: 18),
+              label: const Text('تحديث'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // بطاقة تحميل العقار
+  Widget _buildPropertyShimmerCard() {
+    return Shimmer.fromColors(
+      baseColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[800]!
+          : Colors.grey[300]!,
+      highlightColor: Theme.of(context).brightness == Brightness.dark
+          ? Colors.grey[700]!
+          : Colors.grey[100]!,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // Property image with gradient overlay
-            Stack(
-              children: [
-                SizedBox(
-                  height: 140,
-                  width: double.infinity,
-                  child:
-                      apartment.imageUrls.isNotEmpty
-                          ? CachedNetworkImage(
-                            imageUrl: apartment.imageUrls[0],
-                            fit: BoxFit.cover,
-                            placeholder:
-                                (context, url) => Center(
-                                  child: CircularProgressIndicator(
-                                    color: theme.colorScheme.primary,
-                                  ),
-                                ),
-                            errorWidget:
-                                (context, url, error) => const Icon(
-                                  Icons.broken_image,
-                                  size: 40,
-                                  color: Colors.grey,
-                                ),
-                          )
-                          : Container(
-                            color: Colors.grey[300],
-                            child: const Icon(
-                              Icons.home,
-                              size: 40,
-                              color: Colors.grey,
-                            ),
-                          ),
+            // صورة متلألئة
+            Container(
+              width: double.infinity,
+              height: 180,
+              decoration: const BoxDecoration(
+                borderRadius: BorderRadius.vertical(
+                  top: Radius.circular(16),
                 ),
-
-                // Gradient overlay for better text readability
-                Positioned.fill(
-                  child: Container(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withAlpha(179),
-                        ],
-                        stops: const [0.6, 1.0],
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Price tag
-                Positioned(
-                  bottom: 12,
-                  right: 12,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 4,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.colorScheme.primary,
-                      borderRadius: BorderRadius.circular(8),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.3),
-                          blurRadius: 4,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Text(
-                      '${apartment.price.toInt()} جنيه',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.bold,
-                        fontSize: 14,
-                      ),
-                    ),
-                  ),
-                ),
-
-                // Location
-                Positioned(
-                  bottom: 12,
-                  left: 12,
-                  child: Row(
-                    children: [
-                      const Icon(
-                        Icons.location_on,
-                        color: Colors.white,
-                        size: 14,
-                      ),
-                      const SizedBox(width: 4),
-                      Text(
-                        apartment.location,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                ),
-              ],
+                color: Colors.white,
+              ),
             ),
 
-            // Property details
+            // معلومات متلألئة
             Padding(
               padding: const EdgeInsets.all(12),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Title
-                  Text(
-                    apartment.name,
-                    style: theme.textTheme.titleMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
+                  // العنوان المتلألئ
+                  Container(
+                    width: 150,
+                    height: 20,
+                    color: Colors.white,
                   ),
 
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 10),
 
-                  // Features row - только два элемента: комнаты и кровати
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                    children: [
-                      _buildFeatureChip(
-                        icon: Icons.bedroom_parent_outlined,
-                        label: '${apartment.rooms} غرف',
-                        color: Colors.blue.shade100,
-                        textColor: Colors.blue.shade800,
-                      ),
-                      _buildFeatureChip(
-                        icon: Icons.bed,
-                        label: '${apartment.bathrooms} سرير',
-                        color: Colors.purple.shade100,
-                        textColor: Colors.purple.shade800,
-                      ),
-                    ],
+                  // الموقع المتلألئ
+                  Container(
+                    width: 200,
+                    height: 14,
+                    color: Colors.white,
+                  ),
+
+                  const SizedBox(height: 15),
+
+                  // المميزات المتلألئة
+                  Container(
+                    width: double.infinity,
+                    height: 40,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(12),
+                    ),
                   ),
                 ],
               ),
@@ -2085,93 +1494,254 @@ class _HomeScreenState extends State<HomeScreen>
     );
   }
 
-  // Feature chip with improved design
-  Widget _buildFeatureChip({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required Color textColor,
-  }) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
+  // قسم العقارات المميزة
+  Widget _buildFeaturedPropertiesSection() {
+    if (_isFeaturedLoading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(icon, size: 14, color: textColor),
-          const SizedBox(width: 4),
-          Text(
-            label,
-            style: TextStyle(
-              color: textColor,
-              fontSize: 12,
-              fontWeight: FontWeight.bold,
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Text(
+                  'العقارات المميزة',
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.all(6),
+                  decoration: BoxDecoration(
+                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(
+                    Icons.star_rounded,
+                    size: 18,
+                    color: Theme.of(context).colorScheme.secondary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 220,
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              scrollDirection: Axis.horizontal,
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                return Container(
+                  width: 200,
+                  margin: const EdgeInsets.only(left: 6.0, right: 6.0, bottom: 10.0),
+                  child: _buildPropertyShimmerCard(),
+                );
+              },
             ),
           ),
         ],
-      ),
-    );
-  }
+      );
+    }
 
-  // Widget to build Why Choose Us features
-  Widget _buildWhyChooseUsFeatures() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final features = [
-      _Feature(
-        title: 'خبرة تثق بها',
-        description:
-            'نعرف سوق العريش من الداخل، ونوجهك بكل دقة نحو الخيار الأنسب لك.',
-        icon: Icons.verified_user_outlined,
-        color: Colors.blue,
-      ),
-      _Feature(
-        title: 'تشكيلة مميزة',
-        description:
-            'شقق، محلات، ومساحات استثمارية تناسب كل الأذواق والميزانيات.',
-        icon: Icons.apps,
-        color: Colors.orange,
-      ),
-      _Feature(
-        title: 'سرعة واحترافية',
-        description: 'نلبي طلبك بسرعة واحترافية تستحقها.',
-        icon: Icons.speed_outlined,
-        color: Colors.green,
-      ),
-    ];
+    if (_featuredProperties.isEmpty) {
+      return const SizedBox.shrink(); // لا نظهر القسم إذا لم توجد عقارات مميزة
+    }
 
     return Column(
-      children:
-          features.map((feature) {
-            return Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              decoration: BoxDecoration(
-                color: isDark ? theme.cardColor : Colors.white,
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.05),
-                    spreadRadius: 0,
-                    blurRadius: 10,
-                    offset: const Offset(0, 2),
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const FeaturedPropertiesScreen(),
+                    ),
+                  );
+                },
+                icon: Icon(
+                  Icons.arrow_back_ios_rounded,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.secondary,
+                ),
+                label: Text(
+                  'عرض الكل',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.secondary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    'العقارات المميزة',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.star_rounded,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.secondary,
+                    ),
                   ),
                 ],
               ),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 220,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            scrollDirection: Axis.horizontal,
+            itemCount: _featuredProperties.length,
+            itemBuilder: (context, index) {
+              final property = _featuredProperties[index];
+              return Container(
+                width: 200,
+                margin: const EdgeInsets.only(left: 6.0, right: 6.0, bottom: 10.0),
+                child: PropertyCardWidget(
+                  apartment: property,
+                  showFavoriteButton: true,
+                  isCompact: true,
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+  
+  // قسم "لماذا نحن"
+  Widget _buildWhyChooseUsSection() {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
+    // قائمة المميزات
+    final List<_Feature> features = [
+      _Feature(
+        title: 'جودة عالية',
+        description: 'نقدم لك أفضل العقارات بأعلى معايير الجودة',
+        icon: Icons.grade_rounded,
+        color: Colors.amber,
+      ),
+      _Feature(
+        title: 'أسعار تنافسية',
+        description: 'أسعارنا مناسبة لكافة الميزانيات',
+        icon: Icons.attach_money_rounded,
+        color: Colors.green,
+      ),
+      _Feature(
+        title: 'موقع ممتاز',
+        description: 'عقاراتنا تقع في أفضل المناطق',
+        icon: Icons.location_on_rounded,
+        color: Colors.redAccent,
+      ),
+      _Feature(
+        title: 'أمان وخصوصية',
+        description: 'نوفر بيئة آمنة وخاصة لجميع العملاء',
+        icon: Icons.security_rounded,
+        color: Colors.indigo,
+      ),
+    ];
+    
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 24),
+      decoration: BoxDecoration(
+        color: isDarkMode 
+            ? theme.colorScheme.surface.withOpacity(0.5)
+            : theme.colorScheme.primary.withOpacity(0.04),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: isDarkMode 
+              ? theme.colorScheme.primary.withOpacity(0.1)
+              : theme.colorScheme.primary.withOpacity(0.05),
+        ),
+      ),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      child: Column(
+        children: [
+          // العنوان
+          Padding(
+            padding: const EdgeInsets.only(bottom: 20),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(
+                  Icons.workspace_premium,
+                  color: theme.colorScheme.primary,
+                  size: 24,
+                ),
+                const SizedBox(width: 12),
+                Text(
+                  'لماذا نحن الخيار الأفضل',
+                  style: theme.textTheme.titleLarge?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.primary,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          
+          // المميزات
+          ListView.builder(
+            shrinkWrap: true,
+            physics: const NeverScrollableScrollPhysics(),
+            itemCount: features.length,
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            itemBuilder: (context, index) {
+              final feature = features[index];
+              return Container(
+                margin: const EdgeInsets.only(bottom: 16),
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: isDarkMode 
+                      ? theme.cardColor
+                      : Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(isDarkMode ? 0.2 : 0.05),
+                      blurRadius: 10,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
                 child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Container(
-                      padding: const EdgeInsets.all(10),
+                      width: 50,
+                      height: 50,
                       decoration: BoxDecoration(
-                        color: feature.color.withValues(alpha: 0.1),
+                        color: feature.color.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(feature.icon, color: feature.color, size: 24),
+                      child: Center(
+                        child: Icon(
+                          feature.icon,
+                          color: feature.color,
+                          size: 28,
+                        ),
+                      ),
                     ),
                     const SizedBox(width: 16),
                     Expanded(
@@ -2184,12 +1754,14 @@ class _HomeScreenState extends State<HomeScreen>
                               fontWeight: FontWeight.bold,
                             ),
                           ),
-                          const SizedBox(height: 6),
+                          const SizedBox(height: 4),
                           Text(
                             feature.description,
-                            style: theme.textTheme.bodyMedium?.copyWith(
-                              height: 1.5,
-                              color: isDark ? Colors.white70 : Colors.black87,
+                            style: TextStyle(
+                              fontSize: 14,
+                              color: isDarkMode 
+                                  ? Colors.grey[400]
+                                  : Colors.grey[600],
                             ),
                           ),
                         ],
@@ -2197,636 +1769,284 @@ class _HomeScreenState extends State<HomeScreen>
                     ),
                   ],
                 ),
-              ),
-            );
-          }).toList(),
-    );
-  }
-
-  // Contact Us Section Widget
-  Widget _buildContactUsSection(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Container(
-      margin: const EdgeInsets.only(bottom: 24.0, left: 16.0, right: 16.0),
-      decoration: BoxDecoration(
-        color: isDark ? Colors.grey.shade900 : Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 20,
-            offset: const Offset(0, 5),
+              );
+            },
           ),
-        ],
-      ),
-      child: Column(
-        children: [
-          // Header section with gradient
-          Container(
-            padding: const EdgeInsets.all(20.0),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topRight,
-                end: Alignment.bottomLeft,
-                colors: [
-                  theme.colorScheme.primary,
-                  theme.colorScheme.primary.withValues(alpha: 0.7),
-                ],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(20),
-                topRight: Radius.circular(20),
+          
+          // زر استكشاف المزيد
+          const SizedBox(height: 16),
+          ElevatedButton.icon(
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const WhyChooseUsScreen()),
+              );
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: theme.colorScheme.primary,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
               ),
             ),
-            child: Row(
-              children: [
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withValues(alpha: 0.2),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(
-                    Icons.contact_phone_rounded,
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'تواصل معنا',
-                      style: textTheme.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'فريقنا جاهز لمساعدتك!',
-                      style: textTheme.bodyMedium?.copyWith(
-                        color: Colors.white.withValues(alpha: 0.9),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+            icon: const Icon(Icons.arrow_forward_ios, size: 16),
+            label: const Text('استكشاف المزيد'),
           ),
-
-          // Contact options
-          Padding(
-            padding: const EdgeInsets.all(16.0),
-            child: Column(
-              children: [
-                // Contact cards
-                _buildContactOption(
-                  icon: Icons.phone,
-                  title: 'اتصل بنا',
-                  subtitle: '01093130120',
-                  iconColor: Colors.green,
-                  onTap: () => _launchURL('tel:01093130120'),
-                ),
-
-                const SizedBox(height: 12),
-
-                _buildContactOption(
-                  icon: FontAwesomeIcons.whatsapp,
-                  title: 'واتساب',
-                  subtitle: '+201093130120',
-                  iconColor: const Color(0xFF25D366), // WhatsApp green
-                  onTap: () => _launchURL('https://wa.me/201093130120'),
-                ),
-
-                const SizedBox(height: 12),
-
-                _buildContactOption(
-                  icon: FontAwesomeIcons.facebook,
-                  title: 'فيسبوك',
-                  subtitle: 'تابعنا على فيسبوك',
-                  iconColor: const Color(0xFF1877F2), // Facebook blue
-                  onTap:
-                      () => _launchURL('https://www.facebook.com/elsahm.arish'),
-                ),
-              ],
-            ),
-          ),
-
-          // Divider
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0),
-            child: Divider(color: Colors.grey.withValues(alpha: 0.3)),
-          ),
-
-          // Designer info
-          _buildPremiumDesignerCard(),
         ],
       ),
     );
   }
-
-  // Method to launch URLs
-  Future<void> _launchURL(String url) async {
-    final Uri uri = Uri.parse(url);
-    try {
-      await launchUrl(uri);
-    } catch (e) {
-      if (kDebugMode) {
-        print('Could not launch $url: $e');
-      }
-    }
-  }
-
-  // Contact option card widget
-  Widget _buildContactOption({
-    required IconData icon,
-    required String title,
-    required String subtitle,
-    required Color iconColor,
-    required VoidCallback onTap,
-  }) {
+  
+  // قسم تواصل معنا
+  Widget _buildContactUsSection() {
     final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-
-    return Card(
-      elevation: 0,
-      color: isDark ? Colors.grey.shade800 : Colors.grey.shade50,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: theme.dividerColor.withValues(alpha: 0.1),
-          width: 1,
-        ),
-      ),
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(12),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(
-                  color: iconColor.withValues(alpha: 0.1),
-                  borderRadius: BorderRadius.circular(10),
-                ),
-                child: Icon(icon, color: iconColor, size: 22),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: theme.textTheme.titleMedium?.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    Text(
-                      subtitle,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                        color:
-                            isDark
-                                ? Colors.grey.shade400
-                                : Colors.grey.shade700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Icon(
-                Icons.arrow_forward_ios,
-                color: theme.colorScheme.primary,
-                size: 16,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  // Shimmer loading banner for placeholder
-  Widget _shimmerLoadingBanner() {
-    return Shimmer.fromColors(
-      baseColor: Colors.grey[300]!,
-      highlightColor: Colors.grey[100]!,
-      child: Container(
-        height: 200.0,
-        margin: const EdgeInsets.symmetric(horizontal: 16.0),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(15.0),
-        ),
-      ),
-    );
-  }
-
-  // Shimmer banner image for fallback banners
-  Widget _shimmerBannerImage({required String imageAsset}) {
-    return Image.asset(
-      imageAsset,
-      fit: BoxFit.cover,
-      errorBuilder: (context, error, stackTrace) {
-        return Shimmer.fromColors(
-          baseColor: Colors.grey[300]!,
-          highlightColor: Colors.grey[100]!,
-          child: Container(
-            color: Colors.white,
-            width: double.infinity,
-            height: 200.0,
-          ),
-        );
-      },
-    );
-  }
-
-  // Network banner image with shimmer loading effect
-  Widget _networkBannerImage({required String imageUrl}) {
-    return CachedNetworkImage(
-      imageUrl: imageUrl,
-      fit: BoxFit.cover,
-      placeholder:
-          (context, url) => Shimmer.fromColors(
-            baseColor: Colors.grey[300]!,
-            highlightColor: Colors.grey[100]!,
-            child: Container(color: Colors.white),
-          ),
-      errorWidget: (context, url, error) {
-        if (kDebugMode) {
-          print('Error loading banner image: $error');
-        }
-        return Image.asset(
-          'assets/images/banners/banner1.png',
-          fit: BoxFit.cover,
-          errorBuilder:
-              (context, error, stackTrace) => Container(
-                color: Colors.grey[300],
-                child: const Icon(
-                  Icons.image_not_supported,
-                  size: 50,
-                  color: Colors.grey,
-                ),
-              ),
-        );
-      },
-    );
-  }
-
-  // A new premium designer card with modern style - smaller version
-  Widget _buildPremiumDesignerCard() {
-    final theme = Theme.of(context);
-    final isDark = theme.brightness == Brightness.dark;
-    final textTheme = theme.textTheme;
-
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
+    // وسائل التواصل الاجتماعي
+    final socialMedia = [
+      {'icon': FontAwesomeIcons.whatsapp, 'color': const Color(0xFF25D366), 'url': 'https://wa.me/+201093130120'},
+      {'icon': FontAwesomeIcons.facebook, 'color': const Color(0xFF1877F2), 'url': 'https://www.facebook.com/elsahm.arish'},
+      {'icon': FontAwesomeIcons.envelope, 'color': const Color(0xFFEA4335), 'url': 'mailto:elsahm.arish@gmail.com'},
+      {'icon': FontAwesomeIcons.phone, 'color': const Color(0xFF34B7F1), 'url': 'tel:+201093130120'},
+    ];
+    
     return Container(
-      margin: const EdgeInsets.fromLTRB(0, 12, 0, 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16),
+      padding: const EdgeInsets.all(24),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors:
-              isDark
-                  ? [const Color(0xFF1A1F38), const Color(0xFF0D1321)]
-                  : [const Color(0xFFF8FBFF), const Color(0xFFF0F7FF)],
+          colors: [
+            theme.colorScheme.secondary,
+            theme.colorScheme.primary,
+          ],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.08),
-            blurRadius: 15,
-            offset: const Offset(0, 5),
+            color: theme.colorScheme.primary.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
           ),
         ],
+      ),
+      child: Column(
+        children: [
+          Text(
+            'تواصل معنا',
+            style: theme.textTheme.headlineSmall?.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'نحن هنا لمساعدتك في العثور على العقار المناسب',
+            style: theme.textTheme.bodyMedium?.copyWith(
+              color: Colors.white.withOpacity(0.9),
+            ),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(height: 20),
+          
+          // أزرار وسائل التواصل الاجتماعي
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: socialMedia.map((social) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 8),
+                child: InkWell(
+                  onTap: () async {
+                    final url = social['url'] as String;
+                    if (await canLaunch(url)) {
+                      await launch(url);
+                    }
+                  },
+                  child: Container(
+                    width: 48,
+                    height: 48,
+                    decoration: BoxDecoration(
+                      color: Colors.white,
+                      borderRadius: BorderRadius.circular(24),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 8,
+                          offset: const Offset(0, 4),
+                        ),
+                      ],
+                    ),
+                    child: Center(
+                      child: FaIcon(
+                        social['icon'] as IconData,
+                        color: social['color'] as Color,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ),
+              );
+            }).toList(),
+          ),
+          
+          const SizedBox(height: 24),
+          
+          // زر الاتصال
+          ElevatedButton.icon(
+            onPressed: () async {
+              const phoneNumber = '+201093130120';
+              final url = 'tel:$phoneNumber';
+              if (await canLaunch(url)) {
+                await launch(url);
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.white,
+              foregroundColor: theme.colorScheme.primary,
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            icon: const Icon(Icons.phone),
+            label: const Text('اتصل بنا الآن'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // قسم معلومات المصمم
+  Widget _buildDesignerInfoSection() {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
+    // وسائل التواصل الاجتماعي الجديدة
+    final socialMedia = [
+      {'icon': FontAwesomeIcons.phone, 'color': const Color(0xFF34B7F1), 'url': 'tel:+201003193622'},
+      {'icon': FontAwesomeIcons.whatsapp, 'color': const Color(0xFF25D366), 'url': 'https://wa.me/+201003193622'},
+      {'icon': FontAwesomeIcons.facebook, 'color': const Color(0xFF1877F2), 'url': 'https://www.facebook.com/eslammosalah'},
+      {'icon': FontAwesomeIcons.instagram, 'color': const Color(0xFFE4405F), 'url': 'https://www.instagram.com/eslamz11'},
+    ];
+    
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 24, 16, 32),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(
-          color:
-              isDark
-                  ? Colors.blue.shade800.withValues(alpha: 0.2)
-                  : Colors.blue.shade300.withValues(alpha: 0.2),
-          width: 1.5,
+          color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
+          width: 1,
         ),
       ),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          // Top section with blue gradient - reduced height
+          // إطار الصورة الاحترافي
           Container(
-            height: 80, // Reduced from 110
+            width: 100,
+            height: 100,
             decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [const Color(0xFF0288D1), const Color(0xFF0277BD)],
-              ),
-              borderRadius: const BorderRadius.only(
-                topLeft: Radius.circular(18),
-                topRight: Radius.circular(18),
-              ),
-            ),
-            child: Stack(
-              children: [
-                // Decorative elements - made smaller
-                Positioned(
-                  top: -15,
-                  right: -15,
-                  child: Container(
-                    width: 70, // Reduced from 100
-                    height: 70, // Reduced from 100
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-                Positioned(
-                  bottom: -10,
-                  left: -10,
-                  child: Container(
-                    width: 40, // Reduced from 60
-                    height: 40, // Reduced from 60
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.1),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                ),
-
-                // Title content - simplified and centered
-                Padding(
-                  padding: const EdgeInsets.fromLTRB(
-                    16,
-                    0,
-                    25,
-                    0,
-                  ), // تقليل تباعد الأعلى من 18 إلى 12
-                  child: Center(
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.code,
-                          color: Colors.white.withValues(alpha: 0.9),
-                          size: 16,
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          'تصميم وتطوير',
-                          style: textTheme.titleMedium?.copyWith(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 14,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
+              shape: BoxShape.circle,
+              color: isDarkMode ? Colors.grey[800] : Colors.white,
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.15),
+                  blurRadius: 12,
+                  spreadRadius: 2,
+                  offset: const Offset(0, 5),
                 ),
               ],
+              border: Border.all(
+                color: theme.colorScheme.primary.withOpacity(0.5),
+                width: 3,
+              ),
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(50),
+              child: Image.asset(
+                'assets/images/Eslam_Zayed.webp',
+                fit: BoxFit.cover,
+              ),
             ),
           ),
-
-          // Profile information with reduced spacing
-          SizedBox(
-            height: 100, // Reduced from 110 to fix overflow
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.center,
-              children: [
-                // Profile image - made smaller and positioned higher
-                Positioned(
-                  top: -30, // Moved higher up (تم تعديلها من -35 إلى -30)
+          const SizedBox(height: 12),
+          Text(
+            'تطوير وتصميم',
+            style: TextStyle(
+              fontSize: 14,
+              color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Eng : Eslam Zayed',
+            style: theme.textTheme.titleMedium?.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          
+          // وسائل التواصل الاجتماعي المحدثة
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: socialMedia.map((social) {
+              return Container(
+                margin: const EdgeInsets.symmetric(horizontal: 6),
+                child: InkWell(
+                  onTap: () async {
+                    final url = social['url'] as String;
+                    if (await canLaunch(url)) {
+                      await launch(url);
+                    }
+                  },
                   child: Container(
-                    padding: const EdgeInsets.all(3),
+                    width: 42,
+                    height: 42,
                     decoration: BoxDecoration(
-                      color: isDark ? const Color(0xFF1A1F38) : Colors.white,
-                      shape: BoxShape.circle,
+                      color: isDarkMode
+                          ? Colors.grey[800]
+                          : Colors.white,
+                      borderRadius: BorderRadius.circular(21),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFF0277BD).withValues(alpha: 0.3),
-                          blurRadius: 10,
-                          spreadRadius: 1,
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 6,
                           offset: const Offset(0, 3),
                         ),
                       ],
+                      border: Border.all(
+                        color: (social['color'] as Color).withOpacity(0.2),
+                        width: 1,
+                      ),
                     ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(35),
-                      child: Image.asset(
-                        'assets/images/Eslam_Zayed.jpg',
-                        width: 70, // Reduced from 90
-                        height: 70, // Reduced from 90
-                        fit: BoxFit.cover,
-                        errorBuilder:
-                            (context, error, stackTrace) => Container(
-                              color:
-                                  isDark
-                                      ? Colors.grey.shade800
-                                      : Colors.grey.shade200,
-                              child: Icon(
-                                Icons.person,
-                                color: theme.colorScheme.primary,
-                                size: 30,
-                              ),
-                            ),
+                    child: Center(
+                      child: FaIcon(
+                        social['icon'] as IconData,
+                        color: social['color'] as Color,
+                        size: 22,
                       ),
                     ),
                   ),
                 ),
-
-                // Text elements - repositioned
-                Positioned(
-                  top: 45,
-                  child: Column(
-                    children: [
-                      // Name
-                      Text(
-                        'م. اسلام زايد',
-                        style: textTheme.titleMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color:
-                              isDark ? Colors.white : const Color(0xFF0D47A1),
-                        ),
-                      ),
-
-                      const SizedBox(height: 5),
-
-                      // Badge with profession
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 4,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: LinearGradient(
-                            colors: [
-                              const Color(0xFF0288D1),
-                              const Color(0xFF0277BD),
-                            ],
-                          ),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(
-                                0xFF0277BD,
-                              ).withValues(alpha: 0.25),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Text(
-                          'مطور ومصمم تطبيقات',
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.w500,
-                            fontSize: 11, // Reduced from 13
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              );
+            }).toList(),
           ),
-
-          // Social media buttons - smaller size and closer together
-          Padding(
-            padding: const EdgeInsets.only(bottom: 12, top: 0),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _buildCompactSocialButton(
-                  icon: FontAwesomeIcons.phone,
-                  gradient: const [Color(0xFF4CAF50), Color(0xFF388E3C)],
-                  onTap: () => _launchURL('tel:01003193622'),
-                ),
-                const SizedBox(width: 12), // Reduced spacing
-                _buildCompactSocialButton(
-                  icon: FontAwesomeIcons.whatsapp,
-                  gradient: const [Color(0xFF25D366), Color(0xFF128C7E)],
-                  onTap: () => _launchURL('https://wa.me/201003193622'),
-                ),
-                const SizedBox(width: 12), // Reduced spacing
-                _buildCompactSocialButton(
-                  icon: FontAwesomeIcons.facebook,
-                  gradient: const [Color(0xFF1877F2), Color(0xFF1554AF)],
-                  onTap:
-                      () => _launchURL('https://www.facebook.com/eslammosalah'),
-                ),
-                const SizedBox(width: 12), // Reduced spacing
-                _buildCompactSocialButton(
-                  icon: FontAwesomeIcons.instagram,
-                  gradient: const [Color(0xFFE1306C), Color(0xFF833AB4)],
-                  onTap:
-                      () => _launchURL('https://www.instagram.com/eslamz11/'),
-                ),
-              ],
+          
+          const SizedBox(height: 12),
+          Text(
+            '© ${DateTime.now().year} السهم - جميع الحقوق محفوظة',
+            style: TextStyle(
+              fontSize: 12,
+              color: isDarkMode ? Colors.grey[500] : Colors.grey[700],
             ),
+            textAlign: TextAlign.center,
           ),
         ],
       ),
     );
-  }
-
-  // Smaller social media button for the compact designer card
-  Widget _buildCompactSocialButton({
-    required IconData icon,
-    required List<Color> gradient,
-    required VoidCallback onTap,
-  }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(14),
-      child: Container(
-        width: 38, // Reduced from 50
-        height: 38, // Reduced from 50
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: gradient,
-          ),
-          borderRadius: BorderRadius.circular(14),
-          boxShadow: [
-            BoxShadow(
-              color: gradient.last.withValues(alpha: 0.3),
-              blurRadius: 6,
-              offset: const Offset(0, 2),
-            ),
-          ],
-        ),
-        child: Center(
-          child: FaIcon(
-            icon,
-            color: Colors.white,
-            size: 18, // Reduced from 22
-          ),
-        ),
-      ),
-    );
-  }
-
-  // جلب العقارات المميزة
-  Future<void> _fetchFeaturedProperties() async {
-    if (!mounted) return;
-
-    try {
-      setState(() {
-        _isFeaturedLoading = true;
-      });
-
-      // تسجيل حالة الاتصال الحالية
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.info('بدء جلب العقارات المميزة...');
-      }
-
-      // محاولة مسح التخزين المؤقت قبل جلب البيانات الجديدة
-      _propertyService.clearCache(key: 'featured_properties');
-
-      // جلب الشقق المميزة من Supabase
-      final properties = await _propertyService.getFeaturedProperties(
-        limit: 10,
-      );
-
-      if (!mounted) return;
-
-      // تسجيل معلومات الشقق للتشخيص
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        if (properties.isEmpty) {
-          logger.warning('لم يتم جلب أي عقارات مميزة!');
-        } else {
-          logger.info('تم جلب ${properties.length} عقار مميز');
-        }
-      }
-
-      if (mounted) {
-        setState(() {
-          _featuredProperties = properties;
-          _isFeaturedLoading = false;
-        });
-      }
-    } catch (e) {
-      if (!mounted) return;
-
-      if (kDebugMode) {
-        final logger = Logger('HomeScreen');
-        logger.severe('خطأ عام في جلب العقارات المميزة: $e');
-      }
-
-      // حتى في حالة الخطأ، نريد إنهاء حالة التحميل
-      setState(() {
-        _isFeaturedLoading = false;
-      });
-    }
   }
 }

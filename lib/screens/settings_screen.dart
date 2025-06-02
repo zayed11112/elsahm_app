@@ -310,7 +310,7 @@ class SettingsScreen extends StatelessWidget {
                             ],
                           ),
                           child: Image.asset(
-                            'assets/images/logo_white.png',
+                            'assets/images/logo_white.webp',
                             height: 60,
                             width: 60,
                             errorBuilder:

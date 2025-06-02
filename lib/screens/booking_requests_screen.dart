@@ -442,7 +442,7 @@ class _BookingRequestsScreenState extends State<BookingRequestsScreen> {
                               borderRadius: BorderRadius.circular(12),
                               color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
                               image: const DecorationImage(
-                                image: AssetImage('assets/icons/home-button.png'),
+                                image: AssetImage('assets/icons/home-button.webp'),
                                 fit: BoxFit.contain,
                               ),
                             ),

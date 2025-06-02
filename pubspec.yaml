@@ -186,7 +186,7 @@ flutter_launcher_icons:
 
 flutter_native_splash:
   color: "#000000"
-  image: "assets/icons/Native Splash Screen.png"
+  image: "assets/icons/Native Splash Screen.webp"
   android: true
   ios: true
   web: false

@@ -648,7 +648,7 @@ class _GroupsScreenState extends State<GroupsScreen>
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(15),
                     child: Image.asset(
-                      'assets/images/app_icon.png',
+                      'assets/images/logo_elsham.webp',
                       width: 60,
                       height: 60,
                       fit: BoxFit.cover,

@@ -951,7 +951,7 @@ class _LoginScreenState extends State<LoginScreen>
                                       ),
                                       padding: const EdgeInsets.all(2),
                                       child: Image.asset(
-                                        'assets/icons/google.png',
+                                        'assets/icons/google.webp',
                                         height: 20,
                                         width: 20,
                                       ),

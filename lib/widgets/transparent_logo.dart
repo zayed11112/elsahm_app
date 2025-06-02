@@ -39,7 +39,7 @@ class TransparentLogo extends StatelessWidget {
           },
           blendMode: BlendMode.srcATop,
           child: Image.asset(
-            'assets/images/logo_dark.png',
+            'assets/images/logo_dark.webp',
             height: height,
             color: Colors.white, // استخدام اللون الأبيض كقناع
           ),
@@ -62,7 +62,7 @@ class TransparentLogo extends StatelessWidget {
             },
             blendMode: BlendMode.srcATop,
             child: Image.asset(
-              'assets/images/logo_dark.png',
+              'assets/images/logo_dark.webp',
               height: height,
               color: Colors.white,
             ),

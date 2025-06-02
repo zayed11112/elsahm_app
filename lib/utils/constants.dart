@@ -20,7 +20,7 @@ class AppConstants {
   static const String appName = 'Elsahm';
   
   // Asset paths
-  static const String logoPath = 'assets/images/logo_dark.png';
+  static const String logoPath = 'assets/images/logo_dark.webp';
   static const String placeholderImage = 'assets/images/placeholder.png';
   
   // Animation durations

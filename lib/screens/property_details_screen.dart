@@ -1343,7 +1343,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             child: Opacity(
                               opacity: 0.6, // شفافية 80%
                               child: Image.asset(
-                                'assets/images/logo_new.png',
+                                'assets/images/logo_new.webp',
                                 height: 150,
                                 width: 200,
                               ),
@@ -2541,7 +2541,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
                         child: Opacity(
                           opacity: 0.2, // شفافية 20%
                           child: Image.asset(
-                            'assets/images/logo_new.png',
+                            'assets/images/logo_new.webp',
                             height: 120,
                             width: 120,
                           ),
@@ -2564,7 +2564,7 @@ class _FullScreenGalleryState extends State<_FullScreenGallery> {
               children: [
                 // شعار السهم
                 Image.asset(
-                  'assets/images/logo_dark.png',
+                  'assets/images/logo_dark.webp',
                   height: 50,
                   width: 50,
                 ),

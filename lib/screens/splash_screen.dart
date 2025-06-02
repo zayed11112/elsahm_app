@@ -315,7 +315,7 @@ class _SplashScreenState extends State<SplashScreen>
         decoration: BoxDecoration(
           // Replace gradient with image background
           image: DecorationImage(
-            image: AssetImage('assets/images/backgrond_app.jpg'),
+            image: AssetImage('assets/images/backgrond_app.webp'),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
               Colors.black.withValues(
@@ -371,7 +371,7 @@ class _SplashScreenState extends State<SplashScreen>
                               height: 150,
                               width: 150,
                               child: Image.asset(
-                                'assets/images/logo_new.png',
+                                'assets/images/logo_new.webp',
                                 fit: BoxFit.contain,
                               ),
                             ),
@@ -560,7 +560,7 @@ class _SplashScreenState extends State<SplashScreen>
                           child: ClipRRect(
                             borderRadius: BorderRadius.circular(20),
                             child: Image.asset(
-                              'assets/images/Eslam_Zayed.jpg',
+                              'assets/images/Eslam_Zayed.webp',
                               fit: BoxFit.cover,
                             ),
                           ),

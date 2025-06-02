@@ -59,8 +59,8 @@ class MainNavigationScreen extends StatefulWidget {
     // Choose logo based on theme
     final logoAsset =
         isDarkMode
-            ? 'assets/images/logo_dark.png'
-            : 'assets/images/logo_white.png';
+            ? 'assets/images/logo_dark.webp'
+            : 'assets/images/logo_white.webp';
 
     // Create a scaffold that includes both app bar and bottom navigation bar
     return Scaffold(
@@ -784,8 +784,8 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
     // Choose logo based on theme (Swapped as per request)
     final logoAsset =
         isDarkMode
-            ? 'assets/images/logo_dark.png'
-            : 'assets/images/logo_white.png';
+            ? 'assets/images/logo_dark.webp'
+            : 'assets/images/logo_white.webp';
 
     developer.log(
       "Building MainNavigationScreen - Selected index: ${navigationProvider.selectedIndex}",
