@@ -1,13 +1,13 @@
 # Page Navigation with Loading Animation
 
-This module provides a modern and customizable way to show loading animations during page navigation in your Flutter app.
+This module provides a modern and customizable way to show loading indicators during page navigation in your Flutter app.
 
 ## Features
 
-- Display Lottie animations during page transitions
-- Load pages in the background while showing animations
+- Display loading indicators during page transitions
+- Load pages in the background while showing loading indicators
 - Fetch data before showing the destination page
-- Customizable minimum loading time 
+- Customizable minimum loading time
 - Support for both light and dark themes
 - Easy to use API
 
@@ -52,18 +52,12 @@ NavigationUtils.navigateWithDataLoading<void, List<String>>(
 );
 ```
 
-## Custom Loading Animation
+## Custom Loading Indicator
 
-To use your own Lottie animation:
-
-1. Place your animation file in the assets directory
-2. Update pubspec.yaml if needed
-3. Pass the animation path to the `lottieAsset` parameter
-4. Run `flutter pub get` to update assets
+The loading indicator uses Flutter's built-in CircularProgressIndicator for optimal performance and consistency.
 
 ## Performance Tips
 
-- Keep your Lottie animations lightweight
-- For better performance, optimize your animation file
 - Use the `minimumLoadingTime` parameter to ensure smooth transitions
-- Pre-load heavy assets with the `precacheImage` method 
+- Pre-load heavy assets with the `precacheImage` method
+- Keep data loading operations efficient

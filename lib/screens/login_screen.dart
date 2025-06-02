@@ -20,29 +20,27 @@ class CustomPageRoute<T> extends PageRouteBuilder<T> {
     required this.settings,
     this.rightToLeft = true,
   }) : super(
-          settings: settings,
-          pageBuilder: (context, animation, secondaryAnimation) => child,
-          transitionsBuilder: (context, animation, secondaryAnimation, child) {
-            const begin = Offset(1.0, 0.0); // Start off-screen to the right
-            const end = Offset.zero;
-            const curve = Curves.easeInOutCubic;
-            
-            var tween = Tween(begin: begin, end: end).chain(
-              CurveTween(curve: curve),
-            );
-            
-            var offsetAnimation = animation.drive(tween);
-            
-            return SlideTransition(
-              position: offsetAnimation,
-              child: FadeTransition(
-                opacity: animation,
-                child: child,
-              ),
-            );
-          },
-          transitionDuration: const Duration(milliseconds: 500),
-        );
+         settings: settings,
+         pageBuilder: (context, animation, secondaryAnimation) => child,
+         transitionsBuilder: (context, animation, secondaryAnimation, child) {
+           const begin = Offset(1.0, 0.0); // Start off-screen to the right
+           const end = Offset.zero;
+           const curve = Curves.easeInOutCubic;
+
+           var tween = Tween(
+             begin: begin,
+             end: end,
+           ).chain(CurveTween(curve: curve));
+
+           var offsetAnimation = animation.drive(tween);
+
+           return SlideTransition(
+             position: offsetAnimation,
+             child: FadeTransition(opacity: animation, child: child),
+           );
+         },
+         transitionDuration: const Duration(milliseconds: 500),
+       );
 }
 
 class LoginScreen extends StatefulWidget {
@@ -52,7 +50,8 @@ class LoginScreen extends StatefulWidget {
   State<LoginScreen> createState() => _LoginScreenState();
 }
 
-class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
+class _LoginScreenState extends State<LoginScreen>
+    with SingleTickerProviderStateMixin {
   final _formKey = GlobalKey<FormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
@@ -118,34 +117,28 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     );
 
     _fadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
 
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 0.1),
       end: Offset.zero,
     ).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
 
     // Initialize Rive animation controllers
     controllerIdle = SimpleAnimation(AnimationEnum.idle.name);
-    controllerHandsUp = SimpleAnimation(AnimationEnum.Hands_up.name);
-    controllerHandsDown = SimpleAnimation(AnimationEnum.hands_down.name);
-    controllerLookRight = SimpleAnimation(AnimationEnum.Look_down_right.name);
-    controllerLookLeft = SimpleAnimation(AnimationEnum.Look_down_left.name);
+    controllerHandsUp = SimpleAnimation(AnimationEnum.handsUp.name);
+    controllerHandsDown = SimpleAnimation(AnimationEnum.handsDown.name);
+    controllerLookRight = SimpleAnimation(AnimationEnum.lookDownRight.name);
+    controllerLookLeft = SimpleAnimation(AnimationEnum.lookDownLeft.name);
     controllerSuccess = SimpleAnimation(AnimationEnum.success.name);
     controllerFail = SimpleAnimation(AnimationEnum.fail.name);
 
     loadRiveFileWithItsStates();
     checkForPasswordFocusNodeToChangeAnimationState();
-    
+
     // Start UI animations
     _animationController.forward();
   }
@@ -357,22 +350,20 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       if (success) {
         // Set the navigation index to 'More' (index 4)
         Provider.of<NavigationProvider>(context, listen: false).setIndex(4);
-        
+
         print("تسجيل الدخول بنجاح - الانتقال إلى الشاشة الرئيسية");
-        
+
         // Navigate to the MainNavigationScreen
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(
-            builder: (context) => const MainNavigationScreen(),
-          ),
+          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
         );
-        
+
         // طلب التحقق من اكتمال الملف الشخصي بعد فترة قصيرة
         Future.delayed(const Duration(milliseconds: 500), () {
           MainNavigationScreen.checkProfileCompletion();
         });
-        
+
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
@@ -425,7 +416,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       }
     }
   }
-  
+
   // Custom input decoration
   InputDecoration _getInputDecoration({
     required String labelText,
@@ -472,10 +463,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
           width: 2,
         ),
       ),
-      contentPadding: const EdgeInsets.symmetric(
-        horizontal: 16,
-        vertical: 16,
-      ),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
   }
 
@@ -493,10 +481,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+          statusBarIconBrightness:
+              isDarkMode ? Brightness.light : Brightness.dark,
         ),
         leading: IconButton(
-          icon: Icon(Icons.close, color: isDarkMode ? Colors.white70 : Colors.grey),
+          icon: Icon(
+            Icons.close,
+            color: isDarkMode ? Colors.white70 : Colors.grey,
+          ),
           onPressed: () {
             // Add haptic feedback
             HapticFeedback.lightImpact();
@@ -520,9 +512,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     // Rive Animation
                     SizedBox(
                       height: 150,
-                      child: riveArtboard == null
-                          ? const Center(child: CircularProgressIndicator())
-                          : Rive(artboard: riveArtboard!, fit: BoxFit.contain),
+                      child:
+                          riveArtboard == null
+                              ? const Center(child: CircularProgressIndicator())
+                              : Rive(
+                                artboard: riveArtboard!,
+                                fit: BoxFit.contain,
+                              ),
                     ),
                     const SizedBox(height: 8.0),
 
@@ -616,7 +612,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     // Remember Me Checkbox and Forgot Password
                     Container(
                       decoration: BoxDecoration(
-                        color: isDarkMode ? Colors.grey[800]!.withOpacity(0.5) : Colors.grey[100]!.withOpacity(0.5),
+                        color:
+                            isDarkMode
+                                ? Colors.grey[800]!.withOpacity(0.5)
+                                : Colors.grey[100]!.withOpacity(0.5),
                         borderRadius: BorderRadius.circular(12),
                       ),
                       padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -642,7 +641,8 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           Text(
                             'تذكرني',
                             style: TextStyle(
-                              color: isDarkMode ? Colors.white70 : Colors.black87,
+                              color:
+                                  isDarkMode ? Colors.white70 : Colors.black87,
                             ),
                           ),
                           const Spacer(),
@@ -654,7 +654,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             },
                             style: TextButton.styleFrom(
                               foregroundColor: colorScheme.secondary,
-                              padding: const EdgeInsets.symmetric(horizontal: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                              ),
                             ),
                             child: Text(
                               'نسيت كلمة المرور؟',
@@ -675,56 +677,60 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       height: 56,
                       decoration: BoxDecoration(
                         borderRadius: BorderRadius.circular(16),
-                        boxShadow: !_isLoading 
-                          ? [
-                              BoxShadow(
-                                color: colorScheme.primary.withOpacity(0.3),
-                                blurRadius: 8,
-                                offset: const Offset(0, 4),
-                              ),
-                            ]
-                          : [],
+                        boxShadow:
+                            !_isLoading
+                                ? [
+                                  BoxShadow(
+                                    color: colorScheme.primary.withOpacity(0.3),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 4),
+                                  ),
+                                ]
+                                : [],
                       ),
                       child: ElevatedButton(
-                        onPressed: _isLoading
-                            ? null
-                            : () {
-                                // Add haptic feedback
-                                HapticFeedback.mediumImpact();
-                                _passwordFocusNode.unfocus();
-                                validateEmailAndPassword();
-                              },
+                        onPressed:
+                            _isLoading
+                                ? null
+                                : () {
+                                  // Add haptic feedback
+                                  HapticFeedback.mediumImpact();
+                                  _passwordFocusNode.unfocus();
+                                  validateEmailAndPassword();
+                                },
                         style: ElevatedButton.styleFrom(
                           backgroundColor: colorScheme.primary,
                           foregroundColor: Colors.white,
-                          disabledBackgroundColor: isDarkMode 
-                              ? Colors.grey[700] 
-                              : Colors.grey[300],
-                          disabledForegroundColor: isDarkMode 
-                              ? Colors.grey[500] 
-                              : Colors.grey[500],
+                          disabledBackgroundColor:
+                              isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                          disabledForegroundColor:
+                              isDarkMode ? Colors.grey[500] : Colors.grey[500],
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                           ),
                           elevation: 0,
                         ),
-                        child: _isLoading
-                            ? SizedBox(
-                                height: 24,
-                                width: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                  color: isDarkMode ? colorScheme.primary : Colors.white,
+                        child:
+                            _isLoading
+                                ? SizedBox(
+                                  height: 24,
+                                  width: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color:
+                                        isDarkMode
+                                            ? colorScheme.primary
+                                            : Colors.white,
+                                  ),
+                                )
+                                : const Text(
+                                  'تسجيل الدخول',
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                  ),
                                 ),
-                              )
-                            : const Text(
-                                'تسجيل الدخول',
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
                       ),
                     ),
                     const SizedBox(height: 24.0),
@@ -734,23 +740,36 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       children: [
                         Expanded(
                           child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
                             height: 1.0,
-                            color: isDarkMode ? Colors.grey.shade700 : Colors.grey.withAlpha(77),
+                            color:
+                                isDarkMode
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.withAlpha(77),
                           ),
                         ),
                         Text(
                           'أو',
                           style: TextStyle(
-                            color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+                            color:
+                                isDarkMode
+                                    ? Colors.grey.shade400
+                                    : Colors.grey.shade600,
                             fontWeight: FontWeight.w500,
                           ),
                         ),
                         Expanded(
                           child: Container(
-                            margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                            margin: const EdgeInsets.symmetric(
+                              horizontal: 12.0,
+                            ),
                             height: 1.0,
-                            color: isDarkMode ? Colors.grey.shade700 : Colors.grey.withAlpha(77),
+                            color:
+                                isDarkMode
+                                    ? Colors.grey.shade700
+                                    : Colors.grey.withAlpha(77),
                           ),
                         ),
                       ],
@@ -764,9 +783,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                         borderRadius: BorderRadius.circular(16),
                         boxShadow: [
                           BoxShadow(
-                            color: isDarkMode 
-                                ? Colors.black.withOpacity(0.2) 
-                                : Colors.grey.withOpacity(0.2),
+                            color:
+                                isDarkMode
+                                    ? Colors.black.withOpacity(0.2)
+                                    : Colors.grey.withOpacity(0.2),
                             blurRadius: 8,
                             offset: const Offset(0, 2),
                           ),
@@ -802,8 +822,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   );
                               navProvider.setIndex(4);
 
-                              print("تسجيل الدخول بنجاح عبر جوجل - الانتقال إلى الشاشة الرئيسية");
-                              
+                              print(
+                                "تسجيل الدخول بنجاح عبر جوجل - الانتقال إلى الشاشة الرئيسية",
+                              );
+
                               // Navigate to the MainNavigationScreen
                               Navigator.pushReplacement(
                                 context,
@@ -812,11 +834,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       (context) => const MainNavigationScreen(),
                                 ),
                               );
-                              
+
                               // طلب التحقق من اكتمال الملف الشخصي بعد فترة قصيرة
-                              Future.delayed(const Duration(milliseconds: 500), () {
-                                MainNavigationScreen.checkProfileCompletion();
-                              });
+                              Future.delayed(
+                                const Duration(milliseconds: 500),
+                                () {
+                                  MainNavigationScreen.checkProfileCompletion();
+                                },
+                              );
 
                               // Show success message
                               ScaffoldMessenger.of(context).showSnackBar(
@@ -837,7 +862,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                               // Show error message
                               ScaffoldMessenger.of(context).showSnackBar(
                                 SnackBar(
-                                  content: const Text('فشل تسجيل الدخول عبر جوجل'),
+                                  content: const Text(
+                                    'فشل تسجيل الدخول عبر جوجل',
+                                  ),
                                   backgroundColor: colorScheme.error,
                                   behavior: SnackBarBehavior.floating,
                                   shape: RoundedRectangleBorder(
@@ -869,62 +896,80 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           }
                         },
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: isDarkMode ? const Color(0xFF303030) : Colors.white,
-                          foregroundColor: isDarkMode ? Colors.white : Colors.black87,
+                          backgroundColor:
+                              isDarkMode
+                                  ? const Color(0xFF303030)
+                                  : Colors.white,
+                          foregroundColor:
+                              isDarkMode ? Colors.white : Colors.black87,
                           elevation: 0,
                           padding: const EdgeInsets.symmetric(vertical: 16),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(16),
                             side: BorderSide(
-                              color: isDarkMode ? Colors.grey.shade700 : Colors.grey.shade300,
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey.shade700
+                                      : Colors.grey.shade300,
                               width: 1,
                             ),
                           ),
                         ),
-                        child: _isLoading
-                          ? SizedBox(
-                              height: 24,
-                              width: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: isDarkMode ? Colors.white70 : colorScheme.primary,
-                              ),
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                Container(
+                        child:
+                            _isLoading
+                                ? SizedBox(
                                   height: 24,
                                   width: 24,
-                                  decoration: BoxDecoration(
-                                    color: Colors.white,
-                                    borderRadius: BorderRadius.circular(4),
-                                    boxShadow: isDarkMode ? [] : [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.05),
-                                        blurRadius: 3,
-                                        offset: const Offset(0, 1),
-                                      )
-                                    ],
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color:
+                                        isDarkMode
+                                            ? Colors.white70
+                                            : colorScheme.primary,
                                   ),
-                                  padding: const EdgeInsets.all(2),
-                                  child: Image.asset(
-                                    'assets/icons/google.png',
-                                    height: 20,
-                                    width: 20,
-                                  ),
+                                )
+                                : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Container(
+                                      height: 24,
+                                      width: 24,
+                                      decoration: BoxDecoration(
+                                        color: Colors.white,
+                                        borderRadius: BorderRadius.circular(4),
+                                        boxShadow:
+                                            isDarkMode
+                                                ? []
+                                                : [
+                                                  BoxShadow(
+                                                    color: Colors.black
+                                                        .withOpacity(0.05),
+                                                    blurRadius: 3,
+                                                    offset: const Offset(0, 1),
+                                                  ),
+                                                ],
+                                      ),
+                                      padding: const EdgeInsets.all(2),
+                                      child: Image.asset(
+                                        'assets/icons/google.png',
+                                        height: 20,
+                                        width: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      'متابعة باستخدام حساب جوجل',
+                                      style: TextStyle(
+                                        fontSize: 16,
+                                        fontWeight: FontWeight.w500,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.white
+                                                : Colors.black87,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 12),
-                                Text(
-                                  'متابعة باستخدام حساب جوجل',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w500,
-                                    color: isDarkMode ? Colors.white : Colors.black87,
-                                  ),
-                                ),
-                              ],
-                            ),
                       ),
                     ),
                     const SizedBox(height: 24.0),
@@ -934,7 +979,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       onPressed: () {
                         // Add haptic feedback
                         HapticFeedback.lightImpact();
-                        
+
                         // Navigate to SignUpScreen with custom transition
                         Navigator.of(context).push(
                           CustomPageRoute(
@@ -952,9 +997,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                             color: isDarkMode ? Colors.white70 : Colors.black87,
                           ),
                           children: <TextSpan>[
-                            const TextSpan(
-                              text: 'ليس لديك حساب؟ ',
-                            ),
+                            const TextSpan(text: 'ليس لديك حساب؟ '),
                             TextSpan(
                               text: 'إنشاء حساب جديد',
                               style: TextStyle(

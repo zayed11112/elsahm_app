@@ -38,9 +38,6 @@ dependencies:
   # State Management
   provider: ^6.0.0 # Check for latest version
 
-  # Error tracking and monitoring
-  sentry_flutter: ^8.14.2
-
   # Reactive Extensions for Dart
   rxdart: ^0.27.7 # For combining streams
 
@@ -77,13 +74,8 @@ dependencies:
   # Carousel Slider
   carousel_slider: ^5.0.0 # Update to latest available version
 
-  # Lottie for animations
-  lottie: ^3.3.1 # Check for latest version
   url_launcher: ^6.3.1
   share_plus: ^10.1.4
-
-  # Audio player for sound effects
-  audioplayers: ^5.2.1
 
   # Package info for app version
   package_info_plus: 8.3.0
@@ -104,9 +96,7 @@ dependencies:
   google_sign_in: ^6.2.1
   video_player: ^2.9.5
   chewie: ^1.11.3
-  youtube_player_flutter: ^9.1.1
   webview_flutter: ^4.13.0
-  vimeo_player_flutter: ^0.1.0
   supabase_auth_ui: ^0.5.5
   flutter_staggered_grid_view: ^0.7.0
   onesignal_flutter: ^5.3.2
@@ -148,9 +138,7 @@ flutter:
   assets:
     - assets/images/ # Main images directory (logos)
     - assets/images/banners/ # Banners directory
-    - assets/images/home-anmation.json # Lottie animation file
-    - assets/animations/ # Directory for animations (Lottie and Rive)
-    - assets/sounds/ # Directory for sound effects
+    - assets/animations/ # Directory for animations (Rive)
     - assets/icons/ # Directory for SVG icons
 
   #   - images/a_dot_burr.jpeg

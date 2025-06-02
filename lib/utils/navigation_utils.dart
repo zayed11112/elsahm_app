@@ -11,11 +11,10 @@ class NavigationUtils {
   static Future<T?> navigateWithLoading<T>({
     required BuildContext context,
     required Widget page,
-    String lottieAsset = 'assets/animations/loading.json',
     Duration minimumLoadingTime = const Duration(milliseconds: 1200),
     bool replaceCurrent = false,
     Color? backgroundColor,
-    double lottieSize = 100,
+    double indicatorSize = 100,
   }) async {
     // Prevent multiple navigation requests while one is in progress
     if (_isNavigating) {
@@ -32,10 +31,9 @@ class NavigationUtils {
 
       final route = LoadingRoute<T>(
         page: page,
-        lottieAsset: lottieAsset,
         minimumLoadingTime: minimumLoadingTime,
         backgroundColor: backgroundColor ?? scaffoldBackgroundColor,
-        lottieSize: lottieSize,
+        indicatorSize: indicatorSize,
       );
 
       final result =
@@ -61,11 +59,10 @@ class NavigationUtils {
     required BuildContext context,
     required Future<D> Function() dataLoader,
     required Widget Function(BuildContext, D) pageBuilder,
-    String lottieAsset = 'assets/animations/loading.json',
     Duration minimumLoadingTime = const Duration(milliseconds: 1200),
     bool replaceCurrent = false,
     Color? backgroundColor,
-    double lottieSize = 100,
+    double indicatorSize = 100,
   }) async {
     // Prevent multiple navigation requests while one is in progress
     if (_isNavigating) {
@@ -83,10 +80,9 @@ class NavigationUtils {
       final route = DataLoadingRoute<T, D>(
         dataLoader: dataLoader,
         buildPageWithData: pageBuilder,
-        lottieAsset: lottieAsset,
         minimumLoadingTime: minimumLoadingTime,
         backgroundColor: backgroundColor ?? scaffoldBackgroundColor,
-        lottieSize: lottieSize,
+        indicatorSize: indicatorSize,
       );
 
       final result =

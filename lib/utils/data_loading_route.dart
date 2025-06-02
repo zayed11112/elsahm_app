@@ -14,11 +14,10 @@ class DataLoadingRoute<T, D> extends LoadingRoute<T> {
   DataLoadingRoute({
     required this.dataLoader,
     required this.buildPageWithData,
-    super.lottieAsset = 'assets/animations/loading.json',
     super.animationDuration = const Duration(milliseconds: 800),
     super.minimumLoadingTime = const Duration(milliseconds: 1200),
     super.backgroundColor = Colors.white,
-    super.lottieSize = 100,
+    super.indicatorSize = 100,
     super.timeout = const Duration(seconds: 15),
   }) : super(
          page: Container(), // Placeholder, will be replaced

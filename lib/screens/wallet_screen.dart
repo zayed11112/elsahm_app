@@ -8,7 +8,8 @@ import '../services/supabase_service.dart'; // إضافة SupabaseService
 import '../services/payment_methods_service.dart'; // إضافة خدمة طرق الدفع
 import '../providers/auth_provider.dart'; // إضافة AuthProvider
 import '../utils/notification_utils.dart'; // إضافة خدمة الإشعارات
-import '../constants/theme.dart' hide accentBlue; // Import theme constants but hide accentBlue
+import '../constants/theme.dart'
+    hide accentBlue; // Import theme constants but hide accentBlue
 import 'dart:io';
 import 'dart:convert';
 import 'package:image_picker/image_picker.dart';
@@ -19,7 +20,9 @@ import './payment_requests_screen.dart'; // استيراد صفحة طلبات �
 // Re-export the theme constants for backward compatibility
 // Using different variable names to avoid self-reference
 const Color appBarBlue = Color(0xFF1976d3); // New color for AppBar
-const Color accentBlue = Color(0xFF29B6F6); // Local definition to avoid ambiguity
+const Color accentBlue = Color(
+  0xFF29B6F6,
+); // Local definition to avoid ambiguity
 
 // The rest of the dark mode colors are now imported from theme.dart
 
@@ -664,18 +667,17 @@ class _WalletScreenState extends State<WalletScreen>
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Define colors based on theme
     final backgroundColor = isDarkMode ? darkBackground : Colors.white;
     final cardColor = isDarkMode ? darkCard : Colors.white;
     final textPrimaryColor = isDarkMode ? darkTextPrimary : Colors.black87;
-    final textSecondaryColor = isDarkMode ? darkTextSecondary : Colors.grey.shade600;
+    final textSecondaryColor =
+        isDarkMode ? darkTextSecondary : Colors.grey.shade600;
     final iconColor = isDarkMode ? skyBlue : appBarBlue;
-    final cardBorderColor = isDarkMode ? darkCardColor : Colors.grey.shade300;
-    final highlightColor = isDarkMode ? accentBlue : appBarBlue;
     final surfaceColor = isDarkMode ? darkSurface : Colors.grey.shade50;
     final buttonColor = isDarkMode ? primaryBlueDark : appBarBlue;
-    
+
     return WillPopScope(
       onWillPop: () async {
         // Hide any displayed banners when user presses back button
@@ -687,10 +689,7 @@ class _WalletScreenState extends State<WalletScreen>
         appBar: AppBar(
           title: const Text(
             'شحن المحفظة',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
           backgroundColor: appBarBlue,
@@ -716,7 +715,10 @@ class _WalletScreenState extends State<WalletScreen>
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(20),
@@ -748,16 +750,25 @@ class _WalletScreenState extends State<WalletScreen>
                         ],
                       ),
                       const SizedBox(height: 8),
-                      
+
                       // إضافة ملحوظة احترافية
                       Container(
                         margin: const EdgeInsets.only(bottom: 10),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 6,
+                        ),
                         decoration: BoxDecoration(
-                          color: isDarkMode ? Colors.blue.withOpacity(0.15) : Colors.blue.shade50,
+                          color:
+                              isDarkMode
+                                  ? Colors.blue.withOpacity(0.15)
+                                  : Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
-                            color: isDarkMode ? Colors.blue.withOpacity(0.3) : Colors.blue.shade100,
+                            color:
+                                isDarkMode
+                                    ? Colors.blue.withOpacity(0.3)
+                                    : Colors.blue.shade100,
                             width: 1,
                           ),
                         ),
@@ -773,7 +784,10 @@ class _WalletScreenState extends State<WalletScreen>
                               'اضغط علي الطريقة اللي حولت من خلالها',
                               style: TextStyle(
                                 fontSize: 13,
-                                color: isDarkMode ? Colors.blue.shade300 : Colors.blue.shade800,
+                                color:
+                                    isDarkMode
+                                        ? Colors.blue.shade300
+                                        : Colors.blue.shade800,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
@@ -784,47 +798,52 @@ class _WalletScreenState extends State<WalletScreen>
                       // Payment Methods Cards
                       _isLoadingPaymentMethods
                           ? const Center(
-                              child: Padding(
-                                padding: EdgeInsets.all(20.0),
-                                child: CircularProgressIndicator(),
-                              ),
-                            )
+                            child: Padding(
+                              padding: EdgeInsets.all(20.0),
+                              child: CircularProgressIndicator(),
+                            ),
+                          )
                           : _paymentMethods.isEmpty
-                              ? Center(
-                                  child: Padding(
-                                    padding: const EdgeInsets.all(20.0),
-                                    child: Column(
-                                      children: [
-                                        Icon(
-                                          Icons.payment_outlined,
-                                          size: 48,
-                                          color: Colors.grey.withOpacity(0.6),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        const Text(
-                                          'لا توجد طرق دفع متاحة حالياً',
-                                          style: TextStyle(
-                                            fontSize: 16,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ],
+                          ? Center(
+                            child: Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                children: [
+                                  Icon(
+                                    Icons.payment_outlined,
+                                    size: 48,
+                                    color: Colors.grey.withOpacity(0.6),
+                                  ),
+                                  const SizedBox(height: 16),
+                                  const Text(
+                                    'لا توجد طرق دفع متاحة حالياً',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
                                     ),
                                   ),
-                                )
-                              : Column(
-                                  children: _paymentMethods
-                                      .map(
-                                        (method) => _buildPaymentMethodItemNew(
-                                          method.name,
-                                          method.paymentIdentifier,
-                                          isDarkMode,
-                                          method.name == _selectedPaymentMethod,
-                                          () => setState(() => _selectedPaymentMethod = method.name),
+                                ],
+                              ),
+                            ),
+                          )
+                          : Column(
+                            children:
+                                _paymentMethods
+                                    .map(
+                                      (method) => _buildPaymentMethodItemNew(
+                                        method.name,
+                                        method.paymentIdentifier,
+                                        isDarkMode,
+                                        method.name == _selectedPaymentMethod,
+                                        () => setState(
+                                          () =>
+                                              _selectedPaymentMethod =
+                                                  method.name,
                                         ),
-                                      )
-                                      .toList(),
-                                ),
+                                      ),
+                                    )
+                                    .toList(),
+                          ),
 
                       const SizedBox(height: 16),
 
@@ -835,9 +854,7 @@ class _WalletScreenState extends State<WalletScreen>
                         decoration: BoxDecoration(
                           color: Colors.amber.shade50,
                           borderRadius: BorderRadius.circular(8),
-                          border: Border.all(
-                            color: Colors.amber.shade200,
-                          ),
+                          border: Border.all(color: Colors.amber.shade200),
                         ),
                         child: Row(
                           children: [
@@ -866,7 +883,10 @@ class _WalletScreenState extends State<WalletScreen>
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(20),
@@ -936,7 +956,9 @@ class _WalletScreenState extends State<WalletScreen>
                               width: 2.0,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
                         ),
                         textAlign: TextAlign.center,
                         style: const TextStyle(
@@ -952,9 +974,13 @@ class _WalletScreenState extends State<WalletScreen>
                       // Predefined Amounts
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: ['1000', '2000', '4000', '6000']
-                            .map((amount) => _buildPredefinedAmountButtonNew(amount))
-                            .toList(),
+                        children:
+                            ['1000', '2000', '4000', '6000']
+                                .map(
+                                  (amount) =>
+                                      _buildPredefinedAmountButtonNew(amount),
+                                )
+                                .toList(),
                       ),
 
                       const SizedBox(height: 24),
@@ -963,7 +989,10 @@ class _WalletScreenState extends State<WalletScreen>
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(20),
@@ -1036,11 +1065,11 @@ class _WalletScreenState extends State<WalletScreen>
                               width: 2.0,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
                         ),
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(40),
-                        ],
+                        inputFormatters: [LengthLimitingTextInputFormatter(40)],
                         textAlign: TextAlign.start,
                         enabled: !_isSubmitting,
                       ),
@@ -1079,11 +1108,11 @@ class _WalletScreenState extends State<WalletScreen>
                               width: 2.0,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 16),
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
                         ),
-                        inputFormatters: [
-                          LengthLimitingTextInputFormatter(25),
-                        ],
+                        inputFormatters: [LengthLimitingTextInputFormatter(25)],
                         textAlign: TextAlign.start,
                         enabled: !_isSubmitting,
                       ),
@@ -1095,7 +1124,9 @@ class _WalletScreenState extends State<WalletScreen>
                         children: [
                           const SizedBox(width: 16),
                           Text(
-                            _selectedPaymentMethod == 'إنستا باي' ? 'الرقم الذي حولت منه' : 'الرقم الذي حولت منه',
+                            _selectedPaymentMethod == 'إنستا باي'
+                                ? 'الرقم الذي حولت منه'
+                                : 'الرقم الذي حولت منه',
                             style: TextStyle(
                               fontSize: 14,
                               fontWeight: FontWeight.w500,
@@ -1109,7 +1140,9 @@ class _WalletScreenState extends State<WalletScreen>
                         controller: _sourcePhoneController,
                         decoration: InputDecoration(
                           prefixIcon: Icon(
-                            _selectedPaymentMethod == 'إنستا باي' ? Icons.alternate_email : Icons.phone,
+                            _selectedPaymentMethod == 'إنستا باي'
+                                ? Icons.alternate_email
+                                : Icons.phone,
                             color: Colors.grey.shade500,
                           ),
                           border: OutlineInputBorder(
@@ -1122,20 +1155,31 @@ class _WalletScreenState extends State<WalletScreen>
                               width: 2.0,
                             ),
                           ),
-                          contentPadding: const EdgeInsets.symmetric(vertical: 16),
-                          hintText: _selectedPaymentMethod == 'إنستا باي' ? 'اسم المستخدم على انستا باي' : 'مثال: 01xxxxxxxxx',
+                          contentPadding: const EdgeInsets.symmetric(
+                            vertical: 16,
+                          ),
+                          hintText:
+                              _selectedPaymentMethod == 'إنستا باي'
+                                  ? 'اسم المستخدم على انستا باي'
+                                  : 'مثال: 01xxxxxxxxx',
                         ),
                         textAlign: TextAlign.start,
-                        keyboardType: _selectedPaymentMethod == 'إنستا باي' ? TextInputType.text : TextInputType.phone,
-                        inputFormatters: _selectedPaymentMethod == 'إنستا باي'
-                            ? [
-                                FilteringTextInputFormatter.deny(RegExp(r'@')),
-                                LengthLimitingTextInputFormatter(25),
-                              ]
-                            : [
-                                FilteringTextInputFormatter.digitsOnly,
-                                LengthLimitingTextInputFormatter(25),
-                              ],
+                        keyboardType:
+                            _selectedPaymentMethod == 'إنستا باي'
+                                ? TextInputType.text
+                                : TextInputType.phone,
+                        inputFormatters:
+                            _selectedPaymentMethod == 'إنستا باي'
+                                ? [
+                                  FilteringTextInputFormatter.deny(
+                                    RegExp(r'@'),
+                                  ),
+                                  LengthLimitingTextInputFormatter(25),
+                                ]
+                                : [
+                                  FilteringTextInputFormatter.digitsOnly,
+                                  LengthLimitingTextInputFormatter(25),
+                                ],
                         enabled: !_isSubmitting,
                       ),
 
@@ -1145,7 +1189,10 @@ class _WalletScreenState extends State<WalletScreen>
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 12,
+                              vertical: 6,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.blue.shade50,
                               borderRadius: BorderRadius.circular(20),
@@ -1199,120 +1246,163 @@ class _WalletScreenState extends State<WalletScreen>
                               width: 1.0,
                             ),
                           ),
-                          child: _isUploading
-                              ? const Center(
-                                  child: Column(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      CircularProgressIndicator(
-                                        color: appBarBlue,
-                                      ),
-                                      SizedBox(height: 10),
-                                      Text('جاري رفع الصورة...'),
-                                    ],
-                                  ),
-                                )
-                              : _imageFile != null
-                                  ? Stack(
+                          child:
+                              _isUploading
+                                  ? const Center(
+                                    child: Column(
+                                      mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        ClipRRect(
-                                          borderRadius: BorderRadius.circular(8),
-                                          child: Image.file(
-                                            _imageFile!,
-                                            fit: BoxFit.cover,
-                                            width: double.infinity,
-                                            height: double.infinity,
-                                          ),
+                                        CircularProgressIndicator(
+                                          color: appBarBlue,
                                         ),
-                                        // زر تغيير الصورة
-                                        Positioned(
-                                          bottom: 12,
-                                          right: 12,
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              color: isDarkMode ? Colors.black54 : Colors.white.withOpacity(0.8),
-                                              borderRadius: BorderRadius.circular(20),
-                                              boxShadow: [
-                                                BoxShadow(
-                                                  color: Colors.black.withOpacity(0.1),
-                                                  blurRadius: 4,
-                                                  offset: const Offset(0, 2),
-                                                ),
-                                              ],
+                                        SizedBox(height: 10),
+                                        Text('جاري رفع الصورة...'),
+                                      ],
+                                    ),
+                                  )
+                                  : _imageFile != null
+                                  ? Stack(
+                                    children: [
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: Image.file(
+                                          _imageFile!,
+                                          fit: BoxFit.cover,
+                                          width: double.infinity,
+                                          height: double.infinity,
+                                        ),
+                                      ),
+                                      // زر تغيير الصورة
+                                      Positioned(
+                                        bottom: 12,
+                                        right: 12,
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            color:
+                                                isDarkMode
+                                                    ? Colors.black54
+                                                    : Colors.white.withOpacity(
+                                                      0.8,
+                                                    ),
+                                            borderRadius: BorderRadius.circular(
+                                              20,
                                             ),
-                                            child: Material(
-                                              color: Colors.transparent,
-                                              child: InkWell(
-                                                onTap: _isSubmitting ? null : _pickImage,
-                                                borderRadius: BorderRadius.circular(20),
-                                                child: Padding(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                                                  child: Row(
-                                                    mainAxisSize: MainAxisSize.min,
-                                                    children: [
-                                                      Icon(
-                                                        Icons.edit,
-                                                        size: 16,
-                                                        color: isDarkMode ? Colors.white : appBarBlue,
+                                            boxShadow: [
+                                              BoxShadow(
+                                                color: Colors.black.withOpacity(
+                                                  0.1,
+                                                ),
+                                                blurRadius: 4,
+                                                offset: const Offset(0, 2),
+                                              ),
+                                            ],
+                                          ),
+                                          child: Material(
+                                            color: Colors.transparent,
+                                            child: InkWell(
+                                              onTap:
+                                                  _isSubmitting
+                                                      ? null
+                                                      : _pickImage,
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
+                                              child: Padding(
+                                                padding:
+                                                    const EdgeInsets.symmetric(
+                                                      horizontal: 12,
+                                                      vertical: 8,
+                                                    ),
+                                                child: Row(
+                                                  mainAxisSize:
+                                                      MainAxisSize.min,
+                                                  children: [
+                                                    Icon(
+                                                      Icons.edit,
+                                                      size: 16,
+                                                      color:
+                                                          isDarkMode
+                                                              ? Colors.white
+                                                              : appBarBlue,
+                                                    ),
+                                                    const SizedBox(width: 6),
+                                                    Text(
+                                                      'تغيير',
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                        fontSize: 13,
+                                                        color:
+                                                            isDarkMode
+                                                                ? Colors.white
+                                                                : appBarBlue,
                                                       ),
-                                                      const SizedBox(width: 6),
-                                                      Text(
-                                                        'تغيير',
-                                                        style: TextStyle(
-                                                          fontWeight: FontWeight.bold,
-                                                          fontSize: 13,
-                                                          color: isDarkMode ? Colors.white : appBarBlue,
-                                                        ),
-                                                      ),
-                                                    ],
-                                                  ),
+                                                    ),
+                                                  ],
                                                 ),
                                               ),
                                             ),
                                           ),
                                         ),
-                                      ],
-                                    )
+                                      ),
+                                    ],
+                                  )
                                   : Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
-                                      children: [
-                                        Icon(
-                                          Icons.upload_file,
-                                          size: 40,
-                                          color: Colors.blue.shade300,
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      Icon(
+                                        Icons.upload_file,
+                                        size: 40,
+                                        color: Colors.blue.shade300,
+                                      ),
+                                      const SizedBox(height: 8),
+                                      Text(
+                                        'انقر لرفع صورة إثبات التحويل',
+                                        style: TextStyle(
+                                          color: Colors.grey.shade600,
                                         ),
-                                        const SizedBox(height: 8),
-                                        Text(
-                                          'انقر لرفع صورة إثبات التحويل',
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '(سكرين شوت أو صورة إيصال)',
+                                        style: TextStyle(
+                                          fontSize: 12,
+                                          color: Colors.grey.shade500,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 16),
+                                      // زر رفع الصورة
+                                      ElevatedButton.icon(
+                                        onPressed:
+                                            _isSubmitting ? null : _pickImage,
+                                        icon: const Icon(
+                                          Icons.add_photo_alternate_rounded,
+                                          size: 18,
+                                        ),
+                                        label: const Text(
+                                          'اختيار صورة',
                                           style: TextStyle(
-                                            color: Colors.grey.shade600,
+                                            fontWeight: FontWeight.bold,
                                           ),
                                         ),
-                                        const SizedBox(height: 4),
-                                        Text(
-                                          '(سكرين شوت أو صورة إيصال)',
-                                          style: TextStyle(
-                                            fontSize: 12,
-                                            color: Colors.grey.shade500,
+                                        style: ElevatedButton.styleFrom(
+                                          backgroundColor:
+                                              isDarkMode
+                                                  ? Colors.blueGrey.shade700
+                                                  : appBarBlue,
+                                          foregroundColor: Colors.white,
+                                          padding: const EdgeInsets.symmetric(
+                                            horizontal: 16,
+                                            vertical: 10,
                                           ),
-                                        ),
-                                        const SizedBox(height: 16),
-                                        // زر رفع الصورة
-                                        ElevatedButton.icon(
-                                          onPressed: _isSubmitting ? null : _pickImage,
-                                          icon: const Icon(Icons.add_photo_alternate_rounded, size: 18),
-                                          label: const Text('اختيار صورة', style: TextStyle(fontWeight: FontWeight.bold)),
-                                          style: ElevatedButton.styleFrom(
-                                            backgroundColor: isDarkMode ? Colors.blueGrey.shade700 : appBarBlue,
-                                            foregroundColor: Colors.white,
-                                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                                            shape: RoundedRectangleBorder(
-                                              borderRadius: BorderRadius.circular(20),
+                                          shape: RoundedRectangleBorder(
+                                            borderRadius: BorderRadius.circular(
+                                              20,
                                             ),
                                           ),
                                         ),
-                                      ],
-                                    ),
+                                      ),
+                                    ],
+                                  ),
                         ),
                       ),
 
@@ -1386,14 +1476,14 @@ class _WalletScreenState extends State<WalletScreen>
                       children: [
                         _isSubmitting
                             ? Container(
-                                width: 20,
-                                height: 20,
-                                margin: const EdgeInsets.only(left: 8),
-                                child: const CircularProgressIndicator(
-                                  color: Colors.white,
-                                  strokeWidth: 2,
-                                ),
-                              )
+                              width: 20,
+                              height: 20,
+                              margin: const EdgeInsets.only(left: 8),
+                              child: const CircularProgressIndicator(
+                                color: Colors.white,
+                                strokeWidth: 2,
+                              ),
+                            )
                             : const Icon(Icons.arrow_forward, size: 20),
                         const SizedBox(width: 8),
                         Text(
@@ -1420,12 +1510,13 @@ class _WalletScreenState extends State<WalletScreen>
     final firestoreService = FirestoreService();
     final userId = authProvider.user?.uid;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Define colors for this widget based on theme
     final cardBorderColor = isDarkMode ? darkCardColor : Colors.blue.shade100;
     final tagBgColor = isDarkMode ? darkSurface : Colors.blue.shade50;
     final iconColor = isDarkMode ? skyBlue : appBarBlue;
-    final textSecondaryColor = isDarkMode ? darkTextSecondary : Colors.grey.shade600;
+    final textSecondaryColor =
+        isDarkMode ? darkTextSecondary : Colors.grey.shade600;
     final valueColor = isDarkMode ? accentBlue : appBarBlue;
 
     return FutureBuilder<UserProfile?>(
@@ -1459,7 +1550,10 @@ class _WalletScreenState extends State<WalletScreen>
                 Row(
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 6,
+                      ),
                       decoration: BoxDecoration(
                         color: tagBgColor,
                         borderRadius: BorderRadius.circular(20),
@@ -1499,10 +1593,7 @@ class _WalletScreenState extends State<WalletScreen>
                 const SizedBox(height: 8),
                 Text(
                   "المبلغ المتاح للاستخدام",
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: textSecondaryColor,
-                  ),
+                  style: TextStyle(fontSize: 14, color: textSecondaryColor),
                 ),
                 const SizedBox(height: 16),
                 Text(
@@ -1531,27 +1622,30 @@ class _WalletScreenState extends State<WalletScreen>
     // البحث عن طريقة الدفع في القائمة للحصول على الصورة
     final paymentMethod = _paymentMethods.firstWhere(
       (method) => method.name == name,
-      orElse: () => PaymentMethod(
-        id: '',
-        name: name,
-        paymentIdentifier: details,
-        isActive: true,
-        displayOrder: 0,
-        createdAt: DateTime.now(),
-        updatedAt: DateTime.now(),
-      ),
+      orElse:
+          () => PaymentMethod(
+            id: '',
+            name: name,
+            paymentIdentifier: details,
+            isActive: true,
+            displayOrder: 0,
+            createdAt: DateTime.now(),
+            updatedAt: DateTime.now(),
+          ),
     );
 
     // استخدام صورة طريقة الدفع من قاعدة البيانات
     final String? imageUrl = paymentMethod.imageUrl;
-    
+
     // Define colors for this widget based on theme
     final cardColor = isDarkMode ? darkCard : Colors.white;
-    final borderColor = isSelected 
-        ? (isDarkMode ? accentBlue : appBarBlue) 
-        : (isDarkMode ? darkCardColor : Colors.grey.shade300);
+    final borderColor =
+        isSelected
+            ? (isDarkMode ? accentBlue : appBarBlue)
+            : (isDarkMode ? darkCardColor : Colors.grey.shade300);
     final textPrimaryColor = isDarkMode ? darkTextPrimary : Colors.black87;
-    final textSecondaryColor = isDarkMode ? darkTextSecondary : Colors.grey.shade600;
+    final textSecondaryColor =
+        isDarkMode ? darkTextSecondary : Colors.grey.shade600;
     final loaderColor = isDarkMode ? accentBlue : appBarBlue;
 
     return Card(
@@ -1559,10 +1653,7 @@ class _WalletScreenState extends State<WalletScreen>
       color: cardColor,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(12),
-        side: BorderSide(
-          color: borderColor,
-          width: isSelected ? 2 : 1,
-        ),
+        side: BorderSide(color: borderColor, width: isSelected ? 2 : 1),
       ),
       margin: const EdgeInsets.only(bottom: 12),
       child: InkWell(
@@ -1578,21 +1669,24 @@ class _WalletScreenState extends State<WalletScreen>
                   imageUrl: imageUrl,
                   width: 40,
                   height: 40,
-                  placeholder: (context, url) => SizedBox(
-                    width: 40,
-                    height: 40,
-                    child: Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: loaderColor,
+                  placeholder:
+                      (context, url) => SizedBox(
+                        width: 40,
+                        height: 40,
+                        child: Center(
+                          child: SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: loaderColor,
+                            ),
+                          ),
                         ),
                       ),
-                    ),
-                  ),
-                  errorWidget: (context, url, error) => _getDefaultPaymentIcon(name, isDarkMode),
+                  errorWidget:
+                      (context, url, error) =>
+                          _getDefaultPaymentIcon(name, isDarkMode),
                 )
               else
                 _getDefaultPaymentIcon(name, isDarkMode),
@@ -1612,10 +1706,7 @@ class _WalletScreenState extends State<WalletScreen>
                     const SizedBox(height: 4),
                     Text(
                       details,
-                      style: TextStyle(
-                        color: textSecondaryColor,
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: textSecondaryColor, fontSize: 14),
                     ),
                   ],
                 ),
@@ -1655,11 +1746,7 @@ class _WalletScreenState extends State<WalletScreen>
           color: isDarkMode ? Color(0xFF2A1010) : Colors.red.shade50,
           borderRadius: BorderRadius.circular(8),
         ),
-        child: Icon(
-          Icons.phone_android,
-          color: Colors.red.shade500,
-          size: 24,
-        ),
+        child: Icon(Icons.phone_android, color: Colors.red.shade500, size: 24),
       );
     } else if (name.contains('إنستا')) {
       return Container(
@@ -1695,16 +1782,17 @@ class _WalletScreenState extends State<WalletScreen>
   Widget _buildPredefinedAmountButtonNew(String amount) {
     final bool isSelected = _selectedPredefinedAmount == amount;
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Define colors for this widget based on theme
     final selectedBgColor = isDarkMode ? accentBlue : appBarBlue;
     final selectedTextColor = Colors.white;
     // Always use white text in dark mode, even for unselected buttons
     final normalTextColor = isDarkMode ? Colors.white : Colors.black87;
-    final borderColor = isSelected 
-        ? selectedBgColor 
-        : (isDarkMode ? darkCardColor : Colors.grey.shade300);
-    
+    final borderColor =
+        isSelected
+            ? selectedBgColor
+            : (isDarkMode ? darkCardColor : Colors.grey.shade300);
+
     return InkWell(
       onTap: _isSubmitting ? null : () => _selectPredefinedAmount(amount),
       borderRadius: BorderRadius.circular(8),
@@ -1712,11 +1800,11 @@ class _WalletScreenState extends State<WalletScreen>
         width: 70,
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
-          color: isSelected ? selectedBgColor : (isDarkMode ? darkCard : Colors.transparent),
-          border: Border.all(
-            color: borderColor,
-            width: 1,
-          ),
+          color:
+              isSelected
+                  ? selectedBgColor
+                  : (isDarkMode ? darkCard : Colors.transparent),
+          border: Border.all(color: borderColor, width: 1),
           borderRadius: BorderRadius.circular(8),
         ),
         alignment: Alignment.center,

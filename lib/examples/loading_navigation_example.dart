@@ -7,9 +7,7 @@ class LoadingNavigationExample extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('مثال للانتقال مع التحميل'),
-      ),
+      appBar: AppBar(title: const Text('مثال للانتقال مع التحميل')),
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -20,7 +18,7 @@ class LoadingNavigationExample extends StatelessWidget {
               child: const Text('انتقال بسيط مع تحميل'),
             ),
             const SizedBox(height: 20),
-            
+
             // Example 2: Navigate with data loading
             ElevatedButton(
               onPressed: () => _navigateWithDataLoading(context),
@@ -38,7 +36,6 @@ class LoadingNavigationExample extends StatelessWidget {
       context: context,
       page: const DestinationPage(title: 'صفحة بسيطة'),
       // You can customize these parameters
-      lottieAsset: 'assets/animations/loading.json',
       minimumLoadingTime: const Duration(milliseconds: 1500),
     );
   }
@@ -48,14 +45,14 @@ class LoadingNavigationExample extends StatelessWidget {
     NavigationUtils.navigateWithDataLoading<void, List<String>>(
       context: context,
       // Simulate data loading
-      dataLoader: () => Future.delayed(
-        const Duration(seconds: 2),
-        () => ['بيانات 1', 'بيانات 2', 'بيانات 3'],
-      ),
+      dataLoader:
+          () => Future.delayed(
+            const Duration(seconds: 2),
+            () => ['بيانات 1', 'بيانات 2', 'بيانات 3'],
+          ),
       // Build the page with the loaded data
       pageBuilder: (context, data) => DataPage(items: data),
       // You can customize these parameters
-      lottieAsset: 'assets/animations/loading.json',
       minimumLoadingTime: const Duration(milliseconds: 1000),
     );
   }
@@ -70,9 +67,7 @@ class DestinationPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text(title),
-      ),
+      appBar: AppBar(title: Text(title)),
       body: const Center(
         child: Text('تم الانتقال بنجاح مع عرض أنيميشن التحميل'),
       ),
@@ -89,9 +84,7 @@ class DataPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('صفحة البيانات'),
-      ),
+      appBar: AppBar(title: const Text('صفحة البيانات')),
       body: ListView.builder(
         itemCount: items.length,
         itemBuilder: (context, index) {
@@ -103,4 +96,4 @@ class DataPage extends StatelessWidget {
       ),
     );
   }
-} 
+}

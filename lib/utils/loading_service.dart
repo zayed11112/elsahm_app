@@ -7,7 +7,7 @@ import 'data_loading_route.dart';
 class LoadingService {
   static final LoadingService _instance = LoadingService._internal();
   static bool _debugMode = false;
-  
+
   factory LoadingService() => _instance;
 
   LoadingService._internal();
@@ -16,23 +16,21 @@ class LoadingService {
   static set debugMode(bool value) => _debugMode = value;
 
   /// ضبط وقت التحميل الافتراضي
-  static Duration defaultMinimumLoadingTime = const Duration(milliseconds: 1500);
+  static Duration defaultMinimumLoadingTime = const Duration(
+    milliseconds: 1500,
+  );
 
-  /// ضبط مسار ملف الأنيميشن الافتراضي
-  static String defaultLottieAsset = 'assets/animations/loading.json';
-
-  /// ضبط حجم الأنيميشن الافتراضي
-  static double defaultLottieSize = 120;
+  /// ضبط حجم مؤشر التحميل الافتراضي
+  static double defaultIndicatorSize = 120;
 
   /// التنقل باستخدام أنيميشن التحميل
   static Future<T?> navigateWithLoading<T>({
     required BuildContext context,
     required Widget page,
-    String? lottieAsset,
     Duration? minimumLoadingTime,
     bool replaceCurrent = false,
     Color? backgroundColor,
-    double? lottieSize,
+    double? indicatorSize,
   }) {
     if (_debugMode) {
       debugPrint('🔄 التنقل مع التحميل: ${page.runtimeType.toString()}');
@@ -41,10 +39,10 @@ class LoadingService {
     // استخدم القيم الافتراضية إذا لم يتم تحديد قيم مخصصة
     final route = LoadingRoute<T>(
       page: page,
-      lottieAsset: lottieAsset ?? defaultLottieAsset,
       minimumLoadingTime: minimumLoadingTime ?? defaultMinimumLoadingTime,
-      backgroundColor: backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
-      lottieSize: lottieSize ?? defaultLottieSize,
+      backgroundColor:
+          backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+      indicatorSize: indicatorSize ?? defaultIndicatorSize,
     );
 
     // استخدم أحدث frame لتشغيل الانتقال (مهم لضمان سلاسة UI)
@@ -63,11 +61,10 @@ class LoadingService {
     required BuildContext context,
     required Future<D> Function() dataLoader,
     required Widget Function(BuildContext, D) pageBuilder,
-    String? lottieAsset,
     Duration? minimumLoadingTime,
     bool replaceCurrent = false,
     Color? backgroundColor,
-    double? lottieSize,
+    double? indicatorSize,
   }) {
     if (_debugMode) {
       debugPrint('🔄 التنقل مع تحميل البيانات: [${D.toString()}]');
@@ -76,10 +73,10 @@ class LoadingService {
     final route = DataLoadingRoute<T, D>(
       dataLoader: dataLoader,
       buildPageWithData: pageBuilder,
-      lottieAsset: lottieAsset ?? defaultLottieAsset,
       minimumLoadingTime: minimumLoadingTime ?? defaultMinimumLoadingTime,
-      backgroundColor: backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
-      lottieSize: lottieSize ?? defaultLottieSize,
+      backgroundColor:
+          backgroundColor ?? Theme.of(context).scaffoldBackgroundColor,
+      indicatorSize: indicatorSize ?? defaultIndicatorSize,
     );
 
     // استخدم أحدث frame لتشغيل الانتقال (مهم لضمان سلاسة UI)
@@ -105,4 +102,4 @@ class LoadingService {
       return Navigator.push(context, route);
     }
   }
-} 
+}

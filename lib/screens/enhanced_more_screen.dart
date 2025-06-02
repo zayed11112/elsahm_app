@@ -4,7 +4,6 @@ import 'package:provider/provider.dart';
 import 'package:logging/logging.dart';
 import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
-import 'dart:math' as math;
 
 // Providers
 import '../providers/auth_provider.dart';
@@ -708,17 +707,42 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
               ],
             ),
             const SizedBox(height: defaultPadding),
-            _buildDetailRow(context, 'الحالة', userProfile.status, Icons.person_pin_circle_outlined),
-            _buildDetailRow(context, 'رقم الطالب', userProfile.studentId, Icons.badge_outlined),
-            _buildDetailRow(context, 'الكلية', userProfile.faculty, Icons.school_outlined),
-            _buildDetailRow(context, 'الفرع', userProfile.branch, Icons.location_city_outlined),
+            _buildDetailRow(
+              context,
+              'الحالة',
+              userProfile.status,
+              Icons.person_pin_circle_outlined,
+            ),
+            _buildDetailRow(
+              context,
+              'رقم الطالب',
+              userProfile.studentId,
+              Icons.badge_outlined,
+            ),
+            _buildDetailRow(
+              context,
+              'الكلية',
+              userProfile.faculty,
+              Icons.school_outlined,
+            ),
+            _buildDetailRow(
+              context,
+              'الفرع',
+              userProfile.branch,
+              Icons.location_city_outlined,
+            ),
           ],
         ),
       ),
     );
   }
 
-  Widget _buildDetailRow(BuildContext context, String label, String value, IconData icon) {
+  Widget _buildDetailRow(
+    BuildContext context,
+    String label,
+    String value,
+    IconData icon,
+  ) {
     final isDarkMode = context.isDarkMode;
     final primaryColor = isDarkMode ? skyBlue : const Color(0xFF1976d3);
 
@@ -737,7 +761,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
               ),
             ),
           ),
-          
+
           // Label aligned to the right with icon
           Expanded(
             flex: 2,
@@ -752,11 +776,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(
-                  icon,
-                  color: primaryColor,
-                  size: 18,
-                ),
+                Icon(icon, color: primaryColor, size: 18),
               ],
             ),
           ),
@@ -770,7 +790,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     UserProfile userProfile,
   ) {
     final isDarkMode = context.isDarkMode;
-    
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: defaultPadding),
       child: Column(
@@ -783,7 +803,8 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                   context,
                   MaterialPageRoute(
                     builder:
-                        (context) => EditProfileScreen(userProfile: userProfile),
+                        (context) =>
+                            EditProfileScreen(userProfile: userProfile),
                   ),
                 ),
           ),
@@ -796,13 +817,17 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                 Icon(
                   Icons.info_outline,
                   size: 14,
-                  color: isDarkMode ? skyBlue.withOpacity(0.7) : const Color(0xFF1976d3).withOpacity(0.7),
+                  color:
+                      isDarkMode
+                          ? skyBlue.withOpacity(0.7)
+                          : const Color(0xFF1976d3).withOpacity(0.7),
                 ),
                 const SizedBox(width: 6),
                 Text(
                   "اضغط علي الزر لتغير بياناتك بسهولة",
                   style: TextStyle(
-                    color: isDarkMode ? darkTextSecondary : Colors.grey.shade600,
+                    color:
+                        isDarkMode ? darkTextSecondary : Colors.grey.shade600,
                     fontSize: 12,
                     fontStyle: FontStyle.italic,
                   ),
@@ -849,10 +874,21 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                         color: primaryBlue.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(10),
                       ),
-                      child: Icon(
-                        Icons.account_balance_wallet_outlined,
-                        color: primaryBlue,
-                        size: 20,
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: Image.asset(
+                          'assets/icons/walletelsahm.webp',
+                          width: 20,
+                          height: 20,
+                          fit: BoxFit.contain,
+                          errorBuilder: (context, error, stackTrace) {
+                            return Icon(
+                              Icons.account_balance_wallet_outlined,
+                              color: primaryBlue,
+                              size: 20,
+                            );
+                          },
+                        ),
                       ),
                     ),
                     const SizedBox(width: 12),
@@ -947,7 +983,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                     textBaseline: TextBaseline.alphabetic,
                     children: [
                       Text(
-                        userProfile.balance == userProfile.balance.toInt() 
+                        userProfile.balance == userProfile.balance.toInt()
                             ? userProfile.balance.toInt().toString()
                             : userProfile.balance.toStringAsFixed(2),
                         style: context.titleLarge?.copyWith(
@@ -1032,10 +1068,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF1A2A36) : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: color.withAlpha(40),
-          width: 1.0,
-        ),
+        border: Border.all(color: color.withAlpha(40), width: 1.0),
         boxShadow: [
           BoxShadow(
             color: color.withOpacity(0.1),
@@ -1072,14 +1105,10 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                       ),
                     ],
                   ),
-                  child: Icon(
-                    icon,
-                    color: Colors.white,
-                    size: 22,
-                  ),
+                  child: Icon(icon, color: Colors.white, size: 22),
                 ),
                 const SizedBox(width: 12),
-                
+
                 // Use Marquee text for larger screens
                 Expanded(
                   child: LayoutBuilder(
@@ -1093,17 +1122,18 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                           fontSize: 15.5,
                         ),
                       );
-                      
+
                       final textPainter = TextPainter(
                         text: textSpan,
                         maxLines: 1,
                         textDirection: TextDirection.rtl,
                       );
                       textPainter.layout(maxWidth: constraints.maxWidth);
-                      
-                      final doesOverflow = textPainter.didExceedMaxLines || 
+
+                      final doesOverflow =
+                          textPainter.didExceedMaxLines ||
                           textPainter.width > constraints.maxWidth;
-                      
+
                       // Use marquee for overflow text on wider screens
                       if (doesOverflow && isWideScreen) {
                         return MarqueeText(
@@ -1710,207 +1740,212 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
 
   void _showLoginRequiredDialog(BuildContext context) {
     final isDarkMode = context.isDarkMode;
-    
+
     showDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.5),
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDarkMode ? const Color(0xFF1A2A36) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-                spreadRadius: 1,
-              ),
-            ],
-            border: Border.all(
-              color: isDarkMode 
-                  ? Colors.grey.shade800
-                  : Colors.grey.shade200,
-              width: 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with icon
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      primaryBlue,
-                      primaryBlue.withOpacity(0.7),
-                    ],
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
+      builder:
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF1A2A36) : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 1,
                   ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
+                ],
+                border: Border.all(
+                  color:
+                      isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+                  width: 1,
                 ),
-                child: Center(
-                  child: Container(
-                    width: 70,
-                    height: 70,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header with icon
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.5),
-                        width: 2,
+                      gradient: LinearGradient(
+                        colors: [primaryBlue, primaryBlue.withOpacity(0.7)],
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
                       ),
                     ),
-                    child: const Icon(
-                      Icons.lock_outline,
-                      color: Colors.white,
-                      size: 36,
-                    ),
-                  ),
-                ),
-              ),
-              
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Text(
-                      'تسجيل الدخول مطلوب',
-                      style: context.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? Colors.white : Colors.black87,
-                        fontSize: 20,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'يجب تسجيل الدخول للوصول إلى هذه الخدمة والاستفادة من جميع مميزات التطبيق',
-                      style: context.bodyMedium?.copyWith(
-                        color: isDarkMode 
-                            ? Colors.grey.shade300
-                            : Colors.grey.shade700,
-                        fontSize: 14,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    
-                    // Buttons
-                    Row(
-                      children: [
-                        // Cancel Button
-                        Expanded(
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                Navigator.of(context).pop();
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  color: isDarkMode
-                                      ? Colors.grey.shade800
-                                      : Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'إلغاء',
-                                  style: context.titleSmall?.copyWith(
-                                    color: isDarkMode
-                                        ? Colors.white
-                                        : Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
+                    child: Center(
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.5),
+                            width: 2,
                           ),
                         ),
-                        const SizedBox(width: 12),
-                        
-                        // Login Button
-                        Expanded(
-                          flex: 2,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                HapticFeedback.mediumImpact();
-                                Navigator.of(context).pop();
-                                Navigator.push(
-                                  context,
-                                  MaterialPageRoute(
-                                    builder: (context) => const LoginScreen(),
-                                  ),
-                                );
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [primaryBlue, secondaryTeal],
-                                    begin: Alignment.centerRight,
-                                    end: Alignment.centerLeft,
-                                  ),
+                        child: const Icon(
+                          Icons.lock_outline,
+                          color: Colors.white,
+                          size: 36,
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Text(
+                          'تسجيل الدخول مطلوب',
+                          style: context.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                            fontSize: 20,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'يجب تسجيل الدخول للوصول إلى هذه الخدمة والاستفادة من جميع مميزات التطبيق',
+                          style: context.bodyMedium?.copyWith(
+                            color:
+                                isDarkMode
+                                    ? Colors.grey.shade300
+                                    : Colors.grey.shade700,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Buttons
+                        Row(
+                          children: [
+                            // Cancel Button
+                            Expanded(
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.of(context).pop();
+                                  },
                                   borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: primaryBlue.withOpacity(0.3),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
                                     ),
-                                  ],
-                                ),
-                                alignment: Alignment.center,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.login,
-                                      color: Colors.white,
-                                      size: 20,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isDarkMode
+                                              ? Colors.grey.shade800
+                                              : Colors.grey.shade200,
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'تسجيل الدخول',
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      'إلغاء',
                                       style: context.titleSmall?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.white
+                                                : Colors.black87,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+
+                            // Login Button
+                            Expanded(
+                              flex: 2,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    HapticFeedback.mediumImpact();
+                                    Navigator.of(context).pop();
+                                    Navigator.push(
+                                      context,
+                                      MaterialPageRoute(
+                                        builder:
+                                            (context) => const LoginScreen(),
+                                      ),
+                                    );
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [primaryBlue, secondaryTeal],
+                                        begin: Alignment.centerRight,
+                                        end: Alignment.centerLeft,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: primaryBlue.withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.login,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'تسجيل الدخول',
+                                          style: context.titleSmall?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -2011,30 +2046,29 @@ class MarqueeText extends StatefulWidget {
   State<MarqueeText> createState() => _MarqueeTextState();
 }
 
-class _MarqueeTextState extends State<MarqueeText> with SingleTickerProviderStateMixin {
+class _MarqueeTextState extends State<MarqueeText>
+    with SingleTickerProviderStateMixin {
   late ScrollController _scrollController;
   late Animation<double> _animation;
   late AnimationController _animationController;
   double _contentSize = 0;
-  double _viewportSize = 0;
   bool _hasOverflow = false;
   Timer? _timer;
 
   @override
   void initState() {
     super.initState();
-    
+
     _scrollController = ScrollController();
     _animationController = AnimationController(vsync: this);
-    
+
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      
+
       // Check if text overflows its container
       _hasOverflow = _scrollController.position.maxScrollExtent > 0;
       _contentSize = _scrollController.position.extentTotal;
-      _viewportSize = _scrollController.position.extentInside;
-      
+
       if (_hasOverflow) {
         _startMarquee();
       }
@@ -2047,18 +2081,18 @@ class _MarqueeTextState extends State<MarqueeText> with SingleTickerProviderStat
       if (mounted && _hasOverflow) {
         _animationController.stop();
         _animationController.reset();
-        
+
         // Calculate the animation duration based on content size and velocity
         final totalDistance = _contentSize;
         final duration = totalDistance / widget.velocity;
-        
+
         _animationController.duration = Duration(seconds: duration.ceil());
-        
+
         _animation = Tween<double>(
           begin: 0.0,
           end: totalDistance,
         ).animate(_animationController);
-        
+
         // Add a listener that will update the scroll position
         _animation.addListener(() {
           if (_scrollController.hasClients) {
@@ -2067,7 +2101,7 @@ class _MarqueeTextState extends State<MarqueeText> with SingleTickerProviderStat
             _scrollController.jumpTo(scrollValue % _contentSize);
           }
         });
-        
+
         _animationController.repeat();
       }
     });
@@ -2089,11 +2123,7 @@ class _MarqueeTextState extends State<MarqueeText> with SingleTickerProviderStat
       physics: const NeverScrollableScrollPhysics(),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16),
-        child: Text(
-          widget.text,
-          style: widget.style,
-          maxLines: 1,
-        ),
+        child: Text(widget.text, style: widget.style, maxLines: 1),
       ),
     );
 
@@ -2104,7 +2134,12 @@ class _MarqueeTextState extends State<MarqueeText> with SingleTickerProviderStat
           return LinearGradient(
             begin: Alignment.centerLeft,
             end: Alignment.centerRight,
-            colors: const [Colors.transparent, Colors.white, Colors.white, Colors.transparent],
+            colors: const [
+              Colors.transparent,
+              Colors.white,
+              Colors.white,
+              Colors.transparent,
+            ],
             stops: const [0.0, 0.1, 0.9, 1.0],
           ).createShader(rect);
         },
@@ -2112,7 +2147,7 @@ class _MarqueeTextState extends State<MarqueeText> with SingleTickerProviderStat
         child: child,
       );
     }
-    
+
     return child;
   }
 }

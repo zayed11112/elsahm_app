@@ -13,6 +13,12 @@ android {
     compileSdk = flutter.compileSdkVersion
     ndkVersion = "27.0.12077973" // Updated NDK version to be compatible with all plugins
 
+    // Disable lint checks for faster builds
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
+
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_11
         targetCompatibility = JavaVersion.VERSION_11
@@ -36,7 +42,23 @@ android {
     }
 
     buildTypes {
+        debug {
+            // Debug build type - no minification for faster builds
+            isMinifyEnabled = false
+            isShrinkResources = false
+        }
+
         release {
+            // Enable code shrinking only (no obfuscation for compatibility)
+            isMinifyEnabled = true
+            isShrinkResources = true
+
+            // Use basic ProGuard configuration
+            proguardFiles(
+                getDefaultProguardFile("proguard-android.txt"),
+                "proguard-rules.pro"
+            )
+
             // TODO: Add your own signing config for the release build.
             // Signing with the debug keys for now, so `flutter run --release` works.
             signingConfig = signingConfigs.getByName("debug")

@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart'; // Import Lottie
 import 'package:provider/provider.dart';
 import 'dart:async'; // لإدارة عمليات التحميل المتأخر
 import 'dart:developer' as developer; // DIAGNOSTIC: Added proper logging
@@ -13,7 +12,6 @@ import 'home_screen.dart';
 import 'favorites_screen.dart';
 import 'search_screen.dart';
 import '../constants/theme.dart' as app_theme;
-import '../extensions/theme_extensions.dart';
 import 'categories_screen.dart';
 import 'enhanced_more_screen.dart'; // Import the enhanced MoreScreen
 // DIAGNOSTIC: Removed unused dart:math import
@@ -33,7 +31,7 @@ class MainNavigationScreen extends StatefulWidget {
   static MainNavigationScreenState? _instance;
 
   // Constructor now uses a regular key instead of the static key
-  const MainNavigationScreen({Key? key}) : super(key: key);
+  const MainNavigationScreen({super.key});
 
   @override
   State<MainNavigationScreen> createState() {
@@ -184,14 +182,28 @@ class MainNavigationScreen extends StatefulWidget {
                     ),
 
                   // Wallet icon
-                  SizedBox(
-                    width: 70,
-                    height: 70,
-                    child: Lottie.asset(
-                      'assets/animations/wallet2.json',
-                      repeat: true,
-                      animate: true,
-                      fit: BoxFit.contain,
+                  Container(
+                    width: 50,
+                    height: 50,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.asset(
+                        'assets/icons/walletelsahm.webp',
+                        width: 50,
+                        height: 50,
+                        fit: BoxFit.contain,
+                        errorBuilder: (context, error, stackTrace) {
+                          // Fallback to original icon if image fails to load
+                          return Icon(
+                            Icons.account_balance_wallet,
+                            size: 50,
+                            color: Theme.of(context).colorScheme.primary,
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],
@@ -216,11 +228,10 @@ class MainNavigationScreen extends StatefulWidget {
         backgroundColor: Colors.white,
         elevation: 4.0,
         shape: const CircleBorder(),
-        child: Lottie.asset(
-          'assets/animations/app_home_new2.json',
-          width: 42,
-          height: 42,
-          fit: BoxFit.contain,
+        child: Icon(
+          Icons.home,
+          size: 30,
+          color: Theme.of(context).colorScheme.primary,
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -358,16 +369,11 @@ class MainNavigationScreen extends StatefulWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  // Warning animation
-                  SizedBox(
-                    height: 100,
-                    width: 100,
-                    child: Lottie.asset(
-                      'assets/animations/warning.json',
-                      repeat: true,
-                      animate: true,
-                      fit: BoxFit.cover,
-                    ),
+                  // Warning icon
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 80,
+                    color: theme.colorScheme.primary,
                   ),
                   const SizedBox(height: 16),
 
@@ -649,15 +655,10 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // أيقونة التنبيه
-                  SizedBox(
-                    height: 100,
-                    width: 100,
-                    child: Lottie.asset(
-                      'assets/animations/warning.json',
-                      repeat: true,
-                      animate: true,
-                      fit: BoxFit.cover,
-                    ),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 80,
+                    color: theme.colorScheme.primary,
                   ),
                   const SizedBox(height: 16),
 
@@ -823,12 +824,10 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
         backgroundColor: Colors.white, // White background for the FAB
         elevation: 4.0, // Add some shadow
         shape: const CircleBorder(), // Ensure it's circular
-        child: Lottie.asset(
-          'assets/animations/app_home_new2.json',
-          width: 42, // Reduced size
-          height: 42, // Reduced size
-          fit: BoxFit.contain,
-          // Consider adding controller for more animation control if needed
+        child: Icon(
+          Icons.home,
+          size: 30,
+          color: Theme.of(context).colorScheme.primary,
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -955,14 +954,25 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
               ),
 
             // Wallet icon on the right (a la derecha)
-            SizedBox(
-              width: 70, // Aumentar tamaño
-              height: 70, // Aumentar tamaño
-              child: Lottie.asset(
-                'assets/animations/wallet2.json',
-                repeat: true,
-                animate: true,
-                fit: BoxFit.contain,
+            Container(
+              width: 50,
+              height: 50,
+              decoration: BoxDecoration(borderRadius: BorderRadius.circular(8)),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: Image.asset(
+                  'assets/icons/walletelsahm.webp',
+                  width: 50,
+                  height: 50,
+                  fit: BoxFit.contain,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Icon(
+                      Icons.account_balance_wallet,
+                      size: 50,
+                      color: Theme.of(context).colorScheme.primary,
+                    );
+                  },
+                ),
               ),
             ),
           ],
@@ -1010,15 +1020,10 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Animación de advertencia
-                  SizedBox(
-                    height: 100,
-                    width: 100,
-                    child: Lottie.asset(
-                      'assets/animations/warning.json',
-                      repeat: true,
-                      animate: true,
-                      fit: BoxFit.cover,
-                    ),
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 80,
+                    color: theme.colorScheme.primary,
                   ),
                   const SizedBox(height: 16),
 

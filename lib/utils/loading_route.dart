@@ -1,13 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 
 class LoadingRoute<T> extends PageRouteBuilder<T> {
   final Widget page;
-  final String lottieAsset;
   final Duration animationDuration;
   final Duration minimumLoadingTime;
   final Color backgroundColor;
-  final double lottieSize;
+  final double indicatorSize;
 
   // Add a timeout to prevent infinite loading
   final Duration timeout;
@@ -15,11 +13,10 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
 
   LoadingRoute({
     required this.page,
-    this.lottieAsset = 'assets/animations/loading.json',
     this.animationDuration = const Duration(milliseconds: 800),
     this.minimumLoadingTime = const Duration(milliseconds: 1200),
     this.backgroundColor = Colors.white,
-    this.lottieSize = 100,
+    this.indicatorSize = 100,
     this.timeout = const Duration(seconds: 10),
   }) : super(
          pageBuilder: (context, animation, secondaryAnimation) => page,
@@ -112,12 +109,13 @@ class LoadingRoute<T> extends PageRouteBuilder<T> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             SizedBox(
-              height: lottieSize,
-              width: lottieSize,
-              child: Lottie.asset(
-                lottieAsset,
-                frameRate: FrameRate.max,
-                repeat: true,
+              height: indicatorSize,
+              width: indicatorSize,
+              child: CircularProgressIndicator(
+                strokeWidth: 4.0,
+                valueColor: AlwaysStoppedAnimation<Color>(
+                  isDarkMode ? Colors.white : Colors.blue,
+                ),
               ),
             ),
             const SizedBox(height: 20),

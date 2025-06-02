@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'dart:math' as math;
 import '../constants/theme.dart';
 
@@ -82,10 +81,7 @@ class _WhyChooseUsScreenState extends State<WhyChooseUsScreen>
         backgroundColor: appBarBlue,
         title: const Text(
           'لماذا تختار شركة السهم؟',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 2,
@@ -331,24 +327,7 @@ class _WhyChooseUsScreenState extends State<WhyChooseUsScreen>
                 // Simple check if animation exists - in a real app you'd handle this differently
                 future: Future.delayed(Duration.zero, () => true),
                 builder: (context, snapshot) {
-                  if (snapshot.hasData && snapshot.data!) {
-                    try {
-                      return Lottie.asset(
-                        feature.animationPath,
-                        // Fallback to icon if animation doesn't exist or fails to load
-                        errorBuilder:
-                            (context, error, stackTrace) => Icon(
-                              feature.icon,
-                              size: 60,
-                              color: feature.color,
-                            ),
-                      );
-                    } catch (e) {
-                      return Icon(feature.icon, size: 60, color: feature.color);
-                    }
-                  } else {
-                    return Icon(feature.icon, size: 60, color: feature.color);
-                  }
+                  return Icon(feature.icon, size: 60, color: feature.color);
                 },
               ),
             ),

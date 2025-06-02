@@ -17,14 +17,12 @@ class NavigationProvider with ChangeNotifier {
   Future<T?> navigateWithLoading<T>({
     required BuildContext context,
     required Widget page,
-    String lottieAsset = 'assets/animations/loading.json',
     Duration minimumLoadingTime = const Duration(milliseconds: 1200),
     bool replaceCurrent = false,
   }) {
     return NavigationUtils.navigateWithLoading<T>(
       context: context,
       page: page,
-      lottieAsset: lottieAsset,
       minimumLoadingTime: minimumLoadingTime,
       replaceCurrent: replaceCurrent,
     );
@@ -35,7 +33,6 @@ class NavigationProvider with ChangeNotifier {
     required BuildContext context,
     required Future<D> Function() dataLoader,
     required Widget Function(BuildContext, D) pageBuilder,
-    String lottieAsset = 'assets/animations/loading.json',
     Duration minimumLoadingTime = const Duration(milliseconds: 1200),
     bool replaceCurrent = false,
   }) {
@@ -43,7 +40,6 @@ class NavigationProvider with ChangeNotifier {
       context: context,
       dataLoader: dataLoader,
       pageBuilder: pageBuilder,
-      lottieAsset: lottieAsset,
       minimumLoadingTime: minimumLoadingTime,
       replaceCurrent: replaceCurrent,
     );

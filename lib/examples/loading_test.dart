@@ -28,7 +28,6 @@ class LoadingTest extends StatelessWidget {
                 provider.navigateWithLoading(
                   context: context,
                   page: const TestDestination(title: 'النمط القديم'),
-                  lottieAsset: 'assets/animations/loading.json',
                 );
               },
               child: const Text('طريقة NavigationProvider'),
@@ -42,7 +41,6 @@ class LoadingTest extends StatelessWidget {
                 NavigationUtils.navigateWithLoading(
                   context: context,
                   page: const TestDestination(title: 'طريقة NavigationUtils'),
-                  lottieAsset: 'assets/animations/loading.json',
                   minimumLoadingTime: const Duration(
                     seconds: 2,
                   ), // زيادة وقت التحميل للاختبار

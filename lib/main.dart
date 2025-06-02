@@ -8,8 +8,6 @@ import 'dart:async'; // ضروري للتعامل مع الاستثناءات ب
 import 'package:flutter/services.dart'; // لضبط توجيه الشاشة
 import 'package:onesignal_flutter/onesignal_flutter.dart'; // Import OneSignal
 import 'package:intl/date_symbol_data_local.dart'; // إضافة استيراد جديد
-import 'package:sentry_flutter/sentry_flutter.dart'; // Import Sentry
-import 'package:flutter/foundation.dart'; // For kReleaseMode
 import 'providers/auth_provider.dart';
 import 'providers/theme_provider.dart';
 import 'providers/navigation_provider.dart'; // Import NavigationProvider
@@ -41,10 +39,6 @@ final Logger _oneSignalLogger = Logger('OneSignal');
 
 // OneSignal App ID
 const String oneSignalAppId = '3136dbc6-c09c-4bca-b0aa-fe35421ac513';
-
-// Sentry DSN
-const String sentryDsn =
-    'https://1ba5f23f8807449a9943d0e4bea7b445@o4509413739266049.ingest.de.sentry.io/4509413740380240';
 
 // إضافة دالة لعرض مربع حوار الخروج من التطبيق
 Future<bool> showExitConfirmationDialog(BuildContext context) async {
@@ -159,8 +153,7 @@ Future<bool> showExitConfirmationDialog(BuildContext context) async {
 class ExitConfirmationWrapper extends StatelessWidget {
   final Widget child;
 
-  const ExitConfirmationWrapper({Key? key, required this.child})
-    : super(key: key);
+  const ExitConfirmationWrapper({super.key, required this.child});
 
   @override
   Widget build(BuildContext context) {
@@ -175,20 +168,7 @@ class ExitConfirmationWrapper extends StatelessWidget {
 }
 
 Future<void> main() async {
-  if (kReleaseMode) {
-    // Initialize Sentry only in release mode
-    await SentryFlutter.init((options) {
-      options.dsn = sentryDsn;
-      options.sendDefaultPii = true;
-      options.release = 'elsahm-app@1.0.0';
-      options.environment = 'production';
-      options.tracesSampleRate = 0.5;
-      options.debug = false;
-    }, appRunner: () => _initializeApp());
-  } else {
-    // In debug mode, run without Sentry
-    await _initializeApp();
-  }
+  await _initializeApp();
 }
 
 Future<void> _initializeApp() async {
@@ -213,9 +193,6 @@ Future<void> _initializeApp() async {
         await _initializeOneSignal();
       } catch (e) {
         _logger.severe('Firebase initialization error: $e');
-        if (kReleaseMode) {
-          await Sentry.captureException(e);
-        }
       }
 
       // تهيئة بيانات اللغة العربية للتواريخ
@@ -235,11 +212,6 @@ Future<void> _initializeApp() async {
         _logger.severe('خطأ أثناء تهيئة التطبيق: $e');
         _logger.severe('التفاصيل التقنية: $stackTrace');
 
-        // Send the error to Sentry in release mode
-        if (kReleaseMode) {
-          await Sentry.captureException(e, stackTrace: stackTrace);
-        }
-
         // تشغيل تطبيق في وضع الطوارئ (آمن)
         runApp(
           ErrorApp(
@@ -253,11 +225,6 @@ Future<void> _initializeApp() async {
       // إلتقاط أي استثناءات غير معالجة في التطبيق
       _logger.severe('خطأ غير متوقع: $error');
       _logger.severe('التفاصيل التقنية: $stack');
-
-      // Send the error to Sentry in release mode
-      if (kReleaseMode) {
-        Sentry.captureException(error, stackTrace: stack);
-      }
     },
   );
 }
@@ -336,10 +303,6 @@ Future<void> _initializeOneSignal() async {
     _logger.info('OneSignal initialized successfully');
   } catch (e) {
     _logger.severe('Error initializing OneSignal: $e');
-    // Send OneSignal initialization errors to Sentry in release mode
-    if (kReleaseMode) {
-      Sentry.captureException(e);
-    }
   }
 }
 
@@ -368,19 +331,8 @@ Future<void> setOneSignalExternalUserId(String userId) async {
     _logger.info('OneSignal Device ID: ${pushStatus.id}');
     _logger.info('OneSignal Device Token: ${pushStatus.token}');
     _logger.info('OneSignal user ID set: $cleanUserId');
-
-    // Set user identifier in Sentry in release mode
-    if (kReleaseMode) {
-      Sentry.configureScope((scope) {
-        scope.setUser(SentryUser(id: cleanUserId));
-      });
-      _logger.info('Sentry user ID set: $cleanUserId');
-    }
   } catch (e) {
     _logger.severe('Error setting OneSignal user ID: $e');
-    if (kReleaseMode) {
-      Sentry.captureException(e);
-    }
   }
 }
 
@@ -394,19 +346,8 @@ Future<void> removeOneSignalExternalUserId() async {
     OneSignal.User.removeTags(['user_id']);
 
     _logger.info('OneSignal user ID removed');
-
-    // Clear user identifier in Sentry in release mode
-    if (kReleaseMode) {
-      Sentry.configureScope((scope) {
-        scope.setUser(null);
-      });
-      _logger.info('Sentry user ID cleared');
-    }
   } catch (e) {
     _logger.severe('Error removing OneSignal user ID: $e');
-    if (kReleaseMode) {
-      Sentry.captureException(e);
-    }
   }
 }
 

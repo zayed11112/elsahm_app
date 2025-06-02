@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart'; // إضافة مكتبة لفتح الاتصال الهاتفي
 import 'package:logging/logging.dart';
 import '../constants/theme.dart';
@@ -22,10 +21,7 @@ class HelpScreen extends StatelessWidget {
         backgroundColor: appBarBlue,
         title: const Text(
           'المساعدة',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 2,
@@ -56,22 +52,15 @@ class HelpScreen extends StatelessWidget {
                 physics: const BouncingScrollPhysics(),
                 child: Column(
                   children: [
-                    // رسم متحرك في الأعلى للترحيب - متحرك مع المحتوى
+                    // أيقونة الدعم في الأعلى
                     Container(
                       height: 120,
                       alignment: Alignment.center,
                       margin: const EdgeInsets.only(top: 5, bottom: 5),
-                      child: Lottie.asset(
-                        'assets/animations/support.json',
-                        width: 100,
-                        height: 100,
-                        fit: BoxFit.contain,
-                        errorBuilder:
-                            (context, error, stackTrace) => Icon(
-                              Icons.support_agent,
-                              size: 70,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
+                      child: Icon(
+                        Icons.support_agent,
+                        size: 70,
+                        color: Theme.of(context).colorScheme.primary,
                       ),
                     ),
 

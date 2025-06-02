@@ -68,22 +68,30 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     // Initialize controllers
     _nameController = TextEditingController(text: widget.userProfile.name);
     _batchController = TextEditingController(text: widget.userProfile.batch);
-    _studentIdController = TextEditingController(text: widget.userProfile.studentId);
+    _studentIdController = TextEditingController(
+      text: widget.userProfile.studentId,
+    );
     _profileImageUrl = widget.userProfile.avatarUrl;
 
     // Initialize dropdown values, ensuring they exist in the options list
-    _selectedFaculty = widget.userProfile.faculty.isNotEmpty && _facultyOptions.contains(widget.userProfile.faculty)
-        ? widget.userProfile.faculty
-        : null; // Default to null if not found or empty
+    _selectedFaculty =
+        widget.userProfile.faculty.isNotEmpty &&
+                _facultyOptions.contains(widget.userProfile.faculty)
+            ? widget.userProfile.faculty
+            : null; // Default to null if not found or empty
 
-    _selectedBranch = widget.userProfile.branch.isNotEmpty && _branchOptions.contains(widget.userProfile.branch)
-        ? widget.userProfile.branch
-        : null; // Default to null if not found or empty
-        
+    _selectedBranch =
+        widget.userProfile.branch.isNotEmpty &&
+                _branchOptions.contains(widget.userProfile.branch)
+            ? widget.userProfile.branch
+            : null; // Default to null if not found or empty
+
     // Initialize status from existing value or default to first option
-    _selectedStatus = widget.userProfile.status.isNotEmpty && _statusOptions.contains(widget.userProfile.status)
-        ? widget.userProfile.status
-        : _statusOptions.first; // Default to first option
+    _selectedStatus =
+        widget.userProfile.status.isNotEmpty &&
+                _statusOptions.contains(widget.userProfile.status)
+            ? widget.userProfile.status
+            : _statusOptions.first; // Default to first option
   }
 
   @override
@@ -129,15 +137,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       // رفع الصورة إلى ImgBB
       final String imageUrl = await _uploadToImgBB(File(image.path));
-      
+
       // تحقق من أن الويدجت لا يزال مثبتًا قبل استخدام setState و context
       if (!mounted) return;
 
       // تحديث رابط الصورة في Firestore
-      await _firestoreService.updateUserProfileField(
-        uid,
-        {'avatarUrl': imageUrl},
-      );
+      await _firestoreService.updateUserProfileField(uid, {
+        'avatarUrl': imageUrl,
+      });
 
       // تحديث حالة الواجهة
       setState(() {
@@ -146,7 +153,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       // تحقق مرة أخرى من أن الويدجت لا يزال مثبتًا قبل استخدام context
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Row(
@@ -167,7 +174,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     } catch (e) {
       // تحقق من أن الويدجت لا يزال مثبتًا قبل استخدام context
       if (!mounted) return;
-      
+
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('حدث خطأ أثناء تحديث الصورة: $e'),
@@ -188,11 +195,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   // دالة مساعدة لرفع الصورة إلى ImgBB
   Future<String> _uploadToImgBB(File imageFile) async {
-    const String apiKey = '9acda31c4576aa648bc36802829b3b9d'; // استخدام نفس مفتاح API
+    const String apiKey =
+        '9acda31c4576aa648bc36802829b3b9d'; // استخدام نفس مفتاح API
     final uri = Uri.parse('https://api.imgbb.com/1/upload?key=$apiKey');
-    
+
     final request = http.MultipartRequest('POST', uri);
-    request.files.add(await http.MultipartFile.fromPath('image', imageFile.path));
+    request.files.add(
+      await http.MultipartFile.fromPath('image', imageFile.path),
+    );
 
     try {
       final response = await request.send();
@@ -215,11 +225,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   // دالة بديلة لرفع الصورة باستخدام Freeimage.host
   Future<String> _uploadToFreeImage(File imageFile) async {
-    const String apiKey = '6d207e02198a847aa98d0a2a901485a5'; // مفتاح API الخاص بـ Freeimage.host
+    const String apiKey =
+        '6d207e02198a847aa98d0a2a901485a5'; // مفتاح API الخاص بـ Freeimage.host
     final uri = Uri.parse('https://freeimage.host/api/1/upload?key=$apiKey');
-    
+
     final request = http.MultipartRequest('POST', uri);
-    request.files.add(await http.MultipartFile.fromPath('source', imageFile.path));
+    request.files.add(
+      await http.MultipartFile.fromPath('source', imageFile.path),
+    );
 
     final response = await request.send();
     final responseData = await response.stream.bytesToString();
@@ -228,14 +241,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     if (response.statusCode == 200 && jsonData['status_code'] == 200) {
       return jsonData['image']['url'];
     } else {
-      throw Exception('فشل رفع الصورة: ${jsonData['status_txt'] ?? 'خطأ غير معروف'}');
+      throw Exception(
+        'فشل رفع الصورة: ${jsonData['status_txt'] ?? 'خطأ غير معروف'}',
+      );
     }
   }
 
   // عرض صورة الملف الشخصي في وضع العرض الكامل
   void _viewProfileImage(BuildContext context, String imageUrl) {
     if (imageUrl.isEmpty) return; // Don't show anything if there's no image
-    
+
     showDialog(
       context: context,
       builder: (BuildContext context) {
@@ -251,7 +266,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 minScale: 0.5,
                 maxScale: 4,
                 child: GestureDetector(
-                  onTap: () => Navigator.of(context).pop(), // Tap background to close
+                  onTap:
+                      () =>
+                          Navigator.of(
+                            context,
+                          ).pop(), // Tap background to close
                   child: Container(
                     width: double.infinity,
                     height: double.infinity,
@@ -262,27 +281,35 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         child: CachedNetworkImage(
                           imageUrl: imageUrl,
                           fit: BoxFit.contain,
-                          placeholder: (context, url) => const Center(
-                            child: CircularProgressIndicator(color: Colors.white),
-                          ),
-                          errorWidget: (context, url, error) => Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(Icons.error, color: Colors.white, size: 40),
-                              const SizedBox(height: 8),
-                              Text(
-                                "فشل تحميل الصورة",
-                                style: TextStyle(color: Colors.white),
+                          placeholder:
+                              (context, url) => const Center(
+                                child: CircularProgressIndicator(
+                                  color: Colors.white,
+                                ),
                               ),
-                            ],
-                          ),
+                          errorWidget:
+                              (context, url, error) => Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.error,
+                                    color: Colors.white,
+                                    size: 40,
+                                  ),
+                                  const SizedBox(height: 8),
+                                  Text(
+                                    "فشل تحميل الصورة",
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                ],
+                              ),
                         ),
                       ),
                     ),
                   ),
                 ),
               ),
-              
+
               // Close button positioned at the top
               Positioned(
                 top: 30,
@@ -293,7 +320,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     shape: BoxShape.circle,
                   ),
                   child: IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white, size: 26),
+                    icon: const Icon(
+                      Icons.close,
+                      color: Colors.white,
+                      size: 26,
+                    ),
                     onPressed: () => Navigator.of(context).pop(),
                   ),
                 ),
@@ -307,51 +338,60 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Future<void> _saveProfile() async {
     if (_formKey.currentState?.validate() ?? false) {
-       // Also validate dropdowns manually if needed (e.g., ensure a selection is made)
-       if (_selectedFaculty == null || _selectedBranch == null || _selectedStatus == null) {
-         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(
-             content: Text('الرجاء إكمال جميع الحقول الإلزامية'),
-             backgroundColor: Colors.orange,
-           ),
-         );
-         return;
-       }
+      // Also validate dropdowns manually if needed (e.g., ensure a selection is made)
+      if (_selectedFaculty == null ||
+          _selectedBranch == null ||
+          _selectedStatus == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('الرجاء إكمال جميع الحقول الإلزامية'),
+            backgroundColor: Colors.orange,
+          ),
+        );
+        return;
+      }
 
-      setState(() { _isLoading = true; });
+      setState(() {
+        _isLoading = true;
+      });
 
       // الحصول على معلومات المستخدم قبل العمليات غير المتزامنة
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
       final uid = authProvider.user?.uid;
 
       if (uid == null) {
-         // Check if the widget is still mounted before using context
-         if (!mounted) return;
-         
-         ScaffoldMessenger.of(context).showSnackBar(
-           const SnackBar(content: Text('خطأ: المستخدم غير مسجل الدخول.'), backgroundColor: Colors.red),
-         );
-         setState(() { _isLoading = false; });
-         return;
+        // Check if the widget is still mounted before using context
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('خطأ: المستخدم غير مسجل الدخول.'),
+            backgroundColor: Colors.red,
+          ),
+        );
+        setState(() {
+          _isLoading = false;
+        });
+        return;
       }
 
       // Prepare updated data map using selected dropdown values
       final updatedData = {
         'name': _nameController.text.trim(),
         'faculty': _selectedFaculty, // Use selected value
-        'branch': _selectedBranch,   // Use selected value
+        'branch': _selectedBranch, // Use selected value
         'batch': _batchController.text.trim(),
-        'status': _selectedStatus,   // Use selected status
+        'status': _selectedStatus, // Use selected status
         'studentId': _studentIdController.text.trim(),
       };
 
       try {
         // حفظ البيانات في Firestore
         await _firestoreService.updateUserProfileField(uid, updatedData);
-        
+
         // تحقق من أن الويدجت لا يزال مثبتًا
         if (!mounted) return;
-        
+
         // عرض رسالة نجاح وإغلاق الشاشة
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -359,28 +399,33 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             backgroundColor: Colors.green,
           ),
         );
-        
+
         // Add a small delay to show the success message before popping
         await Future.delayed(const Duration(milliseconds: 800));
-        
+
         // Use Navigator.pop with animated page transition
         if (mounted) {
           Navigator.of(context).pop();
         }
       } catch (e) {
-         _logger.severe("Error saving profile: $e");
-         
-         // تحقق من أن الويدجت لا يزال مثبتًا
-         if (!mounted) return;
-         
-         ScaffoldMessenger.of(context).showSnackBar(
-           SnackBar(content: Text('فشل حفظ التغييرات: $e'), backgroundColor: Colors.red),
-         );
+        _logger.severe("Error saving profile: $e");
+
+        // تحقق من أن الويدجت لا يزال مثبتًا
+        if (!mounted) return;
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('فشل حفظ التغييرات: $e'),
+            backgroundColor: Colors.red,
+          ),
+        );
       } finally {
-         // تحديث حالة التحميل فقط إذا كان الويدجت لا يزال مثبتًا
-         if (mounted) {
-           setState(() { _isLoading = false; });
-         }
+        // تحديث حالة التحميل فقط إذا كان الويدجت لا يزال مثبتًا
+        if (mounted) {
+          setState(() {
+            _isLoading = false;
+          });
+        }
       }
     }
   }
@@ -388,17 +433,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     // Define colors based on theme
     final backgroundColor = isDarkMode ? darkBackground : Colors.grey[100];
     final cardColor = isDarkMode ? darkCard : Colors.white;
     final textPrimaryColor = isDarkMode ? darkTextPrimary : Colors.black87;
-    final textSecondaryColor = isDarkMode ? darkTextSecondary : Colors.grey.shade600;
     final iconColor = isDarkMode ? skyBlue : const Color(0xFF1976d3);
     final cardBorderColor = isDarkMode ? darkCardColor : Colors.transparent;
     final accentColor = const Color(0xFF1976d3);
-    final sectionHeaderBgColor = isDarkMode ? darkSurface : const Color(0xFFE3F2FD);
-    
+    final sectionHeaderBgColor =
+        isDarkMode ? darkSurface : const Color(0xFFE3F2FD);
+
     return WillPopScope(
       onWillPop: () async {
         // Custom back navigation with page transition
@@ -411,10 +456,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           backgroundColor: const Color(0xFF1976d3),
           title: const Text(
             'تعديل الملف الشخصي',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
           leading: IconButton(
@@ -452,11 +494,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                         const SizedBox(height: 10),
                         Center(
                           child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                             decoration: BoxDecoration(
-                              color: isDarkMode ? darkSurface : const Color(0xFFE3F2FD),
+                              color:
+                                  isDarkMode
+                                      ? darkSurface
+                                      : const Color(0xFFE3F2FD),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: accentColor.withOpacity(0.3)),
+                              border: Border.all(
+                                color: accentColor.withOpacity(0.3),
+                              ),
                             ),
                             child: Row(
                               mainAxisSize: MainAxisSize.min,
@@ -479,12 +529,16 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ),
                         const SizedBox(height: 20),
-                        _buildPersonalInfoFields(isDarkMode, textPrimaryColor, iconColor),
+                        _buildPersonalInfoFields(
+                          isDarkMode,
+                          textPrimaryColor,
+                          iconColor,
+                        ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
-                    
+
                     // Academic Information Section
                     _buildSectionCard(
                       title: 'المعلومات الأكاديمية',
@@ -496,7 +550,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       headerBgColor: sectionHeaderBgColor,
                       borderColor: cardBorderColor,
                       children: [
-                        _buildAcademicInfoFields(isDarkMode, textPrimaryColor, iconColor),
+                        _buildAcademicInfoFields(
+                          isDarkMode,
+                          textPrimaryColor,
+                          iconColor,
+                        ),
                       ],
                     ),
 
@@ -516,42 +574,46 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                             borderRadius: BorderRadius.circular(12),
                           ),
                         ),
-                        child: _isLoading
-                          ? Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  width: 24,
-                                  height: 24,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                                  ),
+                        child:
+                            _isLoading
+                                ? Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    SizedBox(
+                                      width: 24,
+                                      height: 24,
+                                      child: CircularProgressIndicator(
+                                        strokeWidth: 2,
+                                        valueColor:
+                                            AlwaysStoppedAnimation<Color>(
+                                              Colors.white,
+                                            ),
+                                      ),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    const Text(
+                                      "جاري الحفظ...",
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
+                                )
+                                : Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.save, size: 22),
+                                    const SizedBox(width: 10),
+                                    const Text(
+                                      'حفظ التغييرات',
+                                      style: TextStyle(
+                                        fontSize: 18,
+                                        fontWeight: FontWeight.bold,
+                                      ),
+                                    ),
+                                  ],
                                 ),
-                                const SizedBox(width: 12),
-                                const Text(
-                                  "جاري الحفظ...",
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            )
-                          : Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                const Icon(Icons.save, size: 22),
-                                const SizedBox(width: 10),
-                                const Text(
-                                  'حفظ التغييرات',
-                                  style: TextStyle(
-                                    fontSize: 18,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ],
-                            ),
                       ),
                     ),
                     const SizedBox(height: 16),
@@ -566,7 +628,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   }
 
   Widget _buildSectionCard({
-    required String title, 
+    required String title,
     required IconData icon,
     required bool isDarkMode,
     required Color cardColor,
@@ -604,11 +666,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             ),
             child: Row(
               children: [
-                Icon(
-                  icon, 
-                  color: iconColor,
-                  size: 24,
-                ),
+                Icon(icon, color: iconColor, size: 24),
                 const SizedBox(width: 8),
                 Text(
                   title,
@@ -635,7 +693,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
   Widget _buildProfileImageSection(bool isDarkMode, Color iconColor) {
     final bgColor = isDarkMode ? darkSurface : Colors.grey.shade50;
-    
+
     return Center(
       child: Stack(
         children: [
@@ -666,30 +724,38 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                               shape: BoxShape.circle,
                               boxShadow: [
                                 BoxShadow(
-                                  color: Colors.black.withOpacity(0.2 * animation.value),
+                                  color: Colors.black.withOpacity(
+                                    0.2 * animation.value,
+                                  ),
                                   blurRadius: 12 * animation.value,
                                   spreadRadius: 2 * animation.value,
                                 ),
                               ],
                             ),
                             child: ClipOval(
-                              child: _profileImageUrl.isNotEmpty
-                                ? Image.network(
-                                    _profileImageUrl,
-                                    fit: BoxFit.cover,
-                                    width: 120,
-                                    height: 120,
-                                  )
-                                : Container(
-                                    width: 120,
-                                    height: 120,
-                                    color: bgColor,
-                                    child: Icon(
-                                      Icons.account_circle,
-                                      size: 80,
-                                      color: isDarkMode ? darkTextSecondary : Colors.black87.withAlpha(179),
-                                    ),
-                                  ),
+                              child:
+                                  _profileImageUrl.isNotEmpty
+                                      ? Image.network(
+                                        _profileImageUrl,
+                                        fit: BoxFit.cover,
+                                        width: 120,
+                                        height: 120,
+                                      )
+                                      : Container(
+                                        width: 120,
+                                        height: 120,
+                                        color: bgColor,
+                                        child: Icon(
+                                          Icons.account_circle,
+                                          size: 80,
+                                          color:
+                                              isDarkMode
+                                                  ? darkTextSecondary
+                                                  : Colors.black87.withAlpha(
+                                                    179,
+                                                  ),
+                                        ),
+                                      ),
                             ),
                           );
                         },
@@ -713,38 +779,55 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                           ),
                         ],
                       ),
-                      child: _isUploadingImage
-                        ? Center(
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(iconColor),
-                            ),
-                          )
-                        : ClipOval(
-                            child: _profileImageUrl.isNotEmpty
-                              ? Image.network(
-                                  _profileImageUrl,
-                                  fit: BoxFit.cover,
-                                  errorBuilder: (context, error, stackTrace) {
-                                    return Icon(
-                                      Icons.account_circle,
-                                      size: 80,
-                                      color: isDarkMode ? darkTextSecondary : Colors.black87.withAlpha(179),
-                                    );
-                                  },
-                                )
-                              : Icon(
-                                  Icons.account_circle,
-                                  size: 80,
-                                  color: isDarkMode ? darkTextSecondary : Colors.black87.withAlpha(179),
+                      child:
+                          _isUploadingImage
+                              ? Center(
+                                child: CircularProgressIndicator(
+                                  valueColor: AlwaysStoppedAnimation<Color>(
+                                    iconColor,
+                                  ),
                                 ),
-                          ),
+                              )
+                              : ClipOval(
+                                child:
+                                    _profileImageUrl.isNotEmpty
+                                        ? Image.network(
+                                          _profileImageUrl,
+                                          fit: BoxFit.cover,
+                                          errorBuilder: (
+                                            context,
+                                            error,
+                                            stackTrace,
+                                          ) {
+                                            return Icon(
+                                              Icons.account_circle,
+                                              size: 80,
+                                              color:
+                                                  isDarkMode
+                                                      ? darkTextSecondary
+                                                      : Colors.black87
+                                                          .withAlpha(179),
+                                            );
+                                          },
+                                        )
+                                        : Icon(
+                                          Icons.account_circle,
+                                          size: 80,
+                                          color:
+                                              isDarkMode
+                                                  ? darkTextSecondary
+                                                  : Colors.black87.withAlpha(
+                                                    179,
+                                                  ),
+                                        ),
+                              ),
                     ),
                   ),
                 );
               },
             ),
           ),
-          
+
           // Camera icon overlay with animation
           Positioned(
             bottom: 0,
@@ -754,10 +837,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               duration: const Duration(milliseconds: 700),
               curve: Curves.elasticOut,
               builder: (context, value, child) {
-                return Transform.scale(
-                  scale: value,
-                  child: child,
-                );
+                return Transform.scale(scale: value, child: child);
               },
               child: GestureDetector(
                 onTap: _pickAndUploadImage,
@@ -789,10 +869,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildPersonalInfoFields(bool isDarkMode, Color textColor, Color iconColor) {
+  Widget _buildPersonalInfoFields(
+    bool isDarkMode,
+    Color textColor,
+    Color iconColor,
+  ) {
     final fieldBgColor = isDarkMode ? darkSurface : Colors.grey.shade50;
     final borderColor = isDarkMode ? darkCardColor : Colors.grey.shade300;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -808,8 +892,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           labelColor: textColor,
           iconColor: iconColor,
           maxLength: 40,
-          validator: (value) => (value == null || value.isEmpty) 
-              ? 'الرجاء إدخال الاسم' : null,
+          validator:
+              (value) =>
+                  (value == null || value.isEmpty)
+                      ? 'الرجاء إدخال الاسم'
+                      : null,
         ),
         const SizedBox(height: 16),
         _buildDropdownFormField(
@@ -845,10 +932,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     );
   }
 
-  Widget _buildAcademicInfoFields(bool isDarkMode, Color textColor, Color iconColor) {
+  Widget _buildAcademicInfoFields(
+    bool isDarkMode,
+    Color textColor,
+    Color iconColor,
+  ) {
     final fieldBgColor = isDarkMode ? darkSurface : Colors.grey.shade50;
     final borderColor = isDarkMode ? darkCardColor : Colors.grey.shade300;
-    
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -869,7 +960,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           validator: (value) => (value == null) ? 'الرجاء اختيار الكلية' : null,
         ),
         const SizedBox(height: 16),
-    
+
         // Branch Dropdown
         _buildDropdownFormField(
           value: _selectedBranch,
@@ -887,7 +978,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           validator: (value) => (value == null) ? 'الرجاء اختيار الفرع' : null,
         ),
         const SizedBox(height: 16),
-    
+
         _buildTextFormField(
           controller: _batchController,
           labelText: 'الدفعة',
@@ -900,8 +991,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           iconColor: iconColor,
           keyboardType: TextInputType.number,
           maxLength: 15,
-          validator: (value) => (value == null || value.isEmpty) 
-              ? 'الرجاء إدخال الدفعة' : null,
+          validator:
+              (value) =>
+                  (value == null || value.isEmpty)
+                      ? 'الرجاء إدخال الدفعة'
+                      : null,
         ),
       ],
     );
@@ -959,7 +1053,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               filled: true,
               fillColor: fieldBgColor,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
               counterText: maxLength != null ? '' : null,
             ),
             maxLength: maxLength,
@@ -1005,16 +1102,17 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Expanded(
           child: DropdownButtonFormField<String>(
             value: value,
-            items: items.map((String item) {
-              return DropdownMenuItem<String>(
-                value: item,
-                child: Text(
-                  item, 
-                  style: TextStyle(color: textColor),
-                  overflow: TextOverflow.ellipsis,
-                ),
-              );
-            }).toList(),
+            items:
+                items.map((String item) {
+                  return DropdownMenuItem<String>(
+                    value: item,
+                    child: Text(
+                      item,
+                      style: TextStyle(color: textColor),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  );
+                }).toList(),
             onChanged: _isLoading ? null : onChanged,
             validator: validator,
             decoration: InputDecoration(
@@ -1038,7 +1136,10 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               filled: true,
               fillColor: fieldBgColor,
-              contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
+              ),
             ),
             dropdownColor: isDarkMode ? darkCard : Colors.white,
             isExpanded: true,

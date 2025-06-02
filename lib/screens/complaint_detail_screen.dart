@@ -33,12 +33,12 @@ class ComplaintDetailScreen extends StatefulWidget {
   State<ComplaintDetailScreen> createState() => _ComplaintDetailScreenState();
 }
 
-class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with TickerProviderStateMixin {
+class _ComplaintDetailScreenState extends State<ComplaintDetailScreen>
+    with TickerProviderStateMixin {
   final ComplaintService _complaintService = ComplaintService();
   final TextEditingController _responseController = TextEditingController();
-  final _formKey = GlobalKey<FormState>();
   final ScrollController _scrollController = ScrollController();
-  
+
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
 
@@ -46,23 +46,22 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
   bool _isUploadingImage = false;
   File? _selectedImage;
   String? _uploadedImageUrl;
-  bool _isInputFocused = false;
 
   @override
   void initState() {
     super.initState();
-    
+
     // Initialize animation controllers
     _fadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 300),
     );
-    
+
     _fadeAnimation = CurvedAnimation(
       parent: _fadeController,
       curve: Curves.easeIn,
     );
-    
+
     _fadeController.forward();
 
     // Remove scroll listener that was affecting input focus
@@ -78,7 +77,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
     _fadeController.dispose();
     super.dispose();
   }
-  
+
   void _handleTextControllerChange() {
     // Only rebuild if we REALLY need to update something visual
     // Don't call setState during text input!
@@ -246,13 +245,17 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final authProvider = Provider.of<AuthProvider>(context);
     final userId = authProvider.user?.uid;
-    
+
     final backgroundColor = isDarkMode ? darkBackground : Colors.grey[100];
     final appBarColor = appBarBlue;
     final appBarIconColor = Colors.white;
 
     if (userId == null) {
-      return _buildAuthenticationRequiredScreen(isDarkMode, appBarColor, appBarIconColor);
+      return _buildAuthenticationRequiredScreen(
+        isDarkMode,
+        appBarColor,
+        appBarIconColor,
+      );
     }
 
     return StreamBuilder<Complaint?>(
@@ -263,7 +266,12 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
         }
 
         if (snapshot.hasError) {
-          return _buildErrorScreen(snapshot.error, isDarkMode, appBarColor, appBarIconColor);
+          return _buildErrorScreen(
+            snapshot.error,
+            isDarkMode,
+            appBarColor,
+            appBarIconColor,
+          );
         }
 
         if (!snapshot.hasData || snapshot.data == null) {
@@ -271,7 +279,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
         }
 
         final complaint = snapshot.data!;
-        
+
         // Scroll to bottom after data is loaded if there are responses
         if (complaint.responses.isNotEmpty) {
           WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -283,23 +291,29 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
           opacity: _fadeAnimation,
           child: Scaffold(
             backgroundColor: backgroundColor,
-            appBar: _buildAppBar(complaint, isDarkMode, appBarColor, appBarIconColor, userId),
+            appBar: _buildAppBar(
+              complaint,
+              isDarkMode,
+              appBarColor,
+              appBarIconColor,
+              userId,
+            ),
             body: _buildBody(complaint, isDarkMode, userId),
           ),
         );
       },
     );
   }
-  
+
   PreferredSizeWidget _buildAppBar(
-    Complaint complaint, 
-    bool isDarkMode, 
-    Color appBarColor, 
+    Complaint complaint,
+    bool isDarkMode,
+    Color appBarColor,
     Color appBarIconColor,
     String userId,
   ) {
     final statusColor = _getStatusColor(complaint.status);
-    
+
     return AppBar(
       elevation: 0,
       backgroundColor: appBarColor,
@@ -392,72 +406,84 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          itemBuilder: (BuildContext context) => <PopupMenuEntry<String>>[
-            PopupMenuItem<String>(
-              value: 'close',
-              enabled: complaint.status != 'closed',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.check_circle,
-                    color: complaint.status != 'closed' ? Colors.green : Colors.grey,
-                    size: 20,
+          itemBuilder:
+              (BuildContext context) => <PopupMenuEntry<String>>[
+                PopupMenuItem<String>(
+                  value: 'close',
+                  enabled: complaint.status != 'closed',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.check_circle,
+                        color:
+                            complaint.status != 'closed'
+                                ? Colors.green
+                                : Colors.grey,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'إغلاق الشكوى',
+                        style: TextStyle(
+                          color:
+                              complaint.status != 'closed' ? null : Colors.grey,
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'إغلاق الشكوى',
-                    style: TextStyle(
-                      color: complaint.status != 'closed' ? null : Colors.grey,
-                    ),
+                ),
+                PopupMenuItem<String>(
+                  value: 'reopen',
+                  enabled: complaint.status == 'closed',
+                  child: Row(
+                    children: [
+                      Icon(
+                        Icons.refresh,
+                        color:
+                            complaint.status == 'closed'
+                                ? Colors.blue
+                                : Colors.grey,
+                        size: 20,
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'إعادة فتح الشكوى',
+                        style: TextStyle(
+                          color:
+                              complaint.status == 'closed' ? null : Colors.grey,
+                        ),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-            PopupMenuItem<String>(
-              value: 'reopen',
-              enabled: complaint.status == 'closed',
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.refresh,
-                    color: complaint.status == 'closed' ? Colors.blue : Colors.grey,
-                    size: 20,
-                  ),
-                  const SizedBox(width: 12),
-                  Text(
-                    'إعادة فتح الشكوى',
-                    style: TextStyle(
-                      color: complaint.status == 'closed' ? null : Colors.grey,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
         ),
         const SizedBox(width: 8),
       ],
     );
   }
-  
-  Future<void> _updateComplaintStatus(String action, String currentStatus) async {
+
+  Future<void> _updateComplaintStatus(
+    String action,
+    String currentStatus,
+  ) async {
     String newStatus = action == 'close' ? 'closed' : 'open';
-    
+
     // If already in the requested state, do nothing
-    if ((newStatus == 'closed' && currentStatus == 'closed') || 
+    if ((newStatus == 'closed' && currentStatus == 'closed') ||
         (newStatus == 'open' && currentStatus == 'open')) {
       return;
     }
-    
+
     // Store ScaffoldMessenger before async operation
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
+
     try {
       await _complaintService.updateComplaintStatus(
         widget.complaintId,
         newStatus,
       );
-      
+
       if (mounted) {
         scaffoldMessenger.showSnackBar(
           SnackBar(
@@ -465,9 +491,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
               children: [
                 Icon(Icons.check_circle, color: Colors.white),
                 SizedBox(width: 10),
-                Text(
-                  'تم تحديث حالة الشكوى إلى ${_getStatusText(newStatus)}',
-                ),
+                Text('تم تحديث حالة الشكوى إلى ${_getStatusText(newStatus)}'),
               ],
             ),
             backgroundColor: Colors.green,
@@ -511,10 +535,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
         backgroundColor: appBarColor,
         title: const Text(
           'تفاصيل الشكوى',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
@@ -544,7 +565,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
               style: ElevatedButton.styleFrom(
                 backgroundColor: appBarColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -568,10 +592,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
         backgroundColor: appBarColor,
         title: const Text(
           'تفاصيل الشكوى',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
@@ -608,10 +629,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
         backgroundColor: appBarColor,
         title: const Text(
           'تفاصيل الشكوى',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
@@ -623,11 +641,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(
-                Icons.error_outline,
-                size: 70,
-                color: Colors.red[400],
-              ),
+              Icon(Icons.error_outline, size: 70, color: Colors.red[400]),
               const SizedBox(height: 20),
               Text(
                 'حدث خطأ أثناء تحميل البيانات',
@@ -659,7 +673,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                 style: ElevatedButton.styleFrom(
                   backgroundColor: appBarColor,
                   foregroundColor: Colors.white,
-                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 24,
+                    vertical: 12,
+                  ),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(8),
                   ),
@@ -683,10 +700,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
         backgroundColor: appBarColor,
         title: const Text(
           'تفاصيل الشكوى',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 0,
@@ -726,7 +740,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
               style: ElevatedButton.styleFrom(
                 backgroundColor: appBarColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -738,25 +755,18 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
     );
   }
 
-  Widget _buildBody(
-    Complaint complaint,
-    bool isDarkMode,
-    String userId,
-  ) {
+  Widget _buildBody(Complaint complaint, bool isDarkMode, String userId) {
     return Column(
       children: [
         // Complaint header
         _buildComplaintHeader(complaint, isDarkMode),
-        
+
         // Responses section
-        Expanded(
-          child: _buildResponsesSection(complaint, isDarkMode, userId),
-        ),
-        
+        Expanded(child: _buildResponsesSection(complaint, isDarkMode, userId)),
+
         // Selected image preview (if any)
-        if (_selectedImage != null)
-          _buildSelectedImagePreview(isDarkMode),
-        
+        if (_selectedImage != null) _buildSelectedImagePreview(isDarkMode),
+
         // Input section
         if (complaint.status != 'closed')
           _buildInputSection(complaint, isDarkMode, userId),
@@ -768,7 +778,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
     final cardColor = isDarkMode ? darkCard : Colors.white;
     final textColor = isDarkMode ? Colors.white : Colors.black87;
     final subtitleColor = isDarkMode ? Colors.grey[400] : Colors.grey[600];
-    
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
@@ -815,10 +825,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                     const SizedBox(height: 2),
                     Text(
                       'بواسطة ${complaint.userName} • ${_formatDateDetailed(complaint.createdAt)}',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: subtitleColor,
-                      ),
+                      style: TextStyle(fontSize: 12, color: subtitleColor),
                     ),
                   ],
                 ),
@@ -829,14 +836,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDarkMode 
-                  ? Colors.grey[850] 
-                  : Colors.grey[100],
+              color: isDarkMode ? Colors.grey[850] : Colors.grey[100],
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isDarkMode 
-                    ? Colors.grey[800]! 
-                    : Colors.grey[300]!,
+                color: isDarkMode ? Colors.grey[800]! : Colors.grey[300]!,
               ),
             ),
             child: Text(
@@ -853,9 +856,13 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
     );
   }
 
-  Widget _buildResponsesSection(Complaint complaint, bool isDarkMode, String userId) {
+  Widget _buildResponsesSection(
+    Complaint complaint,
+    bool isDarkMode,
+    String userId,
+  ) {
     final textColor = isDarkMode ? Colors.white : Colors.black87;
-    
+
     return Column(
       children: [
         // Responses header
@@ -880,21 +887,22 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
             ],
           ),
         ),
-        
+
         // Responses list
         Expanded(
           child: RefreshIndicator(
             onRefresh: _refreshComplaintDetails,
             color: Theme.of(context).primaryColor,
-            child: complaint.responses.isEmpty
-                ? _buildEmptyResponsesView(complaint, isDarkMode)
-                : _buildResponsesList(complaint, isDarkMode, userId),
+            child:
+                complaint.responses.isEmpty
+                    ? _buildEmptyResponsesView(complaint, isDarkMode)
+                    : _buildResponsesList(complaint, isDarkMode, userId),
           ),
         ),
       ],
     );
   }
-  
+
   Widget _buildEmptyResponsesView(Complaint complaint, bool isDarkMode) {
     return ListView(
       physics: const AlwaysScrollableScrollPhysics(),
@@ -935,8 +943,12 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
       ],
     );
   }
-  
-  Widget _buildResponsesList(Complaint complaint, bool isDarkMode, String userId) {
+
+  Widget _buildResponsesList(
+    Complaint complaint,
+    bool isDarkMode,
+    String userId,
+  ) {
     return ListView.builder(
       controller: _scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
@@ -944,25 +956,26 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
       itemCount: complaint.responses.length,
       itemBuilder: (context, index) {
         final response = complaint.responses[index];
-        
+
         // Group consecutive messages by the same person
         bool showAvatar = true;
         bool showTime = true;
-        
+
         if (index > 0) {
           final previousResponse = complaint.responses[index - 1];
           if (previousResponse.responderId == response.responderId) {
             // Same sender, check time difference
-            final timeDiff = response.createdAt
-                .difference(previousResponse.createdAt)
-                .inMinutes;
+            final timeDiff =
+                response.createdAt
+                    .difference(previousResponse.createdAt)
+                    .inMinutes;
             if (timeDiff < 5) {
               showAvatar = false;
               showTime = false;
             }
           }
         }
-        
+
         return AnimationConfiguration.staggeredList(
           position: index,
           duration: const Duration(milliseconds: 350),
@@ -983,10 +996,10 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
       },
     );
   }
-  
+
   Widget _buildSelectedImagePreview(bool isDarkMode) {
     final backgroundColor = isDarkMode ? Colors.grey[900] : Colors.white;
-    
+
     return Container(
       color: backgroundColor,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -1002,31 +1015,32 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                 color: isDarkMode ? Colors.grey[700]! : Colors.grey[300]!,
               ),
             ),
-            child: _isUploadingImage
-                ? Center(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const CircularProgressIndicator(),
-                        const SizedBox(height: 8),
-                        Text(
-                          'جاري تحميل الصورة...',
-                          style: TextStyle(
-                            color: isDarkMode ? Colors.white : Colors.black87,
+            child:
+                _isUploadingImage
+                    ? Center(
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const CircularProgressIndicator(),
+                          const SizedBox(height: 8),
+                          Text(
+                            'جاري تحميل الصورة...',
+                            style: TextStyle(
+                              color: isDarkMode ? Colors.white : Colors.black87,
+                            ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
+                    )
+                    : ClipRRect(
+                      borderRadius: BorderRadius.circular(12),
+                      child: Image.file(
+                        _selectedImage!,
+                        height: 100,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                      ),
                     ),
-                  )
-                : ClipRRect(
-                    borderRadius: BorderRadius.circular(12),
-                    child: Image.file(
-                      _selectedImage!,
-                      height: 100,
-                      width: double.infinity,
-                      fit: BoxFit.cover,
-                    ),
-                  ),
           ),
           Positioned(
             top: 8,
@@ -1039,11 +1053,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                   color: Colors.black.withOpacity(0.5),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  Icons.close,
-                  color: Colors.white,
-                  size: 16,
-                ),
+                child: const Icon(Icons.close, color: Colors.white, size: 16),
               ),
             ),
           ),
@@ -1051,13 +1061,18 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
       ),
     );
   }
-  
-  Widget _buildInputSection(Complaint complaint, bool isDarkMode, String userId) {
+
+  Widget _buildInputSection(
+    Complaint complaint,
+    bool isDarkMode,
+    String userId,
+  ) {
     final backgroundColor = isDarkMode ? Colors.grey[900] : Colors.white;
-    final inputBackgroundColor = isDarkMode ? Colors.grey[800] : Colors.grey[100];
+    final inputBackgroundColor =
+        isDarkMode ? Colors.grey[800] : Colors.grey[100];
     final inputBorderColor = isDarkMode ? Colors.grey[700] : Colors.grey[300];
     final hintColor = isDarkMode ? Colors.grey[500] : Colors.grey[400];
-    
+
     // Simplified input section with minimal state updates
     return Material(
       color: backgroundColor,
@@ -1086,7 +1101,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                 tooltip: 'إرفاق صورة',
                 padding: const EdgeInsets.all(8),
               ),
-              
+
               // Text input field
               Expanded(
                 child: Container(
@@ -1094,37 +1109,35 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                   decoration: BoxDecoration(
                     color: inputBackgroundColor,
                     borderRadius: BorderRadius.circular(4), // مستطيل
-                    border: Border.all(
-                      color: inputBorderColor!,
-                      width: 1,
-                    ),
+                    border: Border.all(color: inputBorderColor!, width: 1),
                   ),
                   child: TextField(
                     controller: _responseController,
                     decoration: InputDecoration(
                       hintText: 'اكتب رسالتك هنا...',
-                      hintStyle: TextStyle(
-                        color: hintColor,
-                        fontSize: 14,
-                      ),
+                      hintStyle: TextStyle(color: hintColor, fontSize: 14),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 12, 
+                        horizontal: 12,
                         vertical: 10,
                       ),
                       isDense: true,
-                      suffixIcon: _responseController.text.isNotEmpty 
-                          ? IconButton(
-                              icon: Icon(
-                                Icons.close,
-                                size: 16,
-                                color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
-                              ),
-                              onPressed: () {
-                                _responseController.clear();
-                              },
-                            )
-                          : null,
+                      suffixIcon:
+                          _responseController.text.isNotEmpty
+                              ? IconButton(
+                                icon: Icon(
+                                  Icons.close,
+                                  size: 16,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[400]
+                                          : Colors.grey[600],
+                                ),
+                                onPressed: () {
+                                  _responseController.clear();
+                                },
+                              )
+                              : null,
                     ),
                     style: TextStyle(
                       fontSize: 14,
@@ -1136,55 +1149,66 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                   ),
                 ),
               ),
-              
+
               const SizedBox(width: 8),
-              
+
               // Send button
               Material(
-                color: (_isSubmitting || _isUploadingImage) 
-                    ? (isDarkMode ? Colors.grey[700] : Colors.grey[300])
-                    : Theme.of(context).primaryColor,
+                color:
+                    (_isSubmitting || _isUploadingImage)
+                        ? (isDarkMode ? Colors.grey[700] : Colors.grey[300])
+                        : Theme.of(context).primaryColor,
                 borderRadius: BorderRadius.circular(4),
                 child: InkWell(
                   borderRadius: BorderRadius.circular(4),
-                  onTap: (_isSubmitting || _isUploadingImage)
-                      ? null 
-                      : () {
-                          if (_responseController.text.trim().isNotEmpty || _uploadedImageUrl != null) {
-                            _addResponse(
-                              widget.complaintId,
-                              userId,
-                              Provider.of<AuthProvider>(context, listen: false)
-                                  .user?.email?.split('@').first ?? "مستخدم",
-                            );
-                          } else {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              const SnackBar(
-                                content: Text('الرجاء إدخال نص أو إرفاق صورة'),
-                                backgroundColor: Colors.red,
-                                duration: Duration(seconds: 2),
-                              ),
-                            );
-                          }
-                        },
+                  onTap:
+                      (_isSubmitting || _isUploadingImage)
+                          ? null
+                          : () {
+                            if (_responseController.text.trim().isNotEmpty ||
+                                _uploadedImageUrl != null) {
+                              _addResponse(
+                                widget.complaintId,
+                                userId,
+                                Provider.of<AuthProvider>(
+                                      context,
+                                      listen: false,
+                                    ).user?.email?.split('@').first ??
+                                    "مستخدم",
+                              );
+                            } else {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                const SnackBar(
+                                  content: Text(
+                                    'الرجاء إدخال نص أو إرفاق صورة',
+                                  ),
+                                  backgroundColor: Colors.red,
+                                  duration: Duration(seconds: 2),
+                                ),
+                              );
+                            }
+                          },
                   child: Container(
                     width: 40,
                     height: 40,
                     alignment: Alignment.center,
-                    child: (_isSubmitting || _isUploadingImage)
-                        ? const SizedBox(
-                            height: 20,
-                            width: 20,
-                            child: CircularProgressIndicator(
-                              valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                              strokeWidth: 2,
+                    child:
+                        (_isSubmitting || _isUploadingImage)
+                            ? const SizedBox(
+                              height: 20,
+                              width: 20,
+                              child: CircularProgressIndicator(
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
+                                ),
+                                strokeWidth: 2,
+                              ),
+                            )
+                            : const Icon(
+                              Icons.send,
+                              color: Colors.white,
+                              size: 20,
                             ),
-                          )
-                        : const Icon(
-                            Icons.send,
-                            color: Colors.white,
-                            size: 20,
-                          ),
                   ),
                 ),
               ),
@@ -1194,7 +1218,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
       ),
     );
   }
-  
+
   Widget _buildResponseItem(
     BuildContext context,
     ComplaintResponse response,
@@ -1204,21 +1228,24 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
     required bool isDarkMode,
   }) {
     final isAdmin = response.isAdmin;
-    
+
     // تحديد ألوان الفقاعات بناءً على نوع المستخدم والوضع (ليلي/نهاري)
-    final bubbleColor = isCurrentUser
-        ? (isDarkMode ? userBubbleColor : userBubbleColor)
-        : isAdmin
+    final bubbleColor =
+        isCurrentUser
+            ? (isDarkMode ? userBubbleColor : userBubbleColor)
+            : isAdmin
             ? (isDarkMode ? darkAdminBubbleColor : adminBubbleColor)
             : (isDarkMode ? darkOtherUserBubbleColor : otherUserBubbleColor);
-            
-    final textColor = (isCurrentUser || isAdmin)
-        ? Colors.white
-        : (isDarkMode ? Colors.white : Colors.black87);
-        
-    final timeColor = (isCurrentUser || isAdmin)
-        ? Colors.white.withOpacity(0.7)
-        : (isDarkMode ? Colors.grey[400]! : Colors.grey[600]!);
+
+    final textColor =
+        (isCurrentUser || isAdmin)
+            ? Colors.white
+            : (isDarkMode ? Colors.white : Colors.black87);
+
+    final timeColor =
+        (isCurrentUser || isAdmin)
+            ? Colors.white.withOpacity(0.7)
+            : (isDarkMode ? Colors.grey[400]! : Colors.grey[600]!);
 
     return Container(
       margin: EdgeInsets.only(
@@ -1244,7 +1271,9 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
           Expanded(
             child: Column(
               crossAxisAlignment:
-                  isCurrentUser ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+                  isCurrentUser
+                      ? CrossAxisAlignment.end
+                      : CrossAxisAlignment.start,
               children: [
                 // User name and badge
                 if (showAvatar)
@@ -1257,19 +1286,21 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (!isCurrentUser && isAdmin)
-                          _buildAdminBadge(),
+                        if (!isCurrentUser && isAdmin) _buildAdminBadge(),
 
                         Text(
                           isCurrentUser ? 'أنت' : response.responderName,
                           style: TextStyle(
                             fontWeight: FontWeight.bold,
                             fontSize: 12,
-                            color: isCurrentUser
-                                ? Theme.of(context).primaryColor
-                                : (isAdmin
-                                    ? Colors.purple
-                                    : isDarkMode ? Colors.grey[300] : Colors.grey[700]),
+                            color:
+                                isCurrentUser
+                                    ? Theme.of(context).primaryColor
+                                    : (isAdmin
+                                        ? Colors.purple
+                                        : isDarkMode
+                                        ? Colors.grey[300]
+                                        : Colors.grey[700]),
                           ),
                         ),
                       ],
@@ -1329,30 +1360,45 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                               fit: BoxFit.cover,
                               width: double.infinity,
                               maxHeightDiskCache: 500,
-                              placeholder: (context, url) => Container(
-                                height: 150,
-                                width: 200,
-                                color: isDarkMode ? Colors.grey[800] : Colors.grey[200],
-                                alignment: Alignment.center,
-                                child: const CircularProgressIndicator(),
-                              ),
-                              errorWidget: (context, url, error) => Container(
-                                height: 100,
-                                width: 200,
-                                color: isDarkMode ? Colors.grey[800] : Colors.grey[300],
-                                alignment: Alignment.center,
-                                child: Column(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Icon(Icons.error_outline, color: Colors.red),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'تعذر تحميل الصورة',
-                                      style: TextStyle(color: Colors.red, fontSize: 12),
+                              placeholder:
+                                  (context, url) => Container(
+                                    height: 150,
+                                    width: 200,
+                                    color:
+                                        isDarkMode
+                                            ? Colors.grey[800]
+                                            : Colors.grey[200],
+                                    alignment: Alignment.center,
+                                    child: const CircularProgressIndicator(),
+                                  ),
+                              errorWidget:
+                                  (context, url, error) => Container(
+                                    height: 100,
+                                    width: 200,
+                                    color:
+                                        isDarkMode
+                                            ? Colors.grey[800]
+                                            : Colors.grey[300],
+                                    alignment: Alignment.center,
+                                    child: Column(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
+                                      children: [
+                                        Icon(
+                                          Icons.error_outline,
+                                          color: Colors.red,
+                                        ),
+                                        const SizedBox(height: 4),
+                                        Text(
+                                          'تعذر تحميل الصورة',
+                                          style: TextStyle(
+                                            color: Colors.red,
+                                            fontSize: 12,
+                                          ),
+                                        ),
+                                      ],
                                     ),
-                                  ],
-                                ),
-                              ),
+                                  ),
                             ),
                           ),
                         ),
@@ -1365,18 +1411,11 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
                           mainAxisSize: MainAxisSize.min,
                           mainAxisAlignment: MainAxisAlignment.end,
                           children: [
-                            Icon(
-                              Icons.access_time,
-                              size: 10,
-                              color: timeColor,
-                            ),
+                            Icon(Icons.access_time, size: 10, color: timeColor),
                             const SizedBox(width: 2),
                             Text(
                               _getTimeAgo(response.createdAt),
-                              style: TextStyle(
-                                fontSize: 10,
-                                color: timeColor,
-                              ),
+                              style: TextStyle(fontSize: 10, color: timeColor),
                             ),
                           ],
                         ),
@@ -1399,12 +1438,13 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
       ),
     );
   }
-  
+
   Widget _buildUserAvatar(bool isAdmin, bool isDarkMode) {
-    final backgroundColor = isAdmin 
-        ? (isDarkMode ? darkAdminBubbleColor : adminBubbleColor)
-        : Theme.of(context).primaryColor;
-        
+    final backgroundColor =
+        isAdmin
+            ? (isDarkMode ? darkAdminBubbleColor : adminBubbleColor)
+            : Theme.of(context).primaryColor;
+
     return Container(
       width: 36,
       height: 36,
@@ -1419,39 +1459,31 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
           ),
         ],
       ),
-      child: isAdmin 
-          ? ClipRRect(
-              borderRadius: BorderRadius.circular(18),
-              child: Image.asset(
-                'assets/icons/app.png',
-                fit: BoxFit.cover,
-                width: 36,
-                height: 36,
+      child:
+          isAdmin
+              ? ClipRRect(
+                borderRadius: BorderRadius.circular(18),
+                child: Image.asset(
+                  'assets/icons/app.png',
+                  fit: BoxFit.cover,
+                  width: 36,
+                  height: 36,
+                ),
+              )
+              : Center(
+                child: Icon(Icons.person, color: Colors.white, size: 18),
               ),
-            )
-          : Center(
-              child: Icon(
-                Icons.person,
-                color: Colors.white,
-                size: 18,
-              ),
-            ),
     );
   }
-  
+
   Widget _buildAdminBadge() {
     return Container(
       margin: const EdgeInsets.only(right: 4),
-      padding: const EdgeInsets.symmetric(
-        horizontal: 6,
-        vertical: 2,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
       decoration: BoxDecoration(
         color: Colors.purple.withOpacity(0.1),
         borderRadius: BorderRadius.circular(8),
-        border: Border.all(
-          color: Colors.purple.withOpacity(0.5),
-        ),
+        border: Border.all(color: Colors.purple.withOpacity(0.5)),
       ),
       child: const Text(
         'الإدارة',
@@ -1463,61 +1495,63 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
       ),
     );
   }
-  
+
   void _openImageViewer(String imageUrl) {
     Navigator.of(context).push(
       PageRouteBuilder(
         opaque: false,
         barrierColor: Colors.black.withOpacity(0.9),
-        pageBuilder: (context, _, __) => Stack(
-          children: [
-            PhotoViewGallery.builder(
-              scrollPhysics: const BouncingScrollPhysics(),
-              builder: (BuildContext context, int index) {
-                return PhotoViewGalleryPageOptions(
-                  imageProvider: CachedNetworkImageProvider(imageUrl),
-                  initialScale: PhotoViewComputedScale.contained,
-                  minScale: PhotoViewComputedScale.contained * 0.8,
-                  maxScale: PhotoViewComputedScale.covered * 1.8,
-                  heroAttributes: PhotoViewHeroAttributes(tag: imageUrl),
-                );
-              },
-              itemCount: 1,
-              loadingBuilder: (context, event) => Center(
-                child: Container(
-                  width: 60.0,
-                  height: 60.0,
-                  child: const CircularProgressIndicator(),
+        pageBuilder:
+            (context, _, __) => Stack(
+              children: [
+                PhotoViewGallery.builder(
+                  scrollPhysics: const BouncingScrollPhysics(),
+                  builder: (BuildContext context, int index) {
+                    return PhotoViewGalleryPageOptions(
+                      imageProvider: CachedNetworkImageProvider(imageUrl),
+                      initialScale: PhotoViewComputedScale.contained,
+                      minScale: PhotoViewComputedScale.contained * 0.8,
+                      maxScale: PhotoViewComputedScale.covered * 1.8,
+                      heroAttributes: PhotoViewHeroAttributes(tag: imageUrl),
+                    );
+                  },
+                  itemCount: 1,
+                  loadingBuilder:
+                      (context, event) => Center(
+                        child: Container(
+                          width: 60.0,
+                          height: 60.0,
+                          child: const CircularProgressIndicator(),
+                        ),
+                      ),
                 ),
-              ),
-            ),
-            Positioned(
-              top: 40,
-              right: 20,
-              child: IconButton(
-                icon: Container(
-                  padding: const EdgeInsets.all(8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.4),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 24,
+                Positioned(
+                  top: 40,
+                  right: 20,
+                  child: IconButton(
+                    icon: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withOpacity(0.4),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(
+                        Icons.close,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                    },
                   ),
                 ),
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-              ),
+              ],
             ),
-          ],
-        ),
       ),
     );
   }
-  
+
   // Methods for formatting time and dates
   String _formatDateDetailed(DateTime date) {
     return DateFormat('dd MMMM yyyy', 'ar').format(date);
@@ -1526,12 +1560,12 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
   String _formatTime(DateTime date) {
     return DateFormat('HH:mm a', 'ar').format(date);
   }
-  
+
   String _getTimeAgo(DateTime dateTime) {
     // استخدام مكتبة timeago للحصول على وقت نسبي (منذ ...)
     final now = DateTime.now();
     final difference = now.difference(dateTime);
-    
+
     // إذا كان الوقت أقل من يوم، نعرض "منذ..."
     if (difference.inHours < 24) {
       // إعداد اللغة العربية للمكتبة
@@ -1581,7 +1615,7 @@ class _ComplaintDetailScreenState extends State<ComplaintDetailScreen> with Tick
         return Colors.grey;
     }
   }
-  
+
   Future<void> _refreshComplaintDetails() async {
     await Future.delayed(const Duration(milliseconds: 800));
     if (mounted) {

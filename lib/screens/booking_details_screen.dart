@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:lottie/lottie.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../models/booking.dart';
@@ -10,16 +9,14 @@ import '../screens/complaints_screen.dart';
 class BookingDetailsScreen extends StatefulWidget {
   final String bookingId;
 
-  const BookingDetailsScreen({
-    super.key,
-    required this.bookingId,
-  });
+  const BookingDetailsScreen({super.key, required this.bookingId});
 
   @override
   State<BookingDetailsScreen> createState() => _BookingDetailsScreenState();
 }
 
-class _BookingDetailsScreenState extends State<BookingDetailsScreen> with SingleTickerProviderStateMixin {
+class _BookingDetailsScreenState extends State<BookingDetailsScreen>
+    with SingleTickerProviderStateMixin {
   final BookingService _bookingService = BookingService();
   bool _isLoading = true;
   bool _hasError = false;
@@ -37,15 +34,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
       duration: const Duration(milliseconds: 800),
     );
     _fadeInAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _animationController,
-        curve: Curves.easeInOut,
-      ),
+      CurvedAnimation(parent: _animationController, curve: Curves.easeInOut),
     );
-    
+
     _loadBookingDetails();
   }
-  
+
   @override
   void dispose() {
     _animationController.dispose();
@@ -60,12 +54,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
       });
 
       final booking = await _bookingService.getBookingById(widget.bookingId);
-      
+
       setState(() {
         _booking = booking;
         _isLoading = false;
       });
-      
+
       // Start animations after data is loaded
       _animationController.forward();
     } catch (e) {
@@ -109,24 +103,25 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    
+
     return Scaffold(
       backgroundColor: theme.scaffoldBackgroundColor,
       appBar: AppBar(
         elevation: 0,
-        title: const Text('تفاصيل الحجز',
-            style: TextStyle(fontWeight: FontWeight.bold)),
+        title: const Text(
+          'تفاصيل الحجز',
+          style: TextStyle(fontWeight: FontWeight.bold),
+        ),
         centerTitle: true,
       ),
-      body: _isLoading
-          ? const Center(
-              child: CircularProgressIndicator(),
-            )
-          : _hasError
+      body:
+          _isLoading
+              ? const Center(child: CircularProgressIndicator())
+              : _hasError
               ? _buildErrorView()
               : _booking == null
-                  ? _buildNotFoundView()
-                  : _buildBookingDetails(theme),
+              ? _buildNotFoundView()
+              : _buildBookingDetails(theme),
     );
   }
 
@@ -153,10 +148,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
             ),
             child: Text(
               _errorMessage,
-              style: TextStyle(
-                fontSize: 16,
-                color: Colors.red[700],
-              ),
+              style: TextStyle(fontSize: 16, color: Colors.red[700]),
               textAlign: TextAlign.center,
             ),
           ),
@@ -182,15 +174,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          SizedBox(
-            height: 180,
-            width: 180,
-            child: Lottie.asset(
-              'assets/animations/not-found.json',
-              repeat: true,
-              fit: BoxFit.contain,
-            ),
-          ),
+          Icon(Icons.search_off, size: 120, color: Colors.grey[400]),
           const SizedBox(height: 32),
           Container(
             margin: const EdgeInsets.symmetric(horizontal: 32),
@@ -210,18 +194,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               children: const [
                 Text(
                   'لم يتم العثور على الحجز',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 SizedBox(height: 8),
                 Text(
                   'قد يكون الحجز غير موجود أو تم حذفه',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Colors.grey,
-                  ),
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
                   textAlign: TextAlign.center,
                 ),
               ],
@@ -246,7 +224,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
 
   Widget _buildBookingDetails(ThemeData theme) {
     final booking = _booking!;
-    
+
     return FadeTransition(
       opacity: _fadeInAnimation,
       child: SingleChildScrollView(
@@ -261,10 +239,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               position: Tween<Offset>(
                 begin: const Offset(0, 0.3),
                 end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: _animationController,
-                curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
-              )),
+              ).animate(
+                CurvedAnimation(
+                  parent: _animationController,
+                  curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
+                ),
+              ),
               child: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.95,
                 child: _buildStatusCard(booking, theme),
@@ -272,16 +252,18 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
             ),
 
             const SizedBox(height: 24),
-            
+
             // Property details with animation
             SlideTransition(
               position: Tween<Offset>(
                 begin: const Offset(0, 0.3),
                 end: Offset.zero,
-              ).animate(CurvedAnimation(
-                parent: _animationController,
-                curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
-              )),
+              ).animate(
+                CurvedAnimation(
+                  parent: _animationController,
+                  curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
+                ),
+              ),
               child: SizedBox(
                 width: MediaQuery.of(context).size.width * 0.95,
                 child: _buildPropertyDetailsCard(booking, theme),
@@ -296,18 +278,20 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                 position: Tween<Offset>(
                   begin: const Offset(0, 0.3),
                   end: Offset.zero,
-                ).animate(CurvedAnimation(
-                  parent: _animationController,
-                  curve: const Interval(0.4, 0.8, curve: Curves.easeOut),
-                )),
+                ).animate(
+                  CurvedAnimation(
+                    parent: _animationController,
+                    curve: const Interval(0.4, 0.8, curve: Curves.easeOut),
+                  ),
+                ),
                 child: SizedBox(
                   width: MediaQuery.of(context).size.width * 0.95,
                   child: _buildNotesCard(booking, theme),
                 ),
               ),
-              
+
             const SizedBox(height: 40),
-            
+
             // Action button with animation
             if (booking.status == BookingStatus.pending)
               ScaleTransition(
@@ -324,7 +308,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.orange.shade700,
                     foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 16,
+                    ),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(16),
                     ),
@@ -342,9 +329,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
     return Card(
       elevation: 8,
       shadowColor: _getStatusColor(booking.status).withAlpha(102),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Container(
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16),
@@ -431,9 +416,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
   Widget _buildPropertyDetailsCard(Booking booking, ThemeData theme) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -457,17 +440,14 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                   const SizedBox(width: 8),
                   const Text(
                     'تفاصيل العقار',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
             ),
-            
+
             const Divider(height: 24),
-            
+
             // Property details rows
             _buildDetailRow(
               'اسم العقار',
@@ -487,7 +467,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               Icons.update_rounded,
               theme,
             ),
-            
+
             // Action buttons
             Padding(
               padding: const EdgeInsets.only(top: 16),
@@ -523,9 +503,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
   Widget _buildNotesCard(Booking booking, ThemeData theme) {
     return Card(
       elevation: 4,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Padding(
         padding: const EdgeInsets.all(20),
         child: Column(
@@ -541,18 +519,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: const [
-                  Icon(
-                    Icons.notes_rounded,
-                    color: Colors.amber,
-                    size: 24,
-                  ),
+                  Icon(Icons.notes_rounded, color: Colors.amber, size: 24),
                   SizedBox(width: 8),
                   Text(
                     'ملاحظات',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                   ),
                 ],
               ),
@@ -564,16 +535,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               decoration: BoxDecoration(
                 color: Colors.grey.withAlpha(13),
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: Colors.grey.withAlpha(51),
-                ),
+                border: Border.all(color: Colors.grey.withAlpha(51)),
               ),
               child: Text(
                 booking.notes!,
-                style: const TextStyle(
-                  fontSize: 18,
-                  height: 1.5,
-                ),
+                style: const TextStyle(fontSize: 18, height: 1.5),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -583,7 +549,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
     );
   }
 
-  Widget _buildDetailRow(String label, String value, IconData icon, ThemeData theme) {
+  Widget _buildDetailRow(
+    String label,
+    String value,
+    IconData icon,
+    ThemeData theme,
+  ) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
@@ -594,11 +565,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
               color: theme.primaryColor.withAlpha(26),
               borderRadius: BorderRadius.circular(8),
             ),
-            child: Icon(
-              icon,
-              color: theme.primaryColor,
-              size: 24,
-            ),
+            child: Icon(icon, color: theme.primaryColor, size: 24),
           ),
           const SizedBox(width: 16),
           Column(
@@ -606,10 +573,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
             children: [
               Text(
                 label,
-                style: TextStyle(
-                  color: Colors.grey.shade600,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
               ),
               const SizedBox(height: 4),
               Text(
@@ -637,29 +601,19 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
           tween: Tween<double>(begin: 0.8, end: 1.0),
           curve: Curves.easeOutBack,
           builder: (context, double scale, child) {
-            return Transform.scale(
-              scale: scale,
-              child: child,
-            );
+            return Transform.scale(scale: scale, child: child);
           },
           child: AlertDialog(
             backgroundColor: Colors.white.withAlpha(242),
             elevation: 20,
             title: Row(
               children: const [
-                Icon(
-                  Icons.warning_amber_rounded,
-                  color: Colors.red,
-                  size: 28,
-                ),
+                Icon(Icons.warning_amber_rounded, color: Colors.red, size: 28),
                 SizedBox(width: 12),
                 Expanded(
                   child: Text(
                     'تأكيد الإلغاء',
-                    style: TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                 ),
               ],
@@ -672,15 +626,11 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                   decoration: BoxDecoration(
                     color: Colors.red.shade50,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(
-                      color: Colors.red.shade100,
-                    ),
+                    border: Border.all(color: Colors.red.shade100),
                   ),
                   child: const Text(
                     'لإلغاء الحجز، يجب تقديم شكوى توضح سبب طلب الإلغاء. هل تريد الانتقال إلى صفحة الشكاوى؟',
-                    style: TextStyle(
-                      fontSize: 16,
-                    ),
+                    style: TextStyle(fontSize: 16),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -693,35 +643,34 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                 },
                 child: Text(
                   'لا، تراجع',
-                  style: TextStyle(
-                    fontSize: 15,
-                    color: Colors.grey.shade700,
-                  ),
+                  style: TextStyle(fontSize: 15, color: Colors.grey.shade700),
                 ),
               ),
               ElevatedButton(
                 onPressed: () async {
                   Navigator.of(dialogContext).pop(); // Close the dialog
-                  
+
                   // Show loading indicator
                   _showLoadingDialog(context);
-                  
+
                   // Get the booking details
-                  final booking = await _bookingService.getBookingById(bookingId);
-                  
+                  final booking = await _bookingService.getBookingById(
+                    bookingId,
+                  );
+
                   // Hide loading indicator
                   if (!context.mounted) return;
                   Navigator.of(context).pop();
-                  
+
                   if (booking != null) {
                     // Navigate to complaints screen with the booking data
                     if (!context.mounted) return;
-                    
+
                     Navigator.of(context).push(
                       MaterialPageRoute(
-                        builder: (context) => ComplaintsScreen(
-                          bookingToCancel: booking,
-                        ),
+                        builder:
+                            (context) =>
+                                ComplaintsScreen(bookingToCancel: booking),
                       ),
                     );
                   } else {
@@ -736,16 +685,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text(
-                  'متابعة',
-                  style: TextStyle(fontSize: 15),
-                ),
+                child: const Text('متابعة', style: TextStyle(fontSize: 15)),
               ),
             ],
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(20),
             ),
-            actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            actionsPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
           ),
         );
       },
@@ -763,10 +712,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
           tween: Tween<double>(begin: 0.8, end: 1.0),
           curve: Curves.easeOutBack,
           builder: (context, double scale, child) {
-            return Transform.scale(
-              scale: scale,
-              child: child,
-            );
+            return Transform.scale(scale: scale, child: child);
           },
           child: AlertDialog(
             content: Padding(
@@ -776,15 +722,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
                   SizedBox(
                     width: 30,
                     height: 30,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 3,
-                    ),
+                    child: CircularProgressIndicator(strokeWidth: 3),
                   ),
                   SizedBox(width: 20),
-                  Text(
-                    'جاري المعالجة...',
-                    style: TextStyle(fontSize: 16),
-                  ),
+                  Text('جاري المعالجة...', style: TextStyle(fontSize: 16)),
                 ],
               ),
             ),
@@ -796,19 +737,16 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
       },
     );
   }
-  
+
   // Show success snackbar
-  
+
   // Show error snackbar
   void _showErrorSnackBar(String message) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Row(
           children: [
-            const Icon(
-              Icons.error_outline,
-              color: Colors.white,
-            ),
+            const Icon(Icons.error_outline, color: Colors.white),
             const SizedBox(width: 12),
             Text(message),
           ],
@@ -816,9 +754,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
         backgroundColor: Colors.red.shade600,
         duration: const Duration(seconds: 3),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
         elevation: 6,
       ),
@@ -836,24 +772,15 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
       onTap: onTap,
       borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.symmetric(
-          horizontal: 12,
-          vertical: 8,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: color.withAlpha(26),
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: color.withAlpha(77),
-          ),
+          border: Border.all(color: color.withAlpha(77)),
         ),
         child: Column(
           children: [
-            Icon(
-              icon,
-              color: color,
-              size: 22,
-            ),
+            Icon(icon, color: color, size: 22),
             const SizedBox(height: 4),
             Text(
               label,
@@ -868,7 +795,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
       ),
     );
   }
-  
+
   // Show toast message
   void _showToast(String message) {
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -877,9 +804,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
         content: Text(message),
         duration: const Duration(seconds: 2),
         behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
         margin: const EdgeInsets.all(16),
       ),
     );
@@ -903,10 +828,10 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
   void _launchWhatsapp(String phoneNumber) async {
     // تنسيق رقم الهاتف (إزالة أي فراغات أو حروف خاصة)
     String formattedNumber = phoneNumber.replaceAll(RegExp(r'\s+'), '');
-    
+
     // إنشاء رابط واتساب
     final Uri whatsappUri = Uri.parse('https://wa.me/$formattedNumber');
-    
+
     try {
       if (await canLaunchUrl(whatsappUri)) {
         await launchUrl(whatsappUri, mode: LaunchMode.externalApplication);
@@ -917,4 +842,4 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen> with Single
       _showToast('حدث خطأ أثناء محاولة فتح واتساب');
     }
   }
-} 
+}

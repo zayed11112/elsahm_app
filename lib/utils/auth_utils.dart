@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../screens/login_screen.dart';
-import 'package:lottie/lottie.dart';
 
 class AuthUtils {
   // Método para mostrar diálogo cuando se requiere autenticación
@@ -40,10 +39,10 @@ class AuthUtils {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Ícono de alerta
-                  Lottie.asset(
-                    'assets/animations/warning.json',
-                    width: 100,
-                    height: 100,
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    size: 80,
+                    color: isDarkMode ? Colors.orange : Colors.orange[700],
                   ),
 
                   const SizedBox(height: 20),

@@ -271,10 +271,7 @@ class _NotificationsScreenState extends State<NotificationsScreen>
         backgroundColor: appBarBlue,
         title: const Text(
           'الإشعارات',
-          style: TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
         ),
         centerTitle: true,
         elevation: 2,
@@ -596,7 +593,20 @@ class _NotificationsScreenState extends State<NotificationsScreen>
             color: iconColor.withValues(alpha: 0.1),
             shape: BoxShape.circle,
           ),
-          child: Icon(Icons.account_balance_wallet, color: iconColor),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(4),
+            child: Image.asset(
+              'assets/icons/walletelsahm.webp',
+              width: 24,
+              height: 24,
+              fit: BoxFit.contain,
+              color: iconColor,
+              colorBlendMode: BlendMode.srcIn,
+              errorBuilder: (context, error, stackTrace) {
+                return Icon(Icons.account_balance_wallet, color: iconColor);
+              },
+            ),
+          ),
         );
       case 'system':
         return Container(
