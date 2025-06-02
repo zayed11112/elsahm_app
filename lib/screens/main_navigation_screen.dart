@@ -228,10 +228,13 @@ class MainNavigationScreen extends StatefulWidget {
         backgroundColor: Colors.white,
         elevation: 4.0,
         shape: const CircleBorder(),
-        child: Icon(
-          Icons.home,
-          size: 30,
-          color: Theme.of(context).colorScheme.primary,
+        child: ClipOval(
+          child: SizedBox.expand(
+            child: Image.asset(
+              'assets/icons/homeiconelsahm.webp',
+              fit: BoxFit.cover,
+            ),
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
@@ -824,10 +827,26 @@ class MainNavigationScreenState extends State<MainNavigationScreen> {
         backgroundColor: Colors.white, // White background for the FAB
         elevation: 4.0, // Add some shadow
         shape: const CircleBorder(), // Ensure it's circular
-        child: Icon(
-          Icons.home,
-          size: 30,
-          color: Theme.of(context).colorScheme.primary,
+        mini: false,
+        heroTag: "homeButton",
+        materialTapTargetSize: MaterialTapTargetSize.padded,
+        child: Padding(
+          padding: const EdgeInsets.all(0),
+          child: Container(
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              color: Colors.transparent,
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(100),
+              child: Image.asset(
+                'assets/icons/homeiconelsahm.webp',
+                fit: BoxFit.contain,
+                width: double.infinity,
+                height: double.infinity,
+              ),
+            ),
+          ),
         ),
       ),
       floatingActionButtonLocation: FloatingActionButtonLocation.centerDocked,
