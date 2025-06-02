@@ -274,15 +274,21 @@ class FavoritesScreen extends StatelessWidget {
                           try {
                             final scaffoldMessenger = ScaffoldMessenger.of(context);
                             await favoritesProvider.toggleFavorite(apartment);
+                            scaffoldMessenger.hideCurrentSnackBar();
                             scaffoldMessenger.showSnackBar(
                               SnackBar(
-                                behavior: SnackBarBehavior.floating,
-                                margin: const EdgeInsets.all(16),
-                                content: Text('تم إزالة ${apartment.name} من المفضلة'),
+                                content: Text(
+                                  'تم إزالة ${apartment.name} من المفضلة',
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
                                 backgroundColor: theme.colorScheme.secondary,
                                 duration: const Duration(seconds: 2),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(8),
+                                behavior: SnackBarBehavior.fixed,
+                                shape: const RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
                                 ),
                               ),
                             );

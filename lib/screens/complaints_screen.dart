@@ -293,24 +293,21 @@ class _ComplaintsScreenState extends State<ComplaintsScreen>
                                           _descriptionController.clear();
 
                                           // Usar scaffoldMessenger que capturamos antes
+                                          scaffoldMessenger.hideCurrentSnackBar();
                                           scaffoldMessenger.showSnackBar(
                                             SnackBar(
-                                              content: Row(
-                                                children: const [
-                                                  Icon(
-                                                    Icons.check_circle,
-                                                    color: Colors.white,
-                                                  ),
-                                                  SizedBox(width: 12),
-                                                  Text('تم تقديم الشكوى بنجاح'),
-                                                ],
+                                              content: Text(
+                                                'تم تقديم الشكوى بنجاح',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
-                                              backgroundColor: Colors.green,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
+                                              duration: const Duration(seconds: 2),
+                                              backgroundColor: Theme.of(context).colorScheme.secondary,
+                                              behavior: SnackBarBehavior.fixed,
+                                              shape: const RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
                                               ),
                                             ),
                                           );
@@ -319,28 +316,20 @@ class _ComplaintsScreenState extends State<ComplaintsScreen>
                                         // Use the pre-captured scaffoldMessenger
 
                                         if (mounted) {
+                                          scaffoldMessenger.hideCurrentSnackBar();
                                           scaffoldMessenger.showSnackBar(
                                             SnackBar(
-                                              content: Row(
-                                                children: [
-                                                  const Icon(
-                                                    Icons.error,
-                                                    color: Colors.white,
-                                                  ),
-                                                  const SizedBox(width: 12),
-                                                  Expanded(
-                                                    child: Text(
-                                                      'حدث خطأ: ${e.toString()}',
-                                                    ),
-                                                  ),
-                                                ],
+                                              content: Text(
+                                                'حدث خطأ أثناء تقديم الشكوى',
+                                                textAlign: TextAlign.center,
+                                                style: const TextStyle(
+                                                  fontWeight: FontWeight.bold,
+                                                ),
                                               ),
                                               backgroundColor: Colors.red,
-                                              behavior:
-                                                  SnackBarBehavior.floating,
-                                              shape: RoundedRectangleBorder(
-                                                borderRadius:
-                                                    BorderRadius.circular(10),
+                                              behavior: SnackBarBehavior.fixed,
+                                              shape: const RoundedRectangleBorder(
+                                                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
                                               ),
                                             ),
                                           );

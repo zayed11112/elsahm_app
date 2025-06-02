@@ -15,31 +15,23 @@ import 'providers/category_provider.dart'; // Import CategoryProvider
 import 'providers/favorites_provider.dart'; // Import FavoritesProvider
 import 'services/notification_service.dart'; // Import NotificationService
 import 'constants/theme.dart'; // Import theme constants
-
 // Import the generated file
 import 'firebase_options.dart';
-
 // Import the screens
 import 'screens/splash_screen.dart';
 import 'screens/error_screen.dart'; // تم إنشاء هذا الملف
 import 'screens/login_screen.dart'; // Import LoginScreen for routes
-
 // إضافة مفتاح Navigator عام للوصول إلى context بطريقة آمنة
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
-
 // إضافة تحكم في زمن انتظار الاتصال
 const Duration connectionTimeout = Duration(seconds: 8);
-
 // إضافة متغير للتحكم في حالة البدء
 bool isInitialized = false;
-
 // Logger instance for main.dart
 final Logger _logger = Logger('Main');
 final Logger _oneSignalLogger = Logger('OneSignal');
-
 // OneSignal App ID
 const String oneSignalAppId = '3136dbc6-c09c-4bca-b0aa-fe35421ac513';
-
 // إضافة دالة لعرض مربع حوار الخروج من التطبيق
 Future<bool> showExitConfirmationDialog(BuildContext context) async {
   final ThemeData theme = Theme.of(context);

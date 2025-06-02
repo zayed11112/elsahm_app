@@ -721,6 +721,12 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
             ),
             _buildDetailRow(
               context,
+              'رقم الهاتف',
+              userProfile.phoneNumber,
+              Icons.phone_outlined,
+            ),
+            _buildDetailRow(
+              context,
               'الكلية',
               userProfile.faculty,
               Icons.school_outlined,
@@ -769,7 +775,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 Text(
-                  '$label:',
+                  label,
                   style: context.bodyMedium?.copyWith(
                     color: isDarkMode ? darkTextSecondary : lightTextSecondary,
                     fontWeight: FontWeight.w500,

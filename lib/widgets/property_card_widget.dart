@@ -369,17 +369,27 @@ class PropertyCardWidget extends StatelessWidget {
       final favoritesProvider = Provider.of<FavoritesProvider>(context, listen: false);
       final isNowFavorite = await favoritesProvider.toggleFavorite(apartment);
       
+      // إلغاء أي إشعارات سابقة
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      
+      // عرض إشعار بنص مركزي
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text(
             isNowFavorite
                 ? 'تمت إضافة ${apartment.name} إلى المفضلة'
                 : 'تمت إزالة ${apartment.name} من المفضلة',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
           duration: const Duration(seconds: 2),
           backgroundColor: Theme.of(context).colorScheme.secondary,
-          behavior: SnackBarBehavior.floating,
-          margin: const EdgeInsets.all(16),
+          behavior: SnackBarBehavior.fixed,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+          ),
         ),
       );
     } catch (e) {

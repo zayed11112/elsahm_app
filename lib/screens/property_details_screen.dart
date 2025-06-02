@@ -207,14 +207,24 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                             .toggleFavorite(property);
                         // Check if widget is still mounted after async call
                         if (mounted) {
+                          scaffoldMessenger.hideCurrentSnackBar();
                           scaffoldMessenger.showSnackBar(
                             SnackBar(
                               content: Text(
                                 isNowFavorite
                                     ? 'تم إضافة $propertyName إلى المفضلة'
                                     : 'تم إزالة $propertyName من المفضلة',
+                                textAlign: TextAlign.center,
+                                style: const TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                ),
                               ),
                               duration: const Duration(seconds: 2),
+                              backgroundColor: Theme.of(context).colorScheme.secondary,
+                              behavior: SnackBarBehavior.fixed,
+                              shape: const RoundedRectangleBorder(
+                                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                              ),
                             ),
                           );
                         }

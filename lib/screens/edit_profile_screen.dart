@@ -52,6 +52,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late TextEditingController _nameController;
   late TextEditingController _batchController;
   late TextEditingController _studentIdController;
+  late TextEditingController _phoneNumberController;
 
   // State variables for dropdowns
   String? _selectedFaculty;
@@ -70,6 +71,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _batchController = TextEditingController(text: widget.userProfile.batch);
     _studentIdController = TextEditingController(
       text: widget.userProfile.studentId,
+    );
+    _phoneNumberController = TextEditingController(
+      text: widget.userProfile.phoneNumber,
     );
     _profileImageUrl = widget.userProfile.avatarUrl;
 
@@ -99,6 +103,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _nameController.dispose();
     _batchController.dispose();
     _studentIdController.dispose();
+    _phoneNumberController.dispose();
     super.dispose();
   }
 
@@ -111,9 +116,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     final authProvider = Provider.of<AuthProvider>(context, listen: false);
     if (authProvider.user == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('خطأ: المستخدم غير مسجل الدخول.'),
+        SnackBar(
+          content: Text(
+            'خطأ: المستخدم غير مسجل الدخول.',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           backgroundColor: Colors.red,
+          behavior: SnackBarBehavior.fixed,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+          ),
         ),
       );
       return;
@@ -153,21 +168,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
 
       // تحقق مرة أخرى من أن الويدجت لا يزال مثبتًا قبل استخدام context
       if (!mounted) return;
-
-      ScaffoldMessenger.of(context).showSnackBar(
+      
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+      scaffoldMessenger.hideCurrentSnackBar();
+      scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Row(
-            children: [
-              Icon(Icons.check_circle, color: Colors.white),
-              SizedBox(width: 10),
-              Text('تم تحديث صورة الملف الشخصي بنجاح'),
-            ],
+          content: Text(
+            'تم تحديث صورة الملف الشخصي بنجاح',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
           ),
-          backgroundColor: Colors.green,
-          duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(10),
+          duration: const Duration(seconds: 2),
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          behavior: SnackBarBehavior.fixed,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
           ),
         ),
       );
@@ -175,12 +192,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       // تحقق من أن الويدجت لا يزال مثبتًا قبل استخدام context
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+      scaffoldMessenger.hideCurrentSnackBar();
+      scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: Text('حدث خطأ أثناء تحديث الصورة: $e'),
+          content: Text(
+            'حدث خطأ أثناء تحديث الصورة',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
           backgroundColor: Colors.red,
-          duration: Duration(seconds: 3),
-          behavior: SnackBarBehavior.floating,
+          behavior: SnackBarBehavior.fixed,
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+          ),
         ),
       );
     } finally {
@@ -342,10 +369,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
       if (_selectedFaculty == null ||
           _selectedBranch == null ||
           _selectedStatus == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('الرجاء إكمال جميع الحقول الإلزامية'),
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        scaffoldMessenger.hideCurrentSnackBar();
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'الرجاء إكمال جميع الحقول الإلزامية',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             backgroundColor: Colors.orange,
+            behavior: SnackBarBehavior.fixed,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            ),
           ),
         );
         return;
@@ -363,10 +402,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         // Check if the widget is still mounted before using context
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('خطأ: المستخدم غير مسجل الدخول.'),
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        scaffoldMessenger.hideCurrentSnackBar();
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'خطأ: المستخدم غير مسجل الدخول.',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.fixed,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            ),
           ),
         );
         setState(() {
@@ -383,6 +434,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         'batch': _batchController.text.trim(),
         'status': _selectedStatus, // Use selected status
         'studentId': _studentIdController.text.trim(),
+        'phoneNumber': _phoneNumberController.text.trim(),
       };
 
       try {
@@ -393,10 +445,23 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         if (!mounted) return;
 
         // عرض رسالة نجاح وإغلاق الشاشة
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('تم حفظ التغييرات بنجاح!'),
-            backgroundColor: Colors.green,
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        scaffoldMessenger.hideCurrentSnackBar();
+        scaffoldMessenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              'تم حفظ التغييرات بنجاح!',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            duration: const Duration(seconds: 2),
+            backgroundColor: Theme.of(context).colorScheme.secondary,
+            behavior: SnackBarBehavior.fixed,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            ),
           ),
         );
 
@@ -413,10 +478,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         // تحقق من أن الويدجت لا يزال مثبتًا
         if (!mounted) return;
 
-        ScaffoldMessenger.of(context).showSnackBar(
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        scaffoldMessenger.hideCurrentSnackBar();
+        scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text('فشل حفظ التغييرات: $e'),
+            content: Text(
+              'فشل حفظ التغييرات',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             backgroundColor: Colors.red,
+            behavior: SnackBarBehavior.fixed,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            ),
           ),
         );
       } finally {
@@ -926,6 +1003,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           labelColor: textColor,
           iconColor: iconColor,
           keyboardType: TextInputType.text,
+          maxLength: 15,
+        ),
+        const SizedBox(height: 16),
+        _buildTextFormField(
+          controller: _phoneNumberController,
+          labelText: 'رقم الهاتف',
+          icon: Icons.phone_outlined,
+          isDarkMode: isDarkMode,
+          fieldBgColor: fieldBgColor,
+          borderColor: borderColor,
+          textColor: textColor,
+          labelColor: textColor,
+          iconColor: iconColor,
+          keyboardType: TextInputType.phone,
           maxLength: 15,
         ),
       ],

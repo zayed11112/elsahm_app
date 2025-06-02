@@ -44,22 +44,44 @@ class _GroupsScreenState extends State<GroupsScreen>
       final Uri uri = Uri.parse(url);
       if (!await launchUrl(uri, mode: LaunchMode.externalApplication)) {
         if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
+          final scaffoldMessenger = ScaffoldMessenger.of(context);
+          scaffoldMessenger.hideCurrentSnackBar();
+          scaffoldMessenger.showSnackBar(
             SnackBar(
-              content: const Text('لا يمكن فتح الرابط'),
+              content: Text(
+                'لا يمكن فتح الرابط',
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
               backgroundColor: Colors.red.shade800,
-              behavior: SnackBarBehavior.floating,
+              behavior: SnackBarBehavior.fixed,
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+              ),
             ),
           );
         }
       }
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
+        final scaffoldMessenger = ScaffoldMessenger.of(context);
+        scaffoldMessenger.hideCurrentSnackBar();
+        scaffoldMessenger.showSnackBar(
           SnackBar(
-            content: Text('حدث خطأ: $e'),
+            content: Text(
+              'حدث خطأ أثناء فتح الرابط',
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
             backgroundColor: Colors.red.shade800,
-            behavior: SnackBarBehavior.floating,
+            behavior: SnackBarBehavior.fixed,
+            shape: const RoundedRectangleBorder(
+              borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+            ),
           ),
         );
       }
@@ -76,12 +98,23 @@ class _GroupsScreenState extends State<GroupsScreen>
   void _copyUrl(String url) {
     Clipboard.setData(ClipboardData(text: url)).then((_) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
+      final scaffoldMessenger = ScaffoldMessenger.of(context);
+      scaffoldMessenger.hideCurrentSnackBar();
+      scaffoldMessenger.showSnackBar(
         SnackBar(
-          content: const Text('تم نسخ الرابط'),
-          backgroundColor: Colors.green.shade800,
-          behavior: SnackBarBehavior.floating,
-          duration: const Duration(seconds: 1),
+          content: Text(
+            'تم نسخ الرابط',
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          backgroundColor: Theme.of(context).colorScheme.secondary,
+          behavior: SnackBarBehavior.fixed,
+          duration: const Duration(seconds: 2),
+          shape: const RoundedRectangleBorder(
+            borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+          ),
         ),
       );
     });

@@ -900,6 +900,39 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
   
+  // إضافة دالة مساعدة لإظهار الإشعارات مع نص مركزي
+  void _showCenteredTextMessage(String message, {bool isError = false}) {
+    if (!mounted) return;
+    
+    // إلغاء أي إشعارات سابقة
+    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    
+    // إظهار الإشعار الجديد في أسفل الشاشة مع نص مركزي
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(
+          message,
+          textAlign: TextAlign.center,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        backgroundColor: isError ? Colors.red : Theme.of(context).colorScheme.secondary,
+        behavior: SnackBarBehavior.fixed,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+        ),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  // تعديل دالة تبديل المفضلة لاستخدام الإشعار المركزي
+  void _toggleFavorite(BuildContext context) async {
+    // ... existing code ...
+    _showCenteredTextMessage('تم تحديث المفضلة بنجاح');
+  }
+
   Future<void> _fetchLatestApartments({bool silent = false}) async {
     if (!mounted) return;
 
@@ -918,7 +951,7 @@ class _HomeScreenState extends State<HomeScreen>
       // مسح التخزين المؤقت
       _propertyService.clearCache(key: 'latest_properties');
       
-      // جلب البيانات
+      // جلب البيانات - تحديد العدد بـ 10 عقارات فقط
       List<Apartment> apartments = [];
       
       try {
@@ -928,7 +961,7 @@ class _HomeScreenState extends State<HomeScreen>
           _logger.warning('خطأ في جلب أحدث العقارات. محاولة جلب العقارات المتاحة: $innerError');
         }
         
-        // جلب العقارات المتاحة كخيار بديل
+        // جلب العقارات المتاحة كخيار بديل - أيضاً 10 عقارات فقط
         apartments = await _propertyService.getAvailableProperties(limit: 10);
       }
 
@@ -958,14 +991,7 @@ class _HomeScreenState extends State<HomeScreen>
       });
 
       if (!silent && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text('حدث خطأ أثناء تحميل البيانات، يرجى المحاولة مرة أخرى'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-            margin: const EdgeInsets.all(16),
-          ),
-        );
+        _showCenteredTextMessage('حدث خطأ أثناء تحميل البيانات، يرجى المحاولة مرة أخرى', isError: true);
       }
     }
   }
@@ -984,7 +1010,8 @@ class _HomeScreenState extends State<HomeScreen>
         _logger.info('بدء جلب العقارات المميزة...');
       }
 
-      final featuredProperties = await _propertyService.getFeaturedProperties(limit: 6);
+      // تحديد العدد بـ 10 عقارات فقط للعقارات المميزة
+      final featuredProperties = await _propertyService.getFeaturedProperties(limit: 10);
 
       if (!mounted) return;
 
@@ -1017,6 +1044,7 @@ class _HomeScreenState extends State<HomeScreen>
     // سيتم تنفيذها لاحقاً
   }
   
+  // تعديل دالة تحديث البيانات لاستخدام الإشعار مع نص مركزي
   Future<void> _refreshAllData() async {
     if (!mounted) return;
 
@@ -1037,26 +1065,14 @@ class _HomeScreenState extends State<HomeScreen>
 
       if (!mounted) return;
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('تم تحديث البيانات بنجاح'),
-          duration: Duration(seconds: 2),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+      _showCenteredTextMessage('تم تحديث البيانات بنجاح');
     } catch (e) {
       if (kDebugMode) {
         _logger.severe('خطأ في تحديث البيانات: $e');
       }
 
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('حدث خطأ أثناء تحديث البيانات، يرجى المحاولة مرة أخرى'),
-            backgroundColor: Colors.red,
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
+        _showCenteredTextMessage('حدث خطأ أثناء تحديث البيانات، يرجى المحاولة مرة أخرى', isError: true);
       }
     } finally {
       if (mounted) {

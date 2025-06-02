@@ -14,6 +14,7 @@ class UserProfile {
   double balance; // إضافة الرصيد في المحفظة
   List<Map<String, dynamic>>
   fcmTokens; // Store FCM tokens for push notifications
+  String phoneNumber; // Added phone number field
 
   UserProfile({
     required this.uid,
@@ -27,6 +28,7 @@ class UserProfile {
     this.studentId = '', // Default to empty
     this.balance = 0.0, // قيمة افتراضية للرصيد
     this.fcmTokens = const [], // Default to empty list
+    this.phoneNumber = '', // Added phone number with default empty string
   });
 
   // Factory constructor to create a UserProfile from a Firestore document
@@ -53,6 +55,7 @@ class UserProfile {
           (data['balance'] ?? 0.0)
               .toDouble(), // تحويل القيمة إلى double إذا كانت موجودة
       fcmTokens: tokensList, // Add FCM tokens list
+      phoneNumber: data['phoneNumber'] ?? '', // Added phone number field
     );
   }
 
@@ -69,6 +72,7 @@ class UserProfile {
       'studentId': studentId, // Added Student ID
       'balance': balance, // إضافة الرصيد للبيانات المخزنة
       'fcmTokens': fcmTokens, // Add FCM tokens to stored data
+      'phoneNumber': phoneNumber, // Added phone number
       // uid is usually the document ID, so not stored inside the document itself
     };
   }
@@ -84,6 +88,7 @@ class UserProfile {
     String? studentId,
     double? balance,
     List<Map<String, dynamic>>? fcmTokens,
+    String? phoneNumber,
   }) {
     return UserProfile(
       uid: uid,
@@ -97,6 +102,7 @@ class UserProfile {
       studentId: studentId ?? this.studentId,
       balance: balance ?? this.balance,
       fcmTokens: fcmTokens ?? this.fcmTokens,
+      phoneNumber: phoneNumber ?? this.phoneNumber,
     );
   }
 }

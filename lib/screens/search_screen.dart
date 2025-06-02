@@ -772,14 +772,27 @@ class _SearchScreenState extends State<SearchScreen> {
                                   final isNowFavorite = await favoritesProvider
                                       .toggleFavorite(apartment);
                                   if (mounted) {
+                                    // إلغاء أي إشعارات سابقة
+                                    scaffoldMessenger.hideCurrentSnackBar();
+                                    
+                                    // عرض الإشعار الجديد بنص مركزي
                                     scaffoldMessenger.showSnackBar(
                                       SnackBar(
                                         content: Text(
                                           isNowFavorite
                                               ? 'تم إضافة ${apartment.name} إلى المفضلة'
                                               : 'تم إزالة ${apartment.name} من المفضلة',
+                                          textAlign: TextAlign.center,
+                                          style: const TextStyle(
+                                            fontWeight: FontWeight.bold,
+                                          ),
                                         ),
                                         duration: const Duration(seconds: 2),
+                                        backgroundColor: Theme.of(context).colorScheme.secondary,
+                                        behavior: SnackBarBehavior.fixed,
+                                        shape: const RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                                        ),
                                       ),
                                     );
                                   }

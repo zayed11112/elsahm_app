@@ -1014,11 +1014,22 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                                           : 'تم إضافة $propertyName إلى المفضلة';
 
                                   // Use the pre-captured ScaffoldMessenger
+                                  scaffoldMessenger.hideCurrentSnackBar();
                                   scaffoldMessenger.showSnackBar(
                                     SnackBar(
-                                      content: Text(message),
+                                      content: Text(
+                                        message,
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                       duration: const Duration(seconds: 2),
-                                      behavior: SnackBarBehavior.floating,
+                                      backgroundColor: Theme.of(context).colorScheme.secondary,
+                                      behavior: SnackBarBehavior.fixed,
+                                      shape: const RoundedRectangleBorder(
+                                        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                                      ),
                                     ),
                                   );
                                 },
