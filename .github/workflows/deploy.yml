@@ -16,6 +16,13 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       
+      - name: Use simplified web pubspec
+        run: |
+          if [ -f "pubspec.yaml.web" ]; then
+            cp pubspec.yaml pubspec.yaml.original
+            cp pubspec.yaml.web pubspec.yaml
+          fi
+      
       - name: Setup Flutter
         uses: subosito/flutter-action@v2
         with:
