@@ -22,11 +22,11 @@ jobs:
         with:
           persist-credentials: true
 
-      - name: Setup Flutter SDK
-        uses: flutter/actions/setup-flutter@v2
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
         with:
+          flutter-version: '3.16.5'
           channel: 'stable'
-          version: '3.19.0'
       
       - name: Flutter version
         run: flutter --version
