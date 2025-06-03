@@ -9,10 +9,10 @@ import 'package:logging/logging.dart'; // Import logging package
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import FontAwesome for social icons
 import 'package:url_launcher/url_launcher.dart'; // Import for URL launching
-import 'package:auto_size_text/auto_size_text.dart'; // Import for auto-resizing text
+// Import for auto-resizing text
 import 'package:marquee_widget/marquee_widget.dart'; // Import for marquee text effect
 import '../providers/navigation_provider.dart';
-import '../providers/favorites_provider.dart'; // Import FavoritesProvider
+// Import FavoritesProvider
 import '../models/apartment.dart'; // Import the Apartment model
 import '../models/banner.dart' as app_banner; // Import Banner model with prefix
 import '../services/category_service.dart'; // Import CategoryService
@@ -20,13 +20,13 @@ import '../services/banner_service.dart'; // Import BannerService
 import '../services/property_service_supabase.dart'; // Import PropertyServiceSupabase
 import '../screens/categories_screen.dart'; // Import CategoriesScreen
 import '../widgets/typewriter_animated_text.dart'; // Import the TypewriterAnimatedText widget
-import '../widgets/cropped_network_image.dart'; // Import the cropped network image widget
+// Import the cropped network image widget
 import '../widgets/property_card_widget.dart'; // إضافة استيراد ويدجيت العقار الجديد
 import 'apartments_list_screen.dart'; // Import the apartments list screen
-import 'property_details_screen.dart'; // Import the property details screen
+// Import the property details screen
 import '../providers/auth_provider.dart'; // Importar AuthProvider
-import '../utils/auth_utils.dart'; // Importar AuthUtils
-import '../services/firestore_service.dart'; // Import FirestoreService
+// Importar AuthUtils
+// Import FirestoreService
 import '../screens/why_choose_us_screen.dart'; // Import WhyChooseUsScreen
 import '../screens/login_screen.dart'; // Import LoginScreen
 import 'featured_properties_screen.dart'; // إضافة استيراد للشاشة الجديدة
@@ -96,7 +96,6 @@ class _HomeScreenState extends State<HomeScreen>
   Timer? _refreshTimer;
   
   // تحسين الأداء من خلال تخزين القيم السابقة
-  bool _hasLoadedDataBefore = false;
 
   @override
   void initState() {
@@ -124,7 +123,6 @@ class _HomeScreenState extends State<HomeScreen>
         
         // تحديث الواجهة بعد تحميل البانرات والفئات
         setState(() {
-          _hasLoadedDataBefore = true;
         });
         
         // استكمال التحميل بشكل متوازٍ
@@ -203,9 +201,7 @@ class _HomeScreenState extends State<HomeScreen>
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final textTheme = theme.textTheme;
-    final colorScheme = theme.colorScheme;
+    Theme.of(context);
 
     return Scaffold(
       body: RefreshIndicator(
@@ -928,10 +924,6 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // تعديل دالة تبديل المفضلة لاستخدام الإشعار المركزي
-  void _toggleFavorite(BuildContext context) async {
-    // ... existing code ...
-    _showCenteredTextMessage('تم تحديث المفضلة بنجاح');
-  }
 
   Future<void> _fetchLatestApartments({bool silent = false}) async {
     if (!mounted) return;
@@ -1817,7 +1809,6 @@ class _HomeScreenState extends State<HomeScreen>
   // قسم تواصل معنا
   Widget _buildContactUsSection() {
     final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
     
     // وسائل التواصل الاجتماعي
     final socialMedia = [

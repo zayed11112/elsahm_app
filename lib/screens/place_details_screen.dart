@@ -75,10 +75,20 @@ class _PlaceDetailsScreenState extends State<PlaceDetailsScreen> {
 
     final Widget content = Scaffold(
       appBar: AppBar(
-        title: Text(widget.place.name),
+        title: Text(
+          widget.place.name,
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+          ),
+        ),
+        elevation: 0,
+        backgroundColor: const Color(0xFF1565C0), // primaryBlue color
+        foregroundColor: Colors.white,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
           onPressed: () {
             developer.log('Back button pressed in PlaceDetailsScreen');
             Navigator.of(context).pop();

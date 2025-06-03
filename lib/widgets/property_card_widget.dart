@@ -304,6 +304,8 @@ class PropertyCardWidget extends StatelessWidget {
 
   // زر المفضلة
   Widget _buildFavoriteButton(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Consumer<FavoritesProvider>(
       builder: (context, favoritesProvider, _) {
         final isFavorite = favoritesProvider.isFavorite(apartment.id);
@@ -311,15 +313,15 @@ class PropertyCardWidget extends StatelessWidget {
           width: 36,
           height: 36,
           decoration: BoxDecoration(
-            color: Theme.of(context).brightness == Brightness.dark
-                ? Colors.black.withOpacity(0.6)
+            color: isDarkMode
+                ? Colors.black38
                 : Colors.white.withOpacity(0.8),
             shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
                 color: Colors.black.withOpacity(0.2),
-                blurRadius: 6,
-                offset: const Offset(0, 2),
+                blurRadius: 3,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
@@ -342,7 +344,11 @@ class PropertyCardWidget extends StatelessWidget {
                   child: Icon(
                     isFavorite ? Icons.favorite : Icons.favorite_border,
                     key: ValueKey<bool>(isFavorite),
-                    color: isFavorite ? Colors.red : Colors.grey[700],
+                    color: isFavorite 
+                        ? Colors.red 
+                        : isDarkMode
+                            ? Colors.white
+                            : Colors.grey[700],
                     size: 20,
                   ),
                 ),

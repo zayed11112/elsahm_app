@@ -1169,8 +1169,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     required VoidCallback onPressed,
   }) {
     final isDarkMode = context.isDarkMode;
-    final screenWidth = MediaQuery.of(context).size.width;
-    final isWideScreen = screenWidth > 360; // Check if screen is wide enough
+// Check if screen is wide enough
 
     // Text style for wallet buttons
     final TextStyle textStyle = TextStyle(
@@ -1805,7 +1804,6 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
   }
 
   Widget _buildLogoutButton(BuildContext context) {
-    final isDarkMode = context.isDarkMode;
     
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: defaultPadding),

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
+import 'dart:math';
 
 import 'package:logging/logging.dart';
 import 'package:provider/provider.dart';
@@ -31,6 +32,17 @@ class _SearchScreenState extends State<SearchScreen> {
   bool _isLoading = false;
   String _searchText = '';
   final TextEditingController _searchController = TextEditingController();
+  final FocusNode _searchFocusNode = FocusNode();
+
+  // Pagination variables
+  int _currentPage = 0;
+  final int _itemsPerPage = 10;
+  int _totalPages = 0;
+  List<Apartment> _paginatedResults = [];
+  bool _isLoadingPage = false;
+
+  // ScrollController for scrolling to top
+  final ScrollController _scrollController = ScrollController();
 
   // Categories will be loaded dynamically
   final List<String> _housingCategories = ['الكل'];
@@ -107,6 +119,8 @@ class _SearchScreenState extends State<SearchScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _searchFocusNode.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -129,6 +143,7 @@ class _SearchScreenState extends State<SearchScreen> {
       if (mounted) {
         setState(() {
           _searchResults = properties;
+          _updatePagination(); // تحديث الصفحات بعد استلام النتائج
           _isLoading = false;
         });
       }
@@ -141,6 +156,82 @@ class _SearchScreenState extends State<SearchScreen> {
           _isLoading = false;
         });
       }
+    }
+  }
+
+  // تحديث بيانات ترقيم الصفحات
+  void _updatePagination() {
+    _totalPages = (_searchResults.length / _itemsPerPage).ceil();
+    // تأكد من أن الصفحة الحالية في الحدود المسموح بها
+    if (_currentPage >= _totalPages) {
+      _currentPage = _totalPages > 0 ? _totalPages - 1 : 0;
+    }
+    // حساب النتائج للصفحة الحالية
+    _updatePaginatedResults();
+  }
+
+  // تحديث النتائج المعروضة بناءً على الصفحة الحالية
+  void _updatePaginatedResults() {
+    final startIndex = _currentPage * _itemsPerPage;
+    final endIndex = min(startIndex + _itemsPerPage, _searchResults.length);
+    
+    if (startIndex < _searchResults.length) {
+      _paginatedResults = _searchResults.sublist(startIndex, endIndex);
+    } else {
+      _paginatedResults = [];
+    }
+  }
+
+  // الانتقال إلى الصفحة التالية
+  void _nextPage() {
+    if (_currentPage < _totalPages - 1 && !_isLoadingPage) {
+      setState(() {
+        _isLoadingPage = true;
+      });
+      
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          setState(() {
+            _currentPage++;
+            _updatePaginatedResults();
+            _isLoadingPage = false;
+          });
+          
+          _scrollToTop();
+        }
+      });
+    }
+  }
+
+  // الانتقال إلى الصفحة السابقة
+  void _previousPage() {
+    if (_currentPage > 0 && !_isLoadingPage) {
+      setState(() {
+        _isLoadingPage = true;
+      });
+      
+      Future.delayed(const Duration(milliseconds: 300), () {
+        if (mounted) {
+          setState(() {
+            _currentPage--;
+            _updatePaginatedResults();
+            _isLoadingPage = false;
+          });
+          
+          _scrollToTop();
+        }
+      });
+    }
+  }
+
+  // دالة للتمرير إلى أعلى الصفحة
+  void _scrollToTop() {
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 500),
+        curve: Curves.easeInOut,
+      );
     }
   }
 
@@ -224,6 +315,8 @@ class _SearchScreenState extends State<SearchScreen> {
       if (mounted) {
         setState(() {
           _searchResults = searchResults;
+          _currentPage = 0; // إعادة الصفحة إلى البداية عند البحث
+          _updatePagination(); // تحديث الصفحات بعد البحث
           _isLoading = false;
         });
 
@@ -369,6 +462,8 @@ class _SearchScreenState extends State<SearchScreen> {
     // تحديث واجهة المستخدم
     setState(() {
       _searchResults = filteredResults;
+      _currentPage = 0; // إعادة الصفحة إلى البداية عند تطبيق الفلاتر
+      _updatePagination(); // تحديث الصفحات بعد تطبيق الفلاتر
     });
 
     _logger.info('اكتملت الفلترة: ${filteredResults.length} نتيجة نهائية');
@@ -381,6 +476,7 @@ class _SearchScreenState extends State<SearchScreen> {
       _selectedHousingCategory = null;
       _selectedArea = null;
       _priceRange = const RangeValues(0, 20000);
+      _currentPage = 0; // إعادة الصفحة إلى البداية عند إعادة ضبط الفلاتر
     });
 
     // إعادة تحميل العقارات
@@ -395,10 +491,31 @@ class _SearchScreenState extends State<SearchScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('البحث', textAlign: TextAlign.center),
+        backgroundColor: const Color(0xFF1976d3),
+        title: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(
+              Icons.search,
+              color: Colors.white,
+              size: 22,
+            ),
+            const SizedBox(width: 8),
+            const Text(
+              'البحث',
+              style: TextStyle(
+                fontWeight: FontWeight.bold,
+                color: Colors.white,
+              ),
+            ),
+          ],
+        ),
         centerTitle: true,
+        automaticallyImplyLeading: false,
+        elevation: 2,
       ),
       body: SingleChildScrollView(
+        controller: _scrollController,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -535,10 +652,12 @@ class _SearchScreenState extends State<SearchScreen> {
                     ],
                   ),
                 )
-                : Padding(
+                : Column(
+                    children: [
+                      Padding(
                   padding: const EdgeInsets.all(16.0),
                   child: GridView.builder(
-                    key: ValueKey(_searchResults.length),
+                          key: ValueKey('${_currentPage}_${_paginatedResults.length}'),
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
                     gridDelegate:
@@ -548,9 +667,9 @@ class _SearchScreenState extends State<SearchScreen> {
                           crossAxisSpacing: 16,
                           mainAxisSpacing: 16,
                         ),
-                    itemCount: _searchResults.length,
+                          itemCount: _paginatedResults.length,
                     itemBuilder: (context, index) {
-                      final apartment = _searchResults[index];
+                            final apartment = _paginatedResults[index];
                       return AnimatedContainer(
                         duration: Duration(milliseconds: 300 + (index * 50)),
                         curve: Curves.easeOutBack,
@@ -559,6 +678,125 @@ class _SearchScreenState extends State<SearchScreen> {
                     },
                   ),
                 ),
+                      
+                      // Pagination controls
+                      if (_totalPages > 1)
+                        Container(
+                          margin: const EdgeInsets.only(top: 12, bottom: 24),
+                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+                          child: Column(
+                            children: [
+                              // أزرار التنقل بتصميم جديد
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    colors: [
+                                      Theme.of(context).colorScheme.primary.withOpacity(0.05),
+                                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
+                                    ],
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                  ),
+                                  borderRadius: BorderRadius.circular(20),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
+                                      blurRadius: 8,
+                                      offset: const Offset(0, 2),
+                                    ),
+                                  ],
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    _buildPaginationButton(
+                                      icon: Icons.keyboard_double_arrow_left_rounded,
+                                      onPressed: (_currentPage > 0 && !_isLoadingPage) ? () {
+                                        setState(() {
+                                          _currentPage = 0;
+                                          _isLoadingPage = true;
+                                        });
+                                        
+                                        Future.delayed(const Duration(milliseconds: 300), () {
+                                          if (mounted) {
+                                            setState(() {
+                                              _updatePaginatedResults();
+                                              _isLoadingPage = false;
+                                            });
+                                            _scrollToTop();
+                                          }
+                                        });
+                                      } : null,
+                                      isLoading: false,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    _buildPaginationButton(
+                                      icon: Icons.arrow_back_ios_rounded,
+                                      onPressed: (_currentPage > 0 && !_isLoadingPage) ? _previousPage : null,
+                                      isLoading: false,
+                                    ),
+                                    Container(
+                                      margin: const EdgeInsets.symmetric(horizontal: 12),
+                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                                      decoration: BoxDecoration(
+                                        color: Theme.of(context).colorScheme.primary,
+                                        borderRadius: BorderRadius.circular(16),
+                                        boxShadow: [
+                                          BoxShadow(
+                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
+                                            blurRadius: 6,
+                                            offset: const Offset(0, 2),
+                                          ),
+                                        ],
+                                      ),
+                                      child: Text(
+                                        '${_currentPage + 1} / $_totalPages',
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 14,
+                                        ),
+                                      ),
+                                    ),
+                                    _buildPaginationButton(
+                                      icon: Icons.arrow_forward_ios_rounded,
+                                      onPressed: (_currentPage < _totalPages - 1 && !_isLoadingPage) ? _nextPage : null,
+                                      isLoading: _isLoadingPage,
+                                    ),
+                                    const SizedBox(width: 4),
+                                    _buildPaginationButton(
+                                      icon: Icons.keyboard_double_arrow_right_rounded,
+                                      onPressed: (_currentPage < _totalPages - 1 && !_isLoadingPage) ? () {
+                                        setState(() {
+                                          _currentPage = _totalPages - 1;
+                                          _isLoadingPage = true;
+                                        });
+                                        
+                                        Future.delayed(const Duration(milliseconds: 300), () {
+                                          if (mounted) {
+                                            setState(() {
+                                              _updatePaginatedResults();
+                                              _isLoadingPage = false;
+                                            });
+                                            _scrollToTop();
+                                          }
+                                        });
+                                      } : null,
+                                      isLoading: false,
+                                    ),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      
+                      // إضافة مساحة في الأسفل لرفع أزرار التنقل للأعلى
+                      const SizedBox(height: 70),
+                    ],
+                  ),
           ],
         ),
       ),
@@ -915,7 +1153,8 @@ class _SearchScreenState extends State<SearchScreen> {
       children: [
         // Header with enhanced design
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+          margin: const EdgeInsets.only(bottom: 8),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [
@@ -923,7 +1162,7 @@ class _SearchScreenState extends State<SearchScreen> {
                 theme.colorScheme.primary.withValues(alpha: 0.05),
               ],
             ),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(8),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -934,22 +1173,29 @@ class _SearchScreenState extends State<SearchScreen> {
                       isDarkMode
                           ? Colors.grey[800]!.withValues(alpha: 0.8)
                           : Colors.white.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    width: 0.5,
                   ),
                 ),
                 child: TextButton.icon(
                   onPressed: _resetFilters,
+                  style: TextButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    minimumSize: const Size(0, 0),
+                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                  ),
                   icon: Icon(
                     Icons.refresh_rounded,
-                    size: 18,
+                    size: 12,
                     color: theme.colorScheme.primary,
                   ),
                   label: Text(
                     'إعادة ضبط',
                     style: TextStyle(
                       color: theme.colorScheme.primary,
+                      fontSize: 10,
                       fontWeight: FontWeight.w600,
                     ),
                   ),
@@ -960,12 +1206,13 @@ class _SearchScreenState extends State<SearchScreen> {
                   Icon(
                     Icons.filter_alt_rounded,
                     color: theme.colorScheme.primary,
-                    size: 24,
+                    size: 14,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 3),
                   Text(
                     'تصفية النتائج',
-                    style: theme.textTheme.titleLarge?.copyWith(
+                    style: TextStyle(
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
                     ),
@@ -975,55 +1222,58 @@ class _SearchScreenState extends State<SearchScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 8),
 
         // First filter: Housing Category (القسم)
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color:
                 isDarkMode
                     ? Colors.grey[800]!.withValues(alpha: 0.6)
                     : Colors.white.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-              width: 1,
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              width: 0.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: theme.colorScheme.primary.withValues(alpha: 0.03),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
                   Icon(
                     Icons.category_rounded,
                     color: theme.colorScheme.primary,
-                    size: 20,
+                    size: 14,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   Text(
                     'القسم',
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: TextStyle(
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
+                  horizontal: 8,
+                  vertical: 0,
                 ),
+                height: 32,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors:
@@ -1034,16 +1284,17 @@ class _SearchScreenState extends State<SearchScreen> {
                             ]
                             : [Colors.white, Colors.grey[50]!],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                    width: 1.5,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    width: 0.5,
                   ),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     isExpanded: true,
                     value: _selectedHousingCategory ?? 'الكل',
+                    isDense: true,
                     items:
                         _housingCategories.map((String item) {
                           return DropdownMenuItem<String>(
@@ -1052,7 +1303,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               item,
                               textAlign: TextAlign.right,
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 color:
                                     isDarkMode ? Colors.white : Colors.black87,
@@ -1069,7 +1320,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     icon: Icon(
                       Icons.keyboard_arrow_down_rounded,
                       color: theme.colorScheme.primary,
-                      size: 28,
+                      size: 18,
                     ),
                     dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
                   ),
@@ -1078,54 +1329,58 @@ class _SearchScreenState extends State<SearchScreen> {
             ],
           ),
         ),
-        const SizedBox(height: 20),
+        const SizedBox(height: 8),
+        
         // Second filter: Area (المنطقة)
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(
             color:
                 isDarkMode
                     ? Colors.grey[800]!.withValues(alpha: 0.6)
                     : Colors.white.withValues(alpha: 0.8),
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(8),
             border: Border.all(
-              color: theme.colorScheme.primary.withValues(alpha: 0.2),
-              width: 1,
+              color: theme.colorScheme.primary.withValues(alpha: 0.1),
+              width: 0.5,
             ),
             boxShadow: [
               BoxShadow(
-                color: theme.colorScheme.primary.withValues(alpha: 0.05),
-                blurRadius: 8,
-                offset: const Offset(0, 2),
+                color: theme.colorScheme.primary.withValues(alpha: 0.03),
+                blurRadius: 4,
+                offset: const Offset(0, 1),
               ),
             ],
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
               Row(
                 children: [
                   Icon(
                     Icons.location_on_rounded,
                     color: theme.colorScheme.primary,
-                    size: 20,
+                    size: 14,
                   ),
-                  const SizedBox(width: 8),
+                  const SizedBox(width: 4),
                   Text(
                     'المنطقة',
-                    style: theme.textTheme.titleMedium?.copyWith(
+                    style: TextStyle(
+                      fontSize: 12,
                       fontWeight: FontWeight.bold,
                       color: theme.colorScheme.primary,
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 12),
+              const SizedBox(height: 4),
               Container(
                 padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 4,
+                  horizontal: 8,
+                  vertical: 0,
                 ),
+                height: 32,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors:
@@ -1136,16 +1391,17 @@ class _SearchScreenState extends State<SearchScreen> {
                             ]
                             : [Colors.white, Colors.grey[50]!],
                   ),
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: theme.colorScheme.primary.withValues(alpha: 0.3),
-                    width: 1.5,
+                    color: theme.colorScheme.primary.withValues(alpha: 0.2),
+                    width: 0.5,
                   ),
                 ),
                 child: DropdownButtonHideUnderline(
                   child: DropdownButton<String>(
                     isExpanded: true,
                     value: _selectedArea ?? 'الكل',
+                    isDense: true,
                     items:
                         _areas.map((String item) {
                           return DropdownMenuItem<String>(
@@ -1154,7 +1410,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               item,
                               textAlign: TextAlign.right,
                               style: TextStyle(
-                                fontSize: 16,
+                                fontSize: 12,
                                 fontWeight: FontWeight.w500,
                                 color:
                                     isDarkMode ? Colors.white : Colors.black87,
@@ -1171,7 +1427,7 @@ class _SearchScreenState extends State<SearchScreen> {
                     icon: Icon(
                       Icons.keyboard_arrow_down_rounded,
                       color: theme.colorScheme.primary,
-                      size: 28,
+                      size: 18,
                     ),
                     dropdownColor: isDarkMode ? Colors.grey[800] : Colors.white,
                   ),
@@ -1190,7 +1446,7 @@ class _SearchScreenState extends State<SearchScreen> {
 
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
       child: Container(
         decoration: BoxDecoration(
           gradient:
@@ -1210,7 +1466,7 @@ class _SearchScreenState extends State<SearchScreen> {
                             ]
                             : [Colors.white, Colors.grey[50]!],
                   ),
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           border: Border.all(
             color:
                 _showFilters
@@ -1224,22 +1480,22 @@ class _SearchScreenState extends State<SearchScreen> {
                   _showFilters
                       ? theme.colorScheme.primary.withValues(alpha: 0.3)
                       : theme.colorScheme.primary.withValues(alpha: 0.1),
-              blurRadius: 8,
-              offset: const Offset(0, 3),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
             ),
           ],
         ),
         child: Material(
           color: Colors.transparent,
           child: InkWell(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(12),
             onTap: () {
               setState(() {
                 _showFilters = !_showFilters;
               });
             },
             child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 20),
+              padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -1252,10 +1508,10 @@ class _SearchScreenState extends State<SearchScreen> {
                           _showFilters
                               ? Colors.white
                               : theme.colorScheme.primary,
-                      size: 22,
+                      size: 18,
                     ),
                   ),
-                  const SizedBox(width: 10),
+                  const SizedBox(width: 8),
                   Text(
                     _showFilters ? 'إخفاء الفلاتر' : 'عرض الفلاتر',
                     style: TextStyle(
@@ -1264,7 +1520,7 @@ class _SearchScreenState extends State<SearchScreen> {
                               ? Colors.white
                               : theme.colorScheme.primary,
                       fontWeight: FontWeight.bold,
-                      fontSize: 16,
+                      fontSize: 14,
                     ),
                   ),
                 ],
@@ -1343,6 +1599,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       _searchText = '';
                     });
                     _loadInitialProperties();
+                    _searchFocusNode.unfocus();
                   },
                   child: Container(
                     padding: const EdgeInsets.all(8),
@@ -1373,6 +1630,7 @@ class _SearchScreenState extends State<SearchScreen> {
           Expanded(
             child: TextField(
               controller: _searchController,
+              focusNode: _searchFocusNode,
               textDirection: TextDirection.rtl,
               textAlign: TextAlign.right,
               maxLength: 50,
@@ -1501,5 +1759,73 @@ class _SearchScreenState extends State<SearchScreen> {
     } catch (e) {
       _logger.severe('خطأ في تحميل الأقسام: $e');
     }
+  }
+
+  // بناء زر التنقل بين الصفحات بتصميم أكثر احترافية
+  Widget _buildPaginationButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required bool isLoading,
+  }) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: BoxDecoration(
+          color: onPressed == null
+              ? (isDarkMode ? Colors.grey[800]!.withOpacity(0.5) : Colors.grey[200]!.withOpacity(0.7))
+              : isDarkMode 
+                ? theme.colorScheme.primary.withOpacity(0.2)
+                : Colors.white,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: onPressed == null
+                ? Colors.transparent
+                : theme.colorScheme.primary.withOpacity(0.3),
+            width: 1,
+          ),
+          boxShadow: onPressed == null
+              ? null
+              : [
+                  BoxShadow(
+                    color: theme.colorScheme.primary.withOpacity(0.1),
+                    blurRadius: 4,
+                    offset: const Offset(0, 2),
+                  ),
+                ],
+        ),
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(14),
+          splashColor: theme.colorScheme.primary.withOpacity(0.1),
+          highlightColor: theme.colorScheme.primary.withOpacity(0.05),
+          child: Container(
+            padding: const EdgeInsets.all(10),
+            width: 36,
+            height: 36,
+            child: isLoading 
+                ? SizedBox(
+                    width: 16,
+                    height: 16,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                        theme.colorScheme.primary,
+                      ),
+                    ),
+                  )
+                : Icon(
+                    icon,
+                    size: 16,
+                    color: onPressed == null
+                        ? (isDarkMode ? Colors.grey[600] : Colors.grey[400])
+                        : theme.colorScheme.primary,
+                  ),
+          ),
+        ),
+      ),
+    );
   }
 }

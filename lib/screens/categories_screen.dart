@@ -196,11 +196,30 @@ class _CategoriesScreenState extends State<CategoriesScreen>
     if (_isLoading && _selectedCategory == null) {
       return Scaffold(
         appBar: AppBar(
-          title: const Text('الأقسام والأماكن المتاحة'),
+          backgroundColor: const Color(0xFF1976d3),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.category,
+                color: Colors.white,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                'الأقسام والأماكن المتاحة',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white,
+                ),
+              ),
+            ],
+          ),
           centerTitle: true,
           automaticallyImplyLeading: false,
+          elevation: 2,
           leading: IconButton(
-            icon: const Icon(Icons.close),
+            icon: const Icon(Icons.close, color: Colors.white),
             onPressed: () => _safelyNavigateBack(context),
             tooltip: 'إغلاق',
           ),
@@ -276,14 +295,28 @@ class _CategoriesScreenState extends State<CategoriesScreen>
                 floating: false, // Changed to false to ensure it stays pinned
                 snap: false, // Added to ensure proper pinning behavior
                 automaticallyImplyLeading: false,
-                title: const Text('الأقسام والأماكن المتاحة'),
+                backgroundColor: const Color(0xFF1976d3),
+                title: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.category,
+                      color: Colors.white,
+                      size: 22,
+                    ),
+                    const SizedBox(width: 8),
+                    const Text(
+                      'الأقسام والأماكن المتاحة',
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
                 centerTitle: true,
-                forceElevated:
-                    innerBoxIsScrolled, // Add elevation when scrolled
-                elevation:
-                    innerBoxIsScrolled
-                        ? 4.0
-                        : 0.0, // Add elevation when scrolled
+                elevation: innerBoxIsScrolled ? 4.0 : 2.0,
+                iconTheme: const IconThemeData(color: Colors.white),
                 bottom: PreferredSize(
                   preferredSize: const Size.fromHeight(
                     52,
@@ -641,11 +674,32 @@ class _CategoriesScreenState extends State<CategoriesScreen>
         // Header with category name and back button
         SliverAppBar(
           pinned: true,
+          elevation: 2,
+          backgroundColor: const Color(0xFF1976d3),
+          foregroundColor: Colors.white,
           automaticallyImplyLeading: false,
-          title: Text(_selectedCategory ?? ""),
+          title: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(
+                Icons.category,
+                color: Colors.white,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                _selectedCategory ?? "",
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                ),
+              ),
+            ],
+          ),
           centerTitle: true,
           leading: IconButton(
-            icon: const Icon(Icons.arrow_back),
+            icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
             onPressed: () => _safelyNavigateBack(context),
           ),
         ),

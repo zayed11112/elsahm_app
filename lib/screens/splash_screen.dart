@@ -28,13 +28,12 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _rotateController;
   late Animation<double> _rotateAnimation;
   late AnimationController _slideController;
-  late Animation<Offset> _slideAnimation;
 
   // تم إزالة مشغل الصوت لتحسين الأداء
 
   // تحميل التطبيق في الخلفية
   bool _isAppLoaded = false;
-  final int _splashDurationSeconds = 5; // مدة ظهور شاشة البداية (5 ثواني)
+  final int _splashDurationSeconds = 4; // تقليل المدة لتحسين UX
 
   // Easter Egg Variables
   bool _easterEggActivated = false;
@@ -49,7 +48,7 @@ class _SplashScreenState extends State<SplashScreen>
     Colors.orange,
   ];
   Timer? _colorTimer;
-  Color _currentColor = Colors.white70;
+  Color _currentColor = Colors.white;
 
   bool _showSecretMessage = false;
 
@@ -62,7 +61,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     // إعداد أنيميشن التلاشي - تم تبسيط المدة
     _fadeController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 600),
       vsync: this,
     );
     _fadeAnimation = CurvedAnimation(
@@ -72,24 +71,24 @@ class _SplashScreenState extends State<SplashScreen>
 
     // إعداد أنيميشن التكبير والتصغير - تم تبسيط المنحنى
     _scaleController = AnimationController(
-      duration: const Duration(milliseconds: 1000),
+      duration: const Duration(milliseconds: 800),
       vsync: this,
     );
     _scaleAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 1.2), weight: 60),
-      TweenSequenceItem(tween: Tween<double>(begin: 1.2, end: 1.0), weight: 40),
+      TweenSequenceItem(tween: Tween<double>(begin: 0.0, end: 1.1), weight: 60),
+      TweenSequenceItem(tween: Tween<double>(begin: 1.1, end: 1.0), weight: 40),
     ]).animate(
       CurvedAnimation(parent: _scaleController, curve: Curves.easeOut),
     );
 
     // إعداد أنيميشن الدوران - تم تبسيط المنحنى
     _rotateController = AnimationController(
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 700),
       vsync: this,
     );
     _rotateAnimation = Tween<double>(
       begin: 0.0,
-      end: 1.0, // دورة كاملة
+      end: 0.05, // دوران بسيط فقط للتأثير
     ).animate(
       CurvedAnimation(parent: _rotateController, curve: Curves.easeInOut),
     );
@@ -99,10 +98,6 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 800),
       vsync: this,
     );
-    _slideAnimation = Tween<Offset>(
-      begin: const Offset(0, -0.5),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(parent: _slideController, curve: Curves.easeOut));
 
     // تشغيل الأنيميشن بالتتابع
     _startLogoAnimation();
@@ -120,7 +115,7 @@ class _SplashScreenState extends State<SplashScreen>
         _slideController.forward();
 
         // تأخير قصير قبل تشغيل أنيميشن التكبير
-        Future.delayed(const Duration(milliseconds: 300), () {
+        Future.delayed(const Duration(milliseconds: 200), () {
           if (mounted) {
             _scaleController.forward();
           }
@@ -128,7 +123,7 @@ class _SplashScreenState extends State<SplashScreen>
 
         // تشغيل أنيميشن الدوران قبل الانتهاء
         Future.delayed(
-          Duration(milliseconds: (_splashDurationSeconds * 1000) - 1000),
+          Duration(milliseconds: (_splashDurationSeconds * 1000) - 800),
           () {
             if (mounted && !_easterEggActivated) {
               _rotateController.forward();
@@ -145,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen>
 
     try {
       // تقليل مدة التحميل لتجنب التجميد
-      await Future.delayed(Duration(seconds: _splashDurationSeconds - 2));
+      await Future.delayed(Duration(seconds: _splashDurationSeconds - 1));
 
       if (mounted) {
         setState(() {
@@ -167,8 +162,8 @@ class _SplashScreenState extends State<SplashScreen>
   }
 
   void _startTypingAnimation() {
-    const typingSpeed = Duration(milliseconds: 100);
-    const pauseBetweenLoops = Duration(milliseconds: 500);
+    const typingSpeed = Duration(milliseconds: 90); // أسرع قليلاً
+    const pauseBetweenLoops = Duration(milliseconds: 400);
 
     _typingTimer = Timer.periodic(typingSpeed, (timer) {
       if (_currentCharIndex < _fullSlogan.length) {
@@ -225,7 +220,7 @@ class _SplashScreenState extends State<SplashScreen>
     });
 
     // Start color cycling
-    _colorTimer = Timer.periodic(const Duration(milliseconds: 500), (timer) {
+    _colorTimer = Timer.periodic(const Duration(milliseconds: 400), (timer) {
       if (mounted) {
         setState(() {
           _currentColor = _partyColors[Random().nextInt(_partyColors.length)];
@@ -233,8 +228,8 @@ class _SplashScreenState extends State<SplashScreen>
       }
     });
 
-    // Reset after 5 seconds and continue to main screen
-    Timer(const Duration(seconds: 5), () {
+    // Reset after 3 seconds and continue to main screen
+    Timer(const Duration(seconds: 3), () {
       _colorTimer?.cancel();
       if (mounted) {
         if (_isAppLoaded) {
@@ -307,15 +302,12 @@ class _SplashScreenState extends State<SplashScreen>
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        decoration: BoxDecoration(
-          // Replace gradient with image background
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/images/backgrond_app.webp'),
             fit: BoxFit.cover,
             colorFilter: ColorFilter.mode(
-              Colors.black.withValues(
-                alpha: 0.7,
-              ), // Darken the image slightly for better text visibility
+              Colors.black54,
               BlendMode.darken,
             ),
           ),
@@ -328,8 +320,8 @@ class _SplashScreenState extends State<SplashScreen>
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     colors: [
-                      Colors.black.withValues(alpha: 0.6),
-                      Colors.black.withValues(alpha: 0.3),
+                      Colors.black.withOpacity(0.5),
+                      Colors.black.withOpacity(0.2),
                     ],
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
@@ -354,21 +346,18 @@ class _SplashScreenState extends State<SplashScreen>
                   // الشعار مع أنيميشن مميز
                   GestureDetector(
                     onTap: _handleLogoTap,
-                    child: SlideTransition(
-                      position: _slideAnimation,
-                      child: ScaleTransition(
-                        scale: _scaleAnimation,
-                        child: RotationTransition(
-                          turns: _rotateAnimation,
-                          child: FadeTransition(
-                            opacity: _fadeAnimation,
-                            child: SizedBox(
-                              height: 150,
-                              width: 150,
-                              child: Image.asset(
-                                'assets/images/logo_new.webp',
-                                fit: BoxFit.contain,
-                              ),
+                    child: ScaleTransition(
+                      scale: _scaleAnimation,
+                      child: RotationTransition(
+                        turns: _rotateAnimation,
+                        child: FadeTransition(
+                          opacity: _fadeAnimation,
+                          child: Container(
+                            height: 150,
+                            width: 150,
+                            child: Image.asset(
+                              'assets/images/logo_new.webp',
+                              fit: BoxFit.contain,
                             ),
                           ),
                         ),
@@ -379,23 +368,21 @@ class _SplashScreenState extends State<SplashScreen>
 
                   // Animated Slogan Text
                   AnimatedDefaultTextStyle(
-                    duration: const Duration(milliseconds: 500),
+                    duration: const Duration(milliseconds: 300),
                     style: TextStyle(
-                      fontSize: 18.0,
+                      fontSize: 20.0,
                       fontWeight: FontWeight.w600,
-                      color:
-                          _easterEggActivated ? _currentColor : Colors.white70,
+                      color: _easterEggActivated ? _currentColor : Colors.white,
                       fontFamily: 'Cairo',
-                      shadows:
-                          _easterEggActivated
-                              ? [
-                                Shadow(
-                                  color: _currentColor.withValues(alpha: 0.7),
-                                  blurRadius: 10,
-                                  offset: const Offset(0, 2),
-                                ),
-                              ]
-                              : null,
+                      shadows: [
+                        Shadow(
+                          color: _easterEggActivated
+                              ? _currentColor.withOpacity(0.7)
+                              : Colors.black.withOpacity(0.5),
+                          blurRadius: 8,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
                     ),
                     child: Text(
                       _displayedSlogan,
@@ -422,43 +409,39 @@ class _SplashScreenState extends State<SplashScreen>
                   const SizedBox(height: 40),
 
                   // Loading Indicator - Enhanced
-                  Column(
-                    children: [
-                      SizedBox(
-                        width: 30,
-                        height: 30,
-                        child:
-                            _easterEggActivated
-                                ? RotationTransition(
-                                  turns: Tween(begin: 0.0, end: 1.0).animate(
-                                    CurvedAnimation(
-                                      parent: _rotateController,
-                                      curve: Curves.linear,
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    Icons.star,
-                                    color: _currentColor,
-                                    size: 30,
-                                  ),
-                                )
-                                : CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    Colors.white54,
-                                  ),
+                  Container(
+                    padding: const EdgeInsets.all(10),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(30),
+                    ),
+                    child: SizedBox(
+                      width: 30,
+                      height: 30,
+                      child: _easterEggActivated
+                          ? RotationTransition(
+                              turns: Tween(begin: 0.0, end: 1.0).animate(
+                                CurvedAnimation(
+                                  parent: AnimationController(
+                                    duration: const Duration(seconds: 1),
+                                    vsync: this,
+                                  )..repeat(),
+                                  curve: Curves.linear,
                                 ),
-                      ),
-                      SizedBox(height: 10),
-                      Text(
-                        "التطبيق بيحمّل دلوقتي...",
-                        style: TextStyle(
-                          color: Colors.white54,
-                          fontSize: 12,
-                          fontFamily: 'Cairo',
-                        ),
-                      ),
-                    ],
+                              ),
+                              child: Icon(
+                                Icons.star,
+                                color: _currentColor,
+                                size: 24,
+                              ),
+                            )
+                          : CircularProgressIndicator(
+                              strokeWidth: 2.5,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                Colors.white,
+                              ),
+                            ),
+                    ),
                   ),
                 ],
               ),
@@ -471,10 +454,10 @@ class _SplashScreenState extends State<SplashScreen>
               right: 0,
               child: Column(
                 children: [
-                  Text(
+                  const Text(
                     "رقم التواصل",
                     style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
+                      color: Colors.white,
                       fontSize: 15.0,
                       fontFamily: 'Cairo',
                       fontWeight: FontWeight.w500,
@@ -486,17 +469,17 @@ class _SplashScreenState extends State<SplashScreen>
                   // Phone number with subtle glow
                   Container(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                      horizontal: 18,
+                      vertical: 10,
                     ),
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.08),
-                      borderRadius: BorderRadius.circular(20),
+                      color: Colors.white.withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(25),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.white.withValues(alpha: 0.05),
-                          blurRadius: 10,
-                          spreadRadius: 1,
+                          color: Colors.black.withOpacity(0.2),
+                          blurRadius: 8,
+                          spreadRadius: 0,
                         ),
                       ],
                     ),
@@ -506,72 +489,24 @@ class _SplashScreenState extends State<SplashScreen>
                       children: [
                         Icon(
                           Icons.phone_android,
-                          color:
-                              _easterEggActivated
-                                  ? _currentColor
-                                  : Colors.white.withValues(alpha: 0.9),
+                          color: _easterEggActivated
+                              ? _currentColor
+                              : Colors.white,
                           size: 18.0,
                         ),
-                        const SizedBox(width: 8),
+                        const SizedBox(width: 10),
                         Text(
                           "01093130120",
                           style: TextStyle(
-                            color:
-                                _easterEggActivated
-                                    ? _currentColor
-                                    : Colors.white.withValues(alpha: 0.9),
+                            color: _easterEggActivated
+                                ? _currentColor
+                                : Colors.white,
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',
                             letterSpacing: 1.1,
                           ),
                           textDirection: TextDirection.ltr,
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  // Add the designer info below contact number
-                  const SizedBox(height: 15),
-                  FadeTransition(
-                    opacity: _fadeAnimation,
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        // Smaller designer image
-                        Container(
-                          width: 40,
-                          height: 40,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.white.withValues(alpha: 0.1),
-                                blurRadius: 5,
-                                spreadRadius: 1,
-                              ),
-                            ],
-                          ),
-                          child: ClipRRect(
-                            borderRadius: BorderRadius.circular(20),
-                            child: Image.asset(
-                              'assets/images/Eslam_Zayed.webp',
-                              fit: BoxFit.cover,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        Text(
-                          "By : Eslam Zayed",
-                          style: TextStyle(
-                            color:
-                                _easterEggActivated
-                                    ? _currentColor
-                                    : Colors.white.withValues(alpha: 0.7),
-                            fontSize: 12,
-                            fontWeight: FontWeight.w500,
-                            fontFamily: 'Cairo',
-                          ),
                         ),
                       ],
                     ),

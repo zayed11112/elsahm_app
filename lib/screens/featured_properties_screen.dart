@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
+import 'dart:math';
 import '../models/apartment.dart';
 import '../services/property_service_supabase.dart';
 import '../providers/favorites_provider.dart';
@@ -21,10 +22,24 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
   bool _isLoading = true;
   bool _hasError = false;
 
+  // Pagination variables
+  int _currentPage = 0;
+  final int _itemsPerPage = 10;
+  int _totalPages = 0;
+  
+  // ScrollController for scrolling to top
+  final ScrollController _scrollController = ScrollController();
+
   @override
   void initState() {
     super.initState();
     _loadFeaturedProperties();
+  }
+  
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadFeaturedProperties() async {
@@ -39,6 +54,7 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
       if (mounted) {
         setState(() {
           _featuredProperties = properties;
+          _updatePagination(); // تحديث الصفحات بعد استلام النتائج
           _isLoading = false;
         });
       }
@@ -51,6 +67,37 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
       }
     }
   }
+  
+  // تحديث بيانات ترقيم الصفحات
+  void _updatePagination() {
+    _totalPages = (_featuredProperties.length / _itemsPerPage).ceil();
+    // تأكد من أن الصفحة الحالية في الحدود المسموح بها
+    if (_currentPage >= _totalPages) {
+      _currentPage = _totalPages > 0 ? _totalPages - 1 : 0;
+    }
+    // حساب النتائج للصفحة الحالية
+    _updatePaginatedResults();
+  }
+
+  // تحديث النتائج المعروضة بناءً على الصفحة الحالية
+  void _updatePaginatedResults() {
+    final startIndex = _currentPage * _itemsPerPage;
+    min(startIndex + _itemsPerPage, _featuredProperties.length);
+    
+    if (startIndex < _featuredProperties.length) {
+    } else {
+    }
+  }
+
+  // دالة للتمرير إلى أعلى الصفحة
+
+  // الانتقال إلى الصفحة التالية
+
+  // الانتقال إلى الصفحة السابقة
+
+  // الانتقال للصفحة الأولى
+
+  // الانتقال للصفحة الأخيرة
 
   @override
   Widget build(BuildContext context) {
@@ -70,24 +117,19 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
             Text(
               'العقارات المميزة',
               style: TextStyle(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.bold,
+                fontSize: 20,
+                color: Colors.white,
               ),
             ),
           ],
         ),
         centerTitle: true,
         elevation: 0,
-        flexibleSpace: Container(
-          decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [
-                theme.primaryColor,
-                theme.primaryColor.withOpacity(0.85),
-              ],
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-            ),
-          ),
+        backgroundColor: theme.primaryColor,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
         ),
       ),
       body: RefreshIndicator(
@@ -100,10 +142,24 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
                 ? _buildErrorView()
                 : _featuredProperties.isEmpty
                     ? _buildEmptyView()
-                    : _buildPropertiesGrid(),
+                    : ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                        itemCount: _featuredProperties.length,
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        itemBuilder: (context, index) {
+                          final apartment = _featuredProperties[index];
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 20.0),
+                            child: _buildFeaturedPropertyCard(apartment),
+                          );
+                        },
+                      ),
       ),
     );
   }
+
+  // تصغير أزرار التنقل
 
   Widget _buildLoadingView() {
     return Center(
@@ -221,21 +277,6 @@ class _FeaturedPropertiesScreenState extends State<FeaturedPropertiesScreen> {
           ],
         ),
       ),
-    );
-  }
-
-  Widget _buildPropertiesGrid() {
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-      itemCount: _featuredProperties.length,
-      physics: const AlwaysScrollableScrollPhysics(),
-      itemBuilder: (context, index) {
-        final apartment = _featuredProperties[index];
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 20.0),
-          child: _buildFeaturedPropertyCard(apartment),
-        );
-      },
     );
   }
 

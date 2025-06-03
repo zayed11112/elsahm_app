@@ -17,7 +17,7 @@ import 'enhanced_more_screen.dart'; // Import the enhanced MoreScreen
 // DIAGNOSTIC: Removed unused dart:math import
 import 'wallet_screen.dart'; // Import wallet screen for navigation
 import 'login_screen.dart'; // Import LoginScreen
-import 'edit_profile_screen.dart'; // Import EditProfileScreen
+// Import EditProfileScreen
 
 // Placeholder screens - we will create these later
 

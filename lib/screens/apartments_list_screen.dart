@@ -19,6 +19,18 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
   final TextEditingController _searchController = TextEditingController();
   final PropertyServiceSupabase _propertyService = PropertyServiceSupabase();
   final Logger _logger = Logger('ApartmentsListScreen');
+  
+  // Pagination variables
+  int _itemsPerPage = 10;
+  int _currentPage = 1;
+  int get _totalPages => (_apartments.length / _itemsPerPage).ceil();
+  
+  // Theme colors
+  final Color primaryBlue = const Color(0xFF1565C0);
+  final Color secondaryBlue = const Color(0xFF42A5F5);
+
+  // ScrollController for scrolling to top
+  final ScrollController _scrollController = ScrollController();
 
   @override
   void initState() {
@@ -29,6 +41,7 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
   }
 
@@ -41,7 +54,7 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
     try {
       // استخدام خدمة Supabase للحصول على العقارات
       final apartments = await _propertyService.getAvailableProperties(
-        limit: 50,
+        limit: 200,
       );
 
       _logger.info('تم تحميل ${apartments.length} عقار');
@@ -50,6 +63,7 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
         setState(() {
           _apartments = apartments;
           _isLoading = false;
+          _currentPage = 1; // Reset to first page when loading new data
         });
       }
     } catch (e) {
@@ -63,23 +77,66 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
       }
     }
   }
-
+  
   List<Apartment> get _filteredApartments {
     return _apartments;
+  }
+  
+  List<Apartment> get _paginatedApartments {
+    if (_filteredApartments.isEmpty) return [];
+    
+    final startIndex = (_currentPage - 1) * _itemsPerPage;
+    final endIndex = startIndex + _itemsPerPage > _filteredApartments.length 
+        ? _filteredApartments.length 
+        : startIndex + _itemsPerPage;
+    
+    if (startIndex >= _filteredApartments.length) return [];
+    return _filteredApartments.sublist(startIndex, endIndex);
+  }
+  
+  void _goToPage(int page) {
+    if (page < 1 || page > _totalPages) return;
+    
+    setState(() {
+      _currentPage = page;
+    });
+    
+    // Scroll to top when changing pages
+    if (_scrollController.hasClients) {
+      _scrollController.animateTo(
+        0,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeOut,
+      );
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final backgroundColor =
+        isDarkMode ? const Color(0xFF121212) : const Color(0xFFF8F9FA);
 
     return Scaffold(
+      backgroundColor: backgroundColor,
       appBar: AppBar(
-        title: Text(
+        elevation: 0,
+        backgroundColor: primaryBlue,
+        foregroundColor: Colors.white,
+        title: const Text(
           'العقارات المتاحة',
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body: Column(
         children: [
@@ -114,7 +171,7 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
             child:
                 _isLoading
                     ? const Center(child: CircularProgressIndicator())
-                    : _filteredApartments.isEmpty
+                    : _apartments.isEmpty
                     ? Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -135,23 +192,173 @@ class _ApartmentsListScreenState extends State<ApartmentsListScreen> {
                         ],
                       ),
                     )
-                    : RefreshIndicator(
-                      onRefresh: _loadApartments,
-                      child: ListView.builder(
-                        itemCount: _filteredApartments.length,
-                        padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                        itemBuilder: (context, index) {
-                          final apartment = _filteredApartments[index];
-                          return _buildApartmentCard(
-                            context,
-                            apartment,
-                            isDarkMode,
-                          );
-                        },
-                      ),
+                    : Column(
+                      children: [
+                        Expanded(
+                          child: RefreshIndicator(
+                            onRefresh: _loadApartments,
+                            child: ListView.builder(
+                              controller: _scrollController,
+                              itemCount: _paginatedApartments.length,
+                              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                              itemBuilder: (context, index) {
+                                final apartment = _paginatedApartments[index];
+                                return _buildApartmentCard(
+                                  context,
+                                  apartment,
+                                  isDarkMode,
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                        // Pagination controls
+                        if (_totalPages > 1)
+                          Container(
+                            padding: const EdgeInsets.symmetric(vertical: 8.0),
+                            decoration: BoxDecoration(
+                              color: isDarkMode ? Colors.black12 : Colors.white,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Colors.black.withOpacity(0.05),
+                                  blurRadius: 5,
+                                  offset: const Offset(0, -3),
+                                ),
+                              ],
+                            ),
+                            child: _buildPaginationControls(context),
+                          ),
+                      ],
                     ),
           ),
         ],
+      ),
+    );
+  }
+  
+  Widget _buildPaginationControls(BuildContext context) {
+    final theme = Theme.of(context);
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          // Previous button
+          _buildPaginationButton(
+            icon: Icons.arrow_back_ios,
+            onPressed: _currentPage > 1 ? () => _goToPage(_currentPage - 1) : null,
+            tooltip: 'الصفحة السابقة',
+            theme: theme,
+          ),
+          
+          const SizedBox(width: 8),
+          
+          // First page button (if not near the start)
+          if (_currentPage > 3)
+            _buildPageNumberButton(1, theme),
+            
+          // Ellipsis if needed
+          if (_currentPage > 4)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text('...', style: theme.textTheme.titleMedium),
+            ),
+            
+          // Page numbers around current page
+          ...List.generate(
+            _totalPages,
+            (index) {
+              final pageNumber = index + 1;
+              // Show current page and 1 page before/after
+              if ((pageNumber >= _currentPage - 1 && pageNumber <= _currentPage + 1) &&
+                  pageNumber > 0 && pageNumber <= _totalPages) {
+                return _buildPageNumberButton(pageNumber, theme);
+              }
+              return const SizedBox.shrink();
+            },
+          ),
+          
+          // Ellipsis if needed
+          if (_currentPage < _totalPages - 3)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Text('...', style: theme.textTheme.titleMedium),
+            ),
+            
+          // Last page button (if not near the end)
+          if (_currentPage < _totalPages - 2)
+            _buildPageNumberButton(_totalPages, theme),
+          
+          const SizedBox(width: 8),
+          
+          // Next button
+          _buildPaginationButton(
+            icon: Icons.arrow_forward_ios,
+            onPressed: _currentPage < _totalPages ? () => _goToPage(_currentPage + 1) : null,
+            tooltip: 'الصفحة التالية',
+            theme: theme,
+          ),
+        ],
+      ),
+    );
+  }
+  
+  Widget _buildPaginationButton({
+    required IconData icon,
+    required VoidCallback? onPressed,
+    required String tooltip,
+    required ThemeData theme,
+  }) {
+    return Material(
+      color: onPressed == null ? Colors.grey.shade200 : theme.colorScheme.primary,
+      borderRadius: BorderRadius.circular(8),
+      child: InkWell(
+        onTap: onPressed,
+        borderRadius: BorderRadius.circular(8),
+        child: Tooltip(
+          message: tooltip,
+          child: Container(
+            padding: const EdgeInsets.all(8.0),
+            child: Icon(
+              icon,
+              size: 16,
+              color: onPressed == null ? Colors.grey.shade400 : Colors.white,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+  
+  Widget _buildPageNumberButton(int pageNumber, ThemeData theme) {
+    final isCurrentPage = pageNumber == _currentPage;
+    
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0),
+      child: Material(
+        color: isCurrentPage ? theme.colorScheme.primary : Colors.transparent,
+        borderRadius: BorderRadius.circular(8),
+        child: InkWell(
+          onTap: isCurrentPage ? null : () => _goToPage(pageNumber),
+          borderRadius: BorderRadius.circular(8),
+          child: Container(
+            width: 36,
+            height: 36,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              border: !isCurrentPage ? Border.all(color: theme.colorScheme.primary) : null,
+              borderRadius: BorderRadius.circular(8),
+            ),
+            child: Text(
+              pageNumber.toString(),
+              style: TextStyle(
+                color: isCurrentPage ? Colors.white : theme.colorScheme.primary,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }

@@ -7,10 +7,6 @@ import '../services/notification_service.dart'; // Import NotificationService
 import '../main.dart' as main; // Import main.dart for OneSignal functions
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'dart:async';
-import 'dart:convert';
-import 'dart:math';
-import 'package:crypto/crypto.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 enum AuthStatus {
