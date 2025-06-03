@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart'; // Import Google Fonts
 import 'package:supabase_flutter/supabase_flutter.dart'; // Import Supabase
 import 'package:logging/logging.dart'; // Import logging
 import 'dart:async'; // ضروري للتعامل مع الاستثناءات بشكل متزامن
+import 'dart:convert'; // For JSON parsing
 import 'package:flutter/services.dart'; // لضبط توجيه الشاشة
 import 'package:onesignal_flutter/onesignal_flutter.dart'; // Import OneSignal
 import 'package:intl/date_symbol_data_local.dart'; // إضافة استيراد جديد
@@ -176,8 +177,11 @@ Future<void> _initializeApp() async {
 
       // تهيئة Firebase بشكل متزامن قبل تشغيل التطبيق
       try {
+        // Get the platform-specific Firebase options asynchronously
+        FirebaseOptions firebaseOptions = await DefaultFirebaseOptions.currentPlatform;
+        
         await Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
+          options: firebaseOptions,
         );
         _logger.info('Firebase initialized successfully');
 

@@ -47,3 +47,9 @@ app.*.map.json
 # Firebase service account keys - don't commit these!
 functions/serviceAccountKey.json
 **/firebase-service-account-*.json
+
+# Environment and configuration files with sensitive data
+.env
+assets/env_config.json
+**/google-services.json
+**/GoogleService-Info.plist
