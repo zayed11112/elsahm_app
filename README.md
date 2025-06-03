@@ -1,16 +1,26 @@
-# elsahm_app
+# السهم للتسكين
 
-A new Flutter project.
+تطبيق فلاتر لخدمات التسكين والإسكان.
 
-## Getting Started
+## حول المشروع
 
-This project is a starting point for a Flutter application.
+هذا المشروع يوفر منصة للتسكين وخدمات الإسكان المختلفة.
 
-A few resources to get you started if this is your first Flutter project:
+## كيفية النشر على GitHub Pages
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+1. تم إعداد التطبيق للنشر على GitHub Pages باستخدام GitHub Actions.
+2. أي دفع للكود إلى الفرع الرئيسي `main` سيؤدي تلقائياً إلى بناء ونشر التطبيق.
+3. يمكن الوصول إلى التطبيق من خلال الرابط: `https://[اسم-المستخدم].github.io/elsahm_app/`
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+## كيفية التشغيل محلياً
+
+```bash
+flutter pub get
+flutter run -d chrome
+```
+
+## بناء إصدار للنشر
+
+```bash
+flutter build web --release --base-href=/elsahm_app/
+```
