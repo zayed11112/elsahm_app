@@ -78,7 +78,7 @@ dependencies:
   share_plus: ^4.5.3
 
   # Package info for app version
-  package_info_plus: ^3.1.2
+  package_info_plus: ^1.4.3
 
   # Shimmer effect for metallic look
   shimmer: ^2.0.0
