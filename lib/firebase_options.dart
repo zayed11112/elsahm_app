@@ -3,8 +3,6 @@
 import 'package:firebase_core/firebase_core.dart' show FirebaseOptions;
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
-import 'dart:convert';
-import 'package:flutter/services.dart';
 
 /// Default [FirebaseOptions] for use with your Firebase apps.
 ///
@@ -17,43 +15,19 @@ import 'package:flutter/services.dart';
 /// );
 /// ```
 class DefaultFirebaseOptions {
-  // Variable to store the configuration once loaded
-  static Map<String, dynamic>? _config;
-
-  // Function to load the configuration
-  static Future<Map<String, dynamic>> _loadConfig() async {
-    if (_config != null) {
-      return _config!;
-    }
-    
-    try {
-      final String configString = await rootBundle.loadString('assets/env_config.json');
-      _config = json.decode(configString)['firebase'];
-      return _config!;
-    } catch (e) {
-      print('Error loading configuration: $e');
-      // Return empty map with default keys as fallback
-      return {
-        'web_api_key': '',
-        'android_api_key': '',
-        'ios_api_key': ''
-      };
-    }
-  }
-
-  static Future<FirebaseOptions> get currentPlatform async {
+  static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return await web;
+      return web;
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
-        return await android;
+        return android;
       case TargetPlatform.iOS:
-        return await ios;
+        return ios;
       case TargetPlatform.macOS:
-        return await macos;
+        return macos;
       case TargetPlatform.windows:
-        return await windows;
+        return windows;
       case TargetPlatform.linux:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for linux - '
@@ -66,62 +40,47 @@ class DefaultFirebaseOptions {
     }
   }
 
-  static Future<FirebaseOptions> get web async {
-    final config = await _loadConfig();
-    return FirebaseOptions(
-      apiKey: config['web_api_key'] ?? '',
-      appId: '1:992039187831:web:d84c394088380e5ca71d72',
-      messagingSenderId: '992039187831',
-      projectId: 'elsahm-d8ebd',
-      authDomain: 'elsahm-d8ebd.firebaseapp.com',
-      storageBucket: 'elsahm-d8ebd.firebasestorage.app',
-    );
-  }
+  static const FirebaseOptions web = FirebaseOptions(
+    apiKey: 'AIzaSyBco6LHTdUotjBpqwzAwLMOh4A6ERcfgxI',
+    appId: '1:992039187831:web:d84c394088380e5ca71d72',
+    messagingSenderId: '992039187831',
+    projectId: 'elsahm-d8ebd',
+    authDomain: 'elsahm-d8ebd.firebaseapp.com',
+    storageBucket: 'elsahm-d8ebd.firebasestorage.app',
+  );
 
-  static Future<FirebaseOptions> get android async {
-    final config = await _loadConfig();
-    return FirebaseOptions(
-      apiKey: config['android_api_key'] ?? '',
-      appId: '1:992039187831:android:cdc60a9dd021fd99a71d72',
-      messagingSenderId: '992039187831',
-      projectId: 'elsahm-d8ebd',
-      storageBucket: 'elsahm-d8ebd.firebasestorage.app',
-    );
-  }
+  static const FirebaseOptions android = FirebaseOptions(
+    apiKey: 'AIzaSyCHeJEN-Lv_Lt4YOLguWi81PlYpYBbk8JA',
+    appId: '1:992039187831:android:cdc60a9dd021fd99a71d72',
+    messagingSenderId: '992039187831',
+    projectId: 'elsahm-d8ebd',
+    storageBucket: 'elsahm-d8ebd.firebasestorage.app',
+  );
 
-  static Future<FirebaseOptions> get ios async {
-    final config = await _loadConfig();
-    return FirebaseOptions(
-      apiKey: config['ios_api_key'] ?? '',
-      appId: '1:992039187831:ios:da498421bc792c6ca71d72',
-      messagingSenderId: '992039187831',
-      projectId: 'elsahm-d8ebd',
-      storageBucket: 'elsahm-d8ebd.firebasestorage.app',
-      iosBundleId: 'com.example.elsahmApp',
-    );
-  }
+  static const FirebaseOptions ios = FirebaseOptions(
+    apiKey: 'AIzaSyAVabwLNb49un9jBRC4MqN3Cmx2PALbMk8',
+    appId: '1:992039187831:ios:da498421bc792c6ca71d72',
+    messagingSenderId: '992039187831',
+    projectId: 'elsahm-d8ebd',
+    storageBucket: 'elsahm-d8ebd.firebasestorage.app',
+    iosBundleId: 'com.example.elsahmApp',
+  );
 
-  static Future<FirebaseOptions> get macos async {
-    final config = await _loadConfig();
-    return FirebaseOptions(
-      apiKey: config['ios_api_key'] ?? '',
-      appId: '1:992039187831:ios:da498421bc792c6ca71d72',
-      messagingSenderId: '992039187831',
-      projectId: 'elsahm-d8ebd',
-      storageBucket: 'elsahm-d8ebd.firebasestorage.app',
-      iosBundleId: 'com.example.elsahmApp',
-    );
-  }
+  static const FirebaseOptions macos = FirebaseOptions(
+    apiKey: 'AIzaSyAVabwLNb49un9jBRC4MqN3Cmx2PALbMk8',
+    appId: '1:992039187831:ios:da498421bc792c6ca71d72',
+    messagingSenderId: '992039187831',
+    projectId: 'elsahm-d8ebd',
+    storageBucket: 'elsahm-d8ebd.firebasestorage.app',
+    iosBundleId: 'com.example.elsahmApp',
+  );
 
-  static Future<FirebaseOptions> get windows async {
-    final config = await _loadConfig();
-    return FirebaseOptions(
-      apiKey: config['web_api_key'] ?? '',
-      appId: '1:992039187831:web:0433e9cafd697f0ea71d72',
-      messagingSenderId: '992039187831',
-      projectId: 'elsahm-d8ebd',
-      authDomain: 'elsahm-d8ebd.firebaseapp.com',
-      storageBucket: 'elsahm-d8ebd.firebasestorage.app',
-    );
-  }
+  static const FirebaseOptions windows = FirebaseOptions(
+    apiKey: 'AIzaSyBco6LHTdUotjBpqwzAwLMOh4A6ERcfgxI',
+    appId: '1:992039187831:web:0433e9cafd697f0ea71d72',
+    messagingSenderId: '992039187831',
+    projectId: 'elsahm-d8ebd',
+    authDomain: 'elsahm-d8ebd.firebaseapp.com',
+    storageBucket: 'elsahm-d8ebd.firebasestorage.app',
+  );
 }
