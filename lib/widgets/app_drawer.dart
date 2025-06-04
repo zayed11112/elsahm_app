@@ -16,6 +16,7 @@ import '../screens/wallet_screen.dart'; // Import wallet screen
 import '../screens/settings_screen.dart'; // Import the new settings screen
 import '../screens/groups_screen.dart'; // Import groups screen
 import '../screens/booking_requests_screen.dart'; // Import booking requests screen
+import '../screens/complaints_screen.dart'; // Import complaints screen
 // import '../screens/settings_screen.dart'; // Placeholder for settings
 
 class AppDrawer extends StatefulWidget {
@@ -224,6 +225,14 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                           text: 'الإعدادات',
                           onTap: () => _navigateToScreen(context, const SettingsScreen()),
                         ),
+                        // Complaints item - only visible for authenticated users
+                        if (authProvider.isAuthenticated)
+                          _buildNavigationItem(
+                            context: context,
+                            svgPath: 'assets/icons/Complaints.svg',
+                            text: 'الشكاوى',
+                            onTap: () => _navigateToScreen(context, const ComplaintsScreen()),
+                          ),
                         _buildNavigationItem(
                           context: context,
                           svgPath: 'assets/icons/phone.svg',

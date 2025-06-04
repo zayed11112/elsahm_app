@@ -27,9 +27,8 @@ import 'apartments_list_screen.dart'; // Import the apartments list screen
 import '../providers/auth_provider.dart'; // Importar AuthProvider
 // Importar AuthUtils
 // Import FirestoreService
-import '../screens/why_choose_us_screen.dart'; // Import WhyChooseUsScreen
 import '../screens/login_screen.dart'; // Import LoginScreen
-import 'featured_properties_screen.dart'; // إضافة استيراد للشاشة الجديدة
+// إضافة استيراد للشاشة الجديدة
 
 // Feature class for Why Choose Us section - moved outside of _HomeScreenState
 class _Feature {
@@ -1513,24 +1512,28 @@ class _HomeScreenState extends State<HomeScreen>
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
-                Text(
-                  'العقارات المميزة',
-                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.all(6),
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.star_rounded,
-                    size: 18,
-                    color: Theme.of(context).colorScheme.secondary,
-                  ),
+                Row(
+                  children: [
+                    Text(
+                      'العقارات المميزة',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.star_rounded,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.secondary,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1564,30 +1567,8 @@ class _HomeScreenState extends State<HomeScreen>
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            mainAxisAlignment: MainAxisAlignment.end,
             children: [
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const FeaturedPropertiesScreen(),
-                    ),
-                  );
-                },
-                icon: Icon(
-                  Icons.arrow_back_ios_rounded,
-                  size: 14,
-                  color: Theme.of(context).colorScheme.secondary,
-                ),
-                label: Text(
-                  'عرض الكل',
-                  style: TextStyle(
-                    color: Theme.of(context).colorScheme.secondary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
               Row(
                 children: [
                   Text(
@@ -1780,27 +1761,6 @@ class _HomeScreenState extends State<HomeScreen>
               );
             },
           ),
-          
-          // زر استكشاف المزيد
-          const SizedBox(height: 16),
-          ElevatedButton.icon(
-            onPressed: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(builder: (_) => const WhyChooseUsScreen()),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: theme.colorScheme.primary,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.arrow_forward_ios, size: 16),
-            label: const Text('استكشاف المزيد'),
-          ),
         ],
       ),
     );
@@ -1896,29 +1856,6 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               );
             }).toList(),
-          ),
-          
-          const SizedBox(height: 24),
-          
-          // زر الاتصال
-          ElevatedButton.icon(
-            onPressed: () async {
-              const phoneNumber = '+201093130120';
-              final url = 'tel:$phoneNumber';
-              if (await canLaunch(url)) {
-                await launch(url);
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Colors.white,
-              foregroundColor: theme.colorScheme.primary,
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
-            icon: const Icon(Icons.phone),
-            label: const Text('اتصل بنا الآن'),
           ),
         ],
       ),

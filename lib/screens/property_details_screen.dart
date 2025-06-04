@@ -2160,19 +2160,19 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
 
             const SizedBox(height: 24),
 
-            // عرض الفيديوهات في مخطط أنيق
-            SizedBox(
-              height: 176, // زيادة الارتفاع لمنع التجاوز
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: videoIds.length,
-                physics: const BouncingScrollPhysics(),
-                padding: const EdgeInsets.only(bottom: 5), // للتظليل
-                itemBuilder: (context, index) {
-                  final videoId = videoIds[index];
-                  return _buildVideoThumbnail(videoId, index);
-                },
-              ),
+            // عرض الفيديوهات في مخطط رأسي (واحد تلو الآخر)
+            ListView.builder(
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              itemCount: videoIds.length,
+              padding: const EdgeInsets.only(bottom: 5),
+              itemBuilder: (context, index) {
+                final videoId = videoIds[index];
+                return Padding(
+                  padding: const EdgeInsets.only(bottom: 16.0),
+                  child: _buildVideoThumbnail(videoId, index),
+                );
+              },
             ),
           ],
         ),
@@ -2197,9 +2197,8 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
             : imageUrls[0];
 
     return Container(
-      width: 220,
-      height: 176, // زيادة الارتفاع بمقدار 2 بيكسل لتفادي التجاوز
-      margin: const EdgeInsets.only(right: 16),
+      width: double.infinity,
+      height: 220,
       decoration: BoxDecoration(
         color: isDarkMode ? const Color(0xFF1E1E1E) : Colors.white,
         borderRadius: BorderRadius.circular(16),
@@ -2234,7 +2233,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                 children: [
                   // خلفية من صورة العقار
                   SizedBox(
-                    height: 124,
+                    height: 160,
                     width: double.infinity,
                     child:
                         backgroundImageUrl.isNotEmpty
@@ -2303,7 +2302,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
 
                   // طبقة شفافة داكنة للتباين
                   Container(
-                    height: 124,
+                    height: 160,
                     decoration: BoxDecoration(
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
@@ -2332,7 +2331,7 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
 
                   // أيقونة التشغيل
                   SizedBox(
-                    height: 124,
+                    height: 160,
                     child: Center(
                       child: Container(
                         width: 54,
@@ -2404,94 +2403,57 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
 
               // معلومات الفيديو - تم تبسيط هذا الجزء لتفادي التجاوز
               SizedBox(
-                height: 52, // ارتفاع ثابت للجزء السفلي
+                height: 60,
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 8,
-                    vertical: 4,
+                    horizontal: 12,
+                    vertical: 8,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.center,
                     children: [
+                      // زر المشاهدة
+                      ElevatedButton.icon(
+                        onPressed: () => _openFullScreenVideo(videoId, index),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: Theme.of(context).primaryColor,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 16,
+                            vertical: 8,
+                          ),
+                        ),
+                        icon: const Icon(Icons.play_arrow, size: 18),
+                        label: const Text('اضغط للمشاهدة'),
+                      ),
+                      // عنوان الفيديو
+                      Expanded(
+                        child: Text(
+                          'فيديو العقار ${index + 1}',
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 15,
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          textAlign: TextAlign.end,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
                       // أيقونة فيديو
                       Container(
                         padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
-                          color:
-                              Theme.of(context).brightness == Brightness.dark
-                                  ? Theme.of(context).primaryColor.withAlpha(38)
-                                  : Theme.of(
-                                    context,
-                                  ).primaryColor.withAlpha(25),
+                          color: Theme.of(context).brightness == Brightness.dark
+                              ? Theme.of(context).primaryColor.withAlpha(38)
+                              : Theme.of(context).primaryColor.withAlpha(25),
                           shape: BoxShape.circle,
                         ),
                         child: Icon(
                           Icons.video_library,
                           size: 16,
                           color: Theme.of(context).primaryColor,
-                        ),
-                      ),
-                      const SizedBox(width: 8),
-                      // نص وصفي للفيديو
-                      Expanded(
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.end,
-                          crossAxisAlignment: CrossAxisAlignment.center,
-                          children: [
-                            // نص وصفي للفيديو
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  Text(
-                                    'فيديو العقار ${index + 1}',
-                                    style: const TextStyle(
-                                      fontWeight: FontWeight.bold,
-                                      fontSize: 13,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.right,
-                                  ),
-                                  Text(
-                                    'اضغط للمشاهدة',
-                                    style: TextStyle(
-                                      color:
-                                          Theme.of(context).brightness ==
-                                                  Brightness.dark
-                                              ? Colors.grey[400]
-                                              : Colors.grey[600],
-                                      fontSize: 11,
-                                    ),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.right,
-                                  ),
-                                ],
-                              ),
-                            ),
-                            const SizedBox(width: 8),
-                            // أيقونة فيديو
-                            Container(
-                              padding: const EdgeInsets.all(6),
-                              decoration: BoxDecoration(
-                                color:
-                                    Theme.of(context).brightness == Brightness.dark
-                                        ? Theme.of(context).primaryColor.withAlpha(38)
-                                        : Theme.of(
-                                          context,
-                                        ).primaryColor.withAlpha(25),
-                                shape: BoxShape.circle,
-                              ),
-                              child: Icon(
-                                Icons.video_library,
-                                size: 16,
-                                color: Theme.of(context).primaryColor,
-                              ),
-                            ),
-                          ],
                         ),
                       ),
                     ],

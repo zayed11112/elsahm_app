@@ -1657,10 +1657,6 @@ class _SearchScreenState extends State<SearchScreen> {
                   _loadInitialProperties();
                   return;
                 }
-
-                if (value.length >= 2) {
-                  _performSearch(value);
-                }
               },
               onSubmitted: (value) => _performSearch(value),
               decoration: InputDecoration(
