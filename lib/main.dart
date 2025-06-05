@@ -168,6 +168,19 @@ Future<void> _initializeApp() async {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
 
+      // تفعيل تسجيل السجلات بمستوى تفصيلي للتصحيح
+      Logger.root.level = Level.FINE;
+      Logger.root.onRecord.listen((record) {
+        debugPrint('${record.level.name}: ${record.time}: ${record.message}');
+        if (record.error != null) {
+          debugPrint('Error: ${record.error}');
+          if (record.stackTrace != null) {
+            debugPrint('Stack trace: ${record.stackTrace}');
+          }
+        }
+      });
+      _logger.info('تم تفعيل نظام السجلات المفصلة');
+
       // ضبط توجيه الشاشة للوضع العمودي فقط للتقليل من استهلاك الموارد
       await SystemChrome.setPreferredOrientations([
         DeviceOrientation.portraitUp,

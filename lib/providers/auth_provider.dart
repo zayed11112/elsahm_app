@@ -433,54 +433,108 @@ class AuthProvider with ChangeNotifier {
       _isLoading = true;
       notifyListeners();
 
-      _logger.info('Starting Google sign in');
+      _logger.info('🔍 بدء عملية تسجيل الدخول بجوجل');
       _isNewUser = true; // Assume new user before authentication
 
+      // إعادة تهيئة مكون GoogleSignIn
+      try {
+        // تدمير المكون الحالي وإعادة إنشائه
+        await _googleSignIn.signOut();
+        _logger.info('🔄 تم إعادة تهيئة مكون GoogleSignIn');
+      } catch (resetError) {
+        _logger.warning('⚠️ خطأ في إعادة تهيئة GoogleSignIn: $resetError');
+        // نتجاهل الخطأ ونستمر
+      }
+
       // Trigger the Google sign-in flow
-      final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+      _logger.info('🔍 جاري استدعاء واجهة تسجيل الدخول من جوجل...');
+      GoogleSignInAccount? googleUser;
+      try {
+        googleUser = await _googleSignIn.signIn();
+      } catch (signInError) {
+        _logger.severe('❌ خطأ في استدعاء واجهة تسجيل الدخول: $signInError');
+        
+        // محاولة مرة أخرى بطريقة بديلة
+        _logger.info('🔄 محاولة استخدام طريقة بديلة للتسجيل...');
+        googleUser = await GoogleSignIn().signIn();
+      }
 
       // If user cancels the sign-in flow
       if (googleUser == null) {
         _status = AuthStatus.unauthenticated;
         notifyListeners();
-        _logger.info('Google Sign In cancelled by user');
+        _logger.info('❌ تم إلغاء تسجيل الدخول بواسطة المستخدم');
         _isLoading = false;
         return false;
       }
 
-      // Obtain the auth details from the request
-      final GoogleSignInAuthentication googleAuth =
-          await googleUser.authentication;
+      _logger.info('✅ تم اختيار حساب جوجل: ${googleUser.email}');
 
-      // Create a new credential
-      final OAuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
+      try {
+        // Obtain the auth details from the request
+        _logger.info('🔍 جاري الحصول على معلومات المصادقة...');
+        final GoogleSignInAuthentication googleAuth =
+            await googleUser.authentication;
 
-      // Sign in to Firebase with the Google credential
-      final UserCredential userCredential = await _auth.signInWithCredential(
-        credential,
-      );
+        _logger.info('✅ تم الحصول على معلومات المصادقة:');
+        _logger.info('   - accessToken: ${googleAuth.accessToken != null ? "موجود" : "غير موجود"}');
+        _logger.info('   - idToken: ${googleAuth.idToken != null ? "موجود" : "غير موجود"}');
 
-      _user = userCredential.user;
-      _isNewUser = false;
-      _logger.info('Google sign in successful - User is new: $_isNewUser');
-      _logger.info(
-        'Google user email: ${userCredential.user?.email}, UID: ${userCredential.user?.uid}',
-      );
-      _logger.info('FCM token will be saved in _onAuthStateChanged method');
+        // التأكد من وجود الرموز المطلوبة
+        if (googleAuth.idToken == null) {
+          _logger.severe('❌ لم يتم الحصول على idToken من جوجل!');
+          _status = AuthStatus.unauthenticated;
+          notifyListeners();
+          _isLoading = false;
+          return false;
+        }
 
-      // State change will be handled by the listener (_onAuthStateChanged)
-      return true;
+        // Create a new credential
+        _logger.info('🔍 إنشاء بيانات اعتماد لفايربيس...');
+        final OAuthCredential credential = GoogleAuthProvider.credential(
+          accessToken: googleAuth.accessToken,
+          idToken: googleAuth.idToken,
+        );
+
+        // Sign in to Firebase with the Google credential
+        _logger.info('🔍 تسجيل الدخول إلى Firebase...');
+        final UserCredential userCredential = await _auth.signInWithCredential(
+          credential,
+        );
+
+        _user = userCredential.user;
+        _isNewUser = false;
+        _logger.info('✅ تسجيل الدخول بنجاح - معرف المستخدم: ${_user?.uid}');
+        _logger.info('✅ البريد الإلكتروني: ${userCredential.user?.email}');
+
+        return true;
+      } catch (innerError) {
+        _logger.severe('❌ خطأ أثناء عملية المصادقة: ${innerError.toString()}');
+        
+        // تفاصيل الخطأ
+        if (innerError is FirebaseAuthException) {
+          _logger.severe('❌ رمز الخطأ: ${innerError.code}');
+          _logger.severe('❌ رسالة الخطأ: ${innerError.message}');
+        }
+        
+        _status = AuthStatus.unauthenticated;
+        notifyListeners();
+        _isLoading = false;
+        return false;
+      }
     } on FirebaseAuthException catch (e) {
-      _logger.severe('Google Sign In Error: ${e.message}');
+      _logger.severe('❌ خطأ مصادقة Firebase: ${e.message}');
+      _logger.severe('❌ رمز الخطأ: ${e.code}');
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       _isLoading = false;
       return false;
     } catch (e) {
-      _logger.severe('Google Sign In Error: $e');
+      _logger.severe('❌ خطأ عام أثناء تسجيل الدخول بجوجل: ${e.toString()}');
+      
+      // طباعة نوع الخطأ
+      _logger.severe('❌ نوع الخطأ: ${e.runtimeType}');
+      
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       _isLoading = false;

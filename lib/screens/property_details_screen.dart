@@ -249,8 +249,49 @@ class _PropertyDetailsScreenState extends State<PropertyDetailsScreen> {
                 child: IconButton(
                   icon: const Icon(Icons.share, color: Colors.white),
                   onPressed: () {
+                    // استخراج البيانات المطلوبة
+                    final String videoLinks = property is Apartment && property.videos.isNotEmpty
+                        ? '🎬 فيديوهات العقار: ${property.videos.join("\n")}'
+                        : '';
+
+                    // العربون والعمولة
+                    final double deposit = property is Apartment ? property.deposit : 0.0;
+                    final double commission = property is Apartment ? property.commission : 0.0;
+                    final String depositStr = deposit > 0 ? '💰 العربون: ${deposit.toStringAsFixed(0)} ج.م' : '';
+                    final String commissionStr = commission > 0 ? '💸 العمولة: ${commission.toStringAsFixed(0)} ج.م' : '';
+                    
+                    // معلومات مميزة
+                    final String infoVip = property is Apartment && property.infoVip != null && property.infoVip!.isNotEmpty
+                        ? '✨ معلومات مميزة: ${property.infoVip}'
+                        : '';
+                    
+                    // مميزات العقار
+                    final String features = property is Apartment && property.features.isNotEmpty
+                        ? '🏠 المميزات: ${property.features.join(" • ")}'
+                        : '';
+
+                    // إنشاء رسالة المشاركة المنسقة
+                    String shareMessage = '''
+🏢 ${propertyTitle}
+📍 ${location}
+💵 السعر: ${price} ${priceType.isNotEmpty ? '($priceType)' : ''}
+$depositStr
+$commissionStr
+$infoVip
+
+$features
+
+${description.isNotEmpty ? '📝 الوصف: $description' : ''}
+
+$videoLinks
+
+📱 حمل تطبيق السهم للتسكين: https://elsahm.netlify.app/
+''';
+
+                    // مشاركة الرسالة
                     Share.share(
-                      'شاهد هذا العقار الرائع: $propertyTitle بسعر $price\n\nتفاصيل: $description',
+                      shareMessage,
+                      subject: 'عقار مميز: $propertyTitle',
                     );
                   },
                 ),

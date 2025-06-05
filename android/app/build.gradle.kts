@@ -89,4 +89,15 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+    // إضافة تبعيات متوافقة من Google Play Services
+    implementation("com.google.android.gms:play-services-auth:21.0.0")
+}
+
+// إضافة لمعالجة تضارب الإصدارات في مكتبات Google
+configurations.all {
+    resolutionStrategy {
+        force("com.google.android.gms:play-services-auth:21.0.0")
+        force("com.google.android.gms:play-services-auth-api-phone:18.0.1")
+        force("com.google.android.gms:play-services-auth-base:18.0.4")
+    }
 }

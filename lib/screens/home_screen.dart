@@ -9,15 +9,18 @@ import 'package:logging/logging.dart'; // Import logging package
 import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:font_awesome_flutter/font_awesome_flutter.dart'; // Import FontAwesome for social icons
 import 'package:url_launcher/url_launcher.dart'; // Import for URL launching
+import 'package:url_launcher/url_launcher_string.dart'; // Import for legacy URL launching methods
 // Import for auto-resizing text
 import 'package:marquee_widget/marquee_widget.dart'; // Import for marquee text effect
 import '../providers/navigation_provider.dart';
 // Import FavoritesProvider
 import '../models/apartment.dart'; // Import the Apartment model
 import '../models/banner.dart' as app_banner; // Import Banner model with prefix
+import '../models/app_update.dart'; // Import the new AppUpdate model
 import '../services/category_service.dart'; // Import CategoryService
 import '../services/banner_service.dart'; // Import BannerService
 import '../services/property_service_supabase.dart'; // Import PropertyServiceSupabase
+import '../services/update_service.dart'; // Import the UpdateService
 import '../screens/categories_screen.dart'; // Import CategoriesScreen
 import '../widgets/typewriter_animated_text.dart'; // Import the TypewriterAnimatedText widget
 // Import the cropped network image widget
@@ -73,6 +76,7 @@ class _HomeScreenState extends State<HomeScreen>
   final PropertyServiceSupabase _propertyService = PropertyServiceSupabase();
   final CategoryService _categoryService = CategoryService();
   final BannerService _bannerService = BannerService();
+  final UpdateService _updateService = UpdateService(); // إضافة خدمة التحديثات
   final Logger _logger = Logger('HomeScreen');
 
   // متغيرات البيانات
@@ -80,11 +84,13 @@ class _HomeScreenState extends State<HomeScreen>
   List<Map<String, dynamic>> _categories = [];
   List<Apartment> _latestApartments = [];
   List<Apartment> _featuredProperties = [];
+  AppUpdate? _appUpdate; // متغير بيانات التحديث
   
   // متغيرات حالة التحميل
   bool _isLoading = true;
   bool _isCategoriesLoading = true;
   bool _isFeaturedLoading = true;
+  bool _isUpdateLoading = true; // حالة تحميل بيانات التحديث
   int _currentBannerIndex = 0;
   
   // متغيرات التحكم في التحديثات
@@ -116,6 +122,7 @@ class _HomeScreenState extends State<HomeScreen>
         await Future.wait([
           _fetchBanners(),
           _fetchCategories(),
+          _fetchAppUpdate(), // إضافة استدعاء دالة جلب بيانات التحديث
         ]);
         
         if (!mounted) return;
@@ -144,6 +151,7 @@ class _HomeScreenState extends State<HomeScreen>
             _isLoading = false;
             _isCategoriesLoading = false;
             _isFeaturedLoading = false;
+            _isUpdateLoading = false;
           });
         }
       }
@@ -218,37 +226,40 @@ class _HomeScreenState extends State<HomeScreen>
             // 2. النص المتحرك - لعرض الميزات والترويج
             _buildAnimatedTextSection(),
             
-            // 3. بنر تسجيل الدخول - للمستخدمين غير المسجلين
+            // 3. قسم تحديث التطبيق - للإشعار بالتحديثات الجديدة
+            _buildAppUpdateSection(),
+            
+            // 4. بنر تسجيل الدخول - للمستخدمين غير المسجلين
             _buildLoginPromotionBanner(),
 
             const SizedBox(height: 12.0),
 
-            // 4. قسم التصنيفات - بتصميم جديد أكثر جاذبية
+            // 5. قسم التصنيفات - بتصميم جديد أكثر جاذبية
             _buildCategoriesHeader(),
             _buildCategoriesSection(),
 
-            // 5. قسم أحدث العقارات
+            // 6. قسم أحدث العقارات
             _buildLatestPropertiesSectionHeader(),
             _buildApartmentsSection(),
 
             const SizedBox(height: 16.0),
 
-            // 6. قسم العقارات المميزة - بتأثيرات جديدة للتمييز
+            // 7. قسم العقارات المميزة - بتأثيرات جديدة للتمييز
             _buildFeaturedPropertiesSection(),
 
             const SizedBox(height: 24.0),
 
-            // 7. قسم لماذا نحن الخيار الأفضل
+            // 8. قسم لماذا نحن الخيار الأفضل
             _buildWhyChooseUsSection(),
 
             const SizedBox(height: 16.0),
 
-            // 8. قسم تواصل معنا - تصميم عصري ومتجاوب
+            // 9. قسم تواصل معنا - تصميم عصري ومتجاوب
             _buildContactUsSection(),
             
             const SizedBox(height: 24.0),
             
-            // 9. قسم معلومات المصمم - في نهاية الصفحة
+            // 10. قسم معلومات المصمم - في نهاية الصفحة
             _buildDesignerInfoSection(),
           ],
         ),
@@ -1035,7 +1046,7 @@ class _HomeScreenState extends State<HomeScreen>
     // سيتم تنفيذها لاحقاً
   }
   
-  // تعديل دالة تحديث البيانات لاستخدام الإشعار مع نص مركزي
+  // تعديل دالة تحديث البيانات لتشمل تحديث معلومات التحديث
   Future<void> _refreshAllData() async {
     if (!mounted) return;
 
@@ -1044,6 +1055,7 @@ class _HomeScreenState extends State<HomeScreen>
         _isLoading = true;
         _isCategoriesLoading = true;
         _isFeaturedLoading = true;
+        _isUpdateLoading = true;
       });
 
       // تنفيذ عمليات التحديث بالتوازي
@@ -1052,6 +1064,7 @@ class _HomeScreenState extends State<HomeScreen>
         _fetchCategories(),
         _fetchLatestApartments(),
         _fetchFeaturedProperties(),
+        _fetchAppUpdate(),
       ]);
 
       if (!mounted) return;
@@ -1071,6 +1084,7 @@ class _HomeScreenState extends State<HomeScreen>
           _isLoading = false;
           _isCategoriesLoading = false;
           _isFeaturedLoading = false;
+          _isUpdateLoading = false;
         });
       }
     }
@@ -1826,9 +1840,16 @@ class _HomeScreenState extends State<HomeScreen>
                 margin: const EdgeInsets.symmetric(horizontal: 8),
                 child: InkWell(
                   onTap: () async {
-                    final url = social['url'] as String;
-                    if (await canLaunch(url)) {
-                      await launch(url);
+                    try {
+                      final url = social['url'] as String;
+                      final Uri uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    } catch (e) {
+                      if (kDebugMode) {
+                        _logger.warning('خطأ في فتح رابط التواصل: $e');
+                      }
                     }
                   },
                   child: Container(
@@ -1942,9 +1963,16 @@ class _HomeScreenState extends State<HomeScreen>
                 margin: const EdgeInsets.symmetric(horizontal: 6),
                 child: InkWell(
                   onTap: () async {
-                    final url = social['url'] as String;
-                    if (await canLaunch(url)) {
-                      await launch(url);
+                    try {
+                      final url = social['url'] as String;
+                      final Uri uri = Uri.parse(url);
+                      if (await canLaunchUrl(uri)) {
+                        await launchUrl(uri, mode: LaunchMode.externalApplication);
+                      }
+                    } catch (e) {
+                      if (kDebugMode) {
+                        _logger.warning('خطأ في فتح رابط التواصل: $e');
+                      }
                     }
                   },
                   child: Container(
@@ -1988,6 +2016,269 @@ class _HomeScreenState extends State<HomeScreen>
               color: isDarkMode ? Colors.grey[500] : Colors.grey[700],
             ),
             textAlign: TextAlign.center,
+          ),
+        ],
+      ),
+    );
+  }
+
+  // دالة جلب بيانات تحديث التطبيق
+  Future<void> _fetchAppUpdate({bool silent = false}) async {
+    if (!mounted) return;
+    
+    try {
+      if (!silent) {
+        setState(() {
+          _isUpdateLoading = true;
+        });
+      }
+      
+      final update = await _updateService.getLatestUpdate();
+      
+      if (!mounted) return;
+      
+      if (kDebugMode) {
+        _logger.info('تم جلب بيانات التحديث: ${update != null ? 'متاح' : 'غير متاح'}');
+      }
+      
+      setState(() {
+        _appUpdate = update;
+        if (!silent) {
+          _isUpdateLoading = false;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+      
+      if (kDebugMode) {
+        _logger.warning('خطأ في جلب بيانات التحديث: $e');
+      }
+      
+      setState(() {
+        if (!silent) {
+          _isUpdateLoading = false;
+        }
+      });
+    }
+  }
+
+  // قسم تحديث التطبيق
+  Widget _buildAppUpdateSection() {
+    // لا نعرض القسم إذا كان التحديث قيد التحميل أو غير متاح أو غير نشط
+    if (_isUpdateLoading || _appUpdate == null || !_appUpdate!.isActive) {
+      return const SizedBox.shrink();
+    }
+    
+    final theme = Theme.of(context);
+    // ignore: unused_local_variable
+    final isDarkMode = theme.brightness == Brightness.dark;
+    
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(int.parse('0xFF${_appUpdate!.primaryColor ?? '3498db'}')),
+            Color(int.parse('0xFF${_appUpdate!.secondaryColor ?? '2980b9'}')),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Color(int.parse('0xFF${_appUpdate!.primaryColor ?? '3498db'}')).withOpacity(0.4),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // عناصر زخرفية في الخلفية
+          Positioned(
+            right: -15,
+            top: -15,
+            child: Container(
+              width: 100,
+              height: 100,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            left: -20,
+            bottom: -20,
+            child: Container(
+              width: 70,
+              height: 70,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          
+          // الأيقونة المتحركة
+          Positioned(
+            left: 15,
+            top: 10,
+            child: Transform.rotate(
+              angle: 0.1,
+              child: Icon(
+                Icons.system_update,
+                size: 28,
+                color: Colors.white.withOpacity(0.3),
+              ),
+            ),
+          ),
+          
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                // أيقونة التحديث
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                    border: Border.all(
+                      color: Colors.white.withOpacity(0.2),
+                      width: 2,
+                    ),
+                  ),
+                  child: const Icon(
+                    Icons.system_update_rounded,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+
+                const SizedBox(width: 16),
+
+                // نص التحديث
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.3),
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: Text(
+                              'v${_appUpdate!.version}',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'تحديث جديد متاح!',
+                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        _appUpdate!.description,
+                        style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                          color: Colors.white.withOpacity(0.9),
+                          height: 1.3,
+                        ),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                ),
+
+                const SizedBox(width: 12),
+
+                // زر التحميل
+                ElevatedButton(
+                  onPressed: () async {
+                    try {
+                      final url = _appUpdate!.downloadUrl;
+                      
+                      if (kDebugMode) {
+                        _logger.info('محاولة فتح الرابط: $url');
+                      }
+                      
+                      // التأكد من أن الرابط يحتوي على بروتوكول
+                      final Uri uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
+                      
+                      // استخدام الطرق الحديثة للتحقق وفتح الروابط
+                      if (await canLaunchUrl(uri)) {
+                        final bool launched = await launchUrl(
+                          uri,
+                          mode: LaunchMode.externalApplication, // إجبار الفتح في متصفح خارجي
+                        );
+                        
+                        if (!launched) {
+                          throw 'فشل في فتح الرابط';
+                        }
+                      } else {
+                        throw 'لا يمكن فتح هذا النوع من الروابط';
+                      }
+                    } catch (e) {
+                      if (kDebugMode) {
+                        _logger.severe('خطأ في فتح رابط التحديث: $e');
+                      }
+                      _showCenteredTextMessage('لا يمكن فتح رابط التحديث', isError: true);
+                    }
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Colors.white,
+                    foregroundColor: Color(int.parse('0xFF${_appUpdate!.primaryColor ?? '3498db'}')),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
+                    elevation: 3,
+                    shadowColor: Colors.black.withOpacity(0.3),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(Icons.download_rounded, size: 18),
+                      SizedBox(width: 6),
+                      Text(
+                        'تحميل',
+                        style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
