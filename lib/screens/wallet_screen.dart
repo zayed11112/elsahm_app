@@ -713,39 +713,21 @@ class _WalletScreenState extends State<WalletScreen>
 
                       // Payment Methods Section
                       Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'طريقة 2',
-                              style: TextStyle(
-                                color: appBarBlue,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
-                              ),
-                            ),
+                          Icon(
+                            Icons.payments_outlined,
+                            color: iconColor,
+                            size: 24,
                           ),
                           const SizedBox(width: 12),
                           Text(
                             'طرق الدفع المتاحة',
                             style: TextStyle(
-                              fontSize: 18,
+                              fontSize: 20,
                               fontWeight: FontWeight.bold,
                               color: textPrimaryColor,
                             ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.payments_outlined,
-                            color: iconColor,
-                            size: 24,
                           ),
                         ],
                       ),
@@ -761,37 +743,30 @@ class _WalletScreenState extends State<WalletScreen>
                         decoration: BoxDecoration(
                           color:
                               isDarkMode
-                                  ? Colors.blue.withOpacity(0.15)
+                                  ? Colors.blue.withValues(alpha: 0.15)
                                   : Colors.blue.shade50,
                           borderRadius: BorderRadius.circular(8),
                           border: Border.all(
                             color:
                                 isDarkMode
-                                    ? Colors.blue.withOpacity(0.3)
+                                    ? Colors.blue.withValues(alpha: 0.3)
                                     : Colors.blue.shade100,
                             width: 1,
                           ),
                         ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.touch_app_rounded,
-                              size: 18,
-                              color: isDarkMode ? accentBlue : appBarBlue,
+                        child: Center(
+                          child: Text(
+                            'اضغط علي الطريقة اللي حولت من خلالها',
+                            style: TextStyle(
+                              fontSize: 13,
+                              color:
+                                  isDarkMode
+                                      ? Colors.blue.shade300
+                                      : Colors.blue.shade800,
+                              fontWeight: FontWeight.w500,
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'اضغط علي الطريقة اللي حولت من خلالها',
-                              style: TextStyle(
-                                fontSize: 13,
-                                color:
-                                    isDarkMode
-                                        ? Colors.blue.shade300
-                                        : Colors.blue.shade800,
-                                fontWeight: FontWeight.w500,
-                              ),
-                            ),
-                          ],
+                            textAlign: TextAlign.center,
+                          ),
                         ),
                       ),
 
@@ -847,30 +822,81 @@ class _WalletScreenState extends State<WalletScreen>
 
                       const SizedBox(height: 16),
 
-                      // رسالة تنبيه للمستخدم
+                      // رسالة تنبيه للمستخدم - محسنة للوضوح
                       Container(
-                        padding: const EdgeInsets.all(12),
-                        margin: const EdgeInsets.symmetric(vertical: 8),
+                        padding: const EdgeInsets.all(16),
+                        margin: const EdgeInsets.symmetric(vertical: 12),
                         decoration: BoxDecoration(
-                          color: Colors.amber.shade50,
-                          borderRadius: BorderRadius.circular(8),
-                          border: Border.all(color: Colors.amber.shade200),
-                        ),
-                        child: Row(
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              color: Colors.amber.shade700,
-                              size: 20,
+                          gradient: LinearGradient(
+                            colors: [
+                              Colors.orange.shade50,
+                              Colors.amber.shade50,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            color: Colors.orange.shade300,
+                            width: 2,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.orange.withValues(alpha: 0.2),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
                             ),
-                            const SizedBox(width: 8),
-                            Expanded(
+                          ],
+                        ),
+                        child: Column(
+                          children: [
+                            Row(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(8),
+                                  decoration: BoxDecoration(
+                                    color: Colors.orange.shade100,
+                                    borderRadius: BorderRadius.circular(20),
+                                  ),
+                                  child: Icon(
+                                    Icons.warning_amber_rounded,
+                                    color: Colors.orange.shade700,
+                                    size: 24,
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                Expanded(
+                                  child: Text(
+                                    'تنبيه مهم',
+                                    style: TextStyle(
+                                      color: Colors.orange.shade800,
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 12),
+                            Container(
+                              padding: const EdgeInsets.all(12),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(
+                                  color: Colors.orange.shade200,
+                                  width: 1,
+                                ),
+                              ),
                               child: Text(
                                 'قم بالتحويل على إحدى طرق الدفع أعلاه ثم أدخل بياناتك واختر صورة إيصال التحويل',
                                 style: TextStyle(
-                                  color: Colors.amber.shade900,
-                                  fontSize: 12,
+                                  color: Colors.orange.shade900,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                  height: 1.4,
                                 ),
+                                textAlign: TextAlign.center,
                               ),
                             ),
                           ],
@@ -880,50 +906,41 @@ class _WalletScreenState extends State<WalletScreen>
                       const SizedBox(height: 16),
 
                       // Amount Input Section
-                      Row(
+                      Column(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'مبلغ الشحن',
-                              style: TextStyle(
-                                color: appBarBlue,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                          // Centered main title with icon
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.account_balance_wallet_outlined,
+                                color: iconColor,
+                                size: 24,
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'المبلغ المراد شحنه',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: textPrimaryColor,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'المبلغ المراد شحنه',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: textPrimaryColor,
+                          const SizedBox(height: 8),
+                          // Centered subtitle
+                          Center(
+                            child: Text(
+                              'أدخل المبلغ أو اختر من المقترحات',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: textSecondaryColor,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.account_balance_wallet_outlined,
-                            color: iconColor,
-                            size: 24,
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'أدخل المبلغ أو اختر من المقترحات',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: textSecondaryColor,
-                        ),
                       ),
                       const SizedBox(height: 12),
 
@@ -944,7 +961,7 @@ class _WalletScreenState extends State<WalletScreen>
                           hintText: 'المبلغ (بالجنيه)',
                           prefixIcon: Icon(
                             Icons.monetization_on,
-                            color: iconColor.withOpacity(0.7),
+                            color: iconColor.withValues(alpha: 0.7),
                           ),
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(8.0),
@@ -986,50 +1003,41 @@ class _WalletScreenState extends State<WalletScreen>
                       const SizedBox(height: 24),
 
                       // User Info Section
-                      Row(
+                      Column(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'بيانات شخصية',
-                              style: TextStyle(
-                                color: appBarBlue,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                          // Centered main title with icon
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.person_outline,
+                                color: iconColor,
+                                size: 24,
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'أدخل بياناتك',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: textPrimaryColor,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'أدخل بياناتك',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: textPrimaryColor,
+                          const SizedBox(height: 8),
+                          // Centered subtitle
+                          Center(
+                            child: Text(
+                              'البيانات المطلوبة للتحقق',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: textSecondaryColor,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.person_outline,
-                            color: iconColor,
-                            size: 24,
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'البيانات المطلوبة للتحقق',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: textSecondaryColor,
-                        ),
                       ),
                       const SizedBox(height: 12),
 
@@ -1186,50 +1194,41 @@ class _WalletScreenState extends State<WalletScreen>
                       const SizedBox(height: 24),
 
                       // Payment Proof Upload Section
-                      Row(
+                      Column(
                         children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            decoration: BoxDecoration(
-                              color: Colors.blue.shade50,
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            child: const Text(
-                              'رفع صورة',
-                              style: TextStyle(
-                                color: appBarBlue,
-                                fontWeight: FontWeight.bold,
-                                fontSize: 14,
+                          // Centered main title with icon
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.image_outlined,
+                                color: iconColor,
+                                size: 24,
                               ),
-                            ),
+                              const SizedBox(width: 12),
+                              Text(
+                                'إثبات التحويل',
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: textPrimaryColor,
+                                ),
+                              ),
+                            ],
                           ),
-                          const SizedBox(width: 12),
-                          Text(
-                            'إثبات التحويل',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: textPrimaryColor,
+                          const SizedBox(height: 8),
+                          // Centered subtitle
+                          Center(
+                            child: Text(
+                              'صورة أو سكرين شوت للإيصال',
+                              style: TextStyle(
+                                fontSize: 14,
+                                color: textSecondaryColor,
+                              ),
+                              textAlign: TextAlign.center,
                             ),
-                          ),
-                          const Spacer(),
-                          Icon(
-                            Icons.image_outlined,
-                            color: iconColor,
-                            size: 24,
                           ),
                         ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        'صورة أو سكرين شوت للإيصال',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: textSecondaryColor,
-                        ),
                       ),
                       const SizedBox(height: 12),
 
@@ -1281,16 +1280,16 @@ class _WalletScreenState extends State<WalletScreen>
                                             color:
                                                 isDarkMode
                                                     ? Colors.black54
-                                                    : Colors.white.withOpacity(
-                                                      0.8,
+                                                    : Colors.white.withValues(
+                                                      alpha: 0.8,
                                                     ),
                                             borderRadius: BorderRadius.circular(
                                               20,
                                             ),
                                             boxShadow: [
                                               BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                  0.1,
+                                                color: Colors.black.withValues(
+                                                  alpha: 0.1,
                                                 ),
                                                 blurRadius: 4,
                                                 offset: const Offset(0, 2),
@@ -1452,7 +1451,7 @@ class _WalletScreenState extends State<WalletScreen>
                 color: surfaceColor,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.1),
+                    color: Colors.black.withValues(alpha: 0.1),
                     blurRadius: 4,
                     offset: const Offset(0, -2),
                   ),
