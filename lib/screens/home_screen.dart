@@ -1,5 +1,6 @@
 import 'dart:async'; // Import for Timer
 import 'package:flutter/material.dart'; // Ensure no 'hide' directive here
+import 'package:flutter/services.dart'; // Import for HapticFeedback
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:provider/provider.dart';
 import 'package:carousel_slider/carousel_slider.dart'
@@ -12,6 +13,10 @@ import 'package:url_launcher/url_launcher.dart'; // Import for URL launching
 import 'package:url_launcher/url_launcher_string.dart'; // Import for legacy URL launching methods
 // Import for auto-resizing text
 import 'package:marquee_widget/marquee_widget.dart'; // Import for marquee text effect
+// ignore: unused_import
+import 'package:permission_handler/permission_handler.dart'; // Import for permission handling
+import 'package:onesignal_flutter/onesignal_flutter.dart'; // Import for OneSignal notifications
+import 'package:shared_preferences/shared_preferences.dart'; // Import for SharedPreferences
 import '../providers/navigation_provider.dart';
 // Import FavoritesProvider
 import '../models/apartment.dart'; // Import the Apartment model
@@ -93,6 +98,10 @@ class _HomeScreenState extends State<HomeScreen>
   bool _isUpdateLoading = true; // حالة تحميل بيانات التحديث
   int _currentBannerIndex = 0;
 
+  // متغيرات إدارة أذونات الإشعارات
+  bool _notificationPermissionGranted = false;
+  bool _isCheckingNotificationPermission = true;
+
   // متغيرات التحكم في التحديثات
   StreamSubscription<List<Apartment>>? _apartmentsStreamSubscription;
   late ScrollController _scrollController;
@@ -117,12 +126,14 @@ class _HomeScreenState extends State<HomeScreen>
       // 2. الفئات (صغيرة وضرورية)
       // 3. العقارات المميزة (محدودة وذات أولوية عالية)
       // 4. أحدث العقارات (قد تكون أكثر عدداً)
+      // 5. فحص أذونات الإشعارات
 
       try {
         await Future.wait([
           _fetchBanners(),
           _fetchCategories(),
           _fetchAppUpdate(), // إضافة استدعاء دالة جلب بيانات التحديث
+          _checkNotificationPermission(), // فحص أذونات الإشعارات
         ]);
 
         if (!mounted) return;
@@ -151,6 +162,7 @@ class _HomeScreenState extends State<HomeScreen>
             _isCategoriesLoading = false;
             _isFeaturedLoading = false;
             _isUpdateLoading = false;
+            _isCheckingNotificationPermission = false;
           });
         }
       }
@@ -233,7 +245,10 @@ class _HomeScreenState extends State<HomeScreen>
 
             const SizedBox(height: 12.0),
 
-            // 5. قسم التصنيفات - بتصميم جديد أكثر جاذبية
+            // 5. قسم تفعيل الإشعارات - يظهر فقط عند عدم تفعيل الإشعارات
+            _buildNotificationPromptSection(),
+
+            // 6. قسم التصنيفات - بتصميم جديد أكثر جاذبية
             _buildCategoriesHeader(),
             _buildCategoriesSection(),
 
@@ -267,6 +282,164 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // --- أقسام الواجهة المقسمة لتسهيل الصيانة ---
+
+  // قسم تفعيل الإشعارات - يظهر فقط عند عدم تفعيل الإشعارات
+  Widget _buildNotificationPromptSection() {
+    // إخفاء القسم إذا كانت الإشعارات مفعلة أو قيد الفحص
+    if (_notificationPermissionGranted || _isCheckingNotificationPermission) {
+      return const SizedBox.shrink();
+    }
+
+    final theme = Theme.of(context);
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topRight,
+          end: Alignment.bottomLeft,
+          colors: [Colors.orange.shade600, Colors.orange.shade700],
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 5),
+          ),
+        ],
+      ),
+      child: Stack(
+        children: [
+          // عناصر زخرفية في الخلفية
+          Positioned(
+            right: -15,
+            top: -15,
+            child: Container(
+              width: 80,
+              height: 80,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+          Positioned(
+            left: -20,
+            bottom: -20,
+            child: Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                color: Colors.white.withOpacity(0.1),
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+
+          // محتوى القسم
+          Padding(
+            padding: const EdgeInsets.all(20.0),
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final bool isCompact = constraints.maxWidth < 350;
+
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // أيقونة الإشعارات
+                    Container(
+                      width: isCompact ? 48 : 56,
+                      height: isCompact ? 48 : 56,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.15),
+                        shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.1),
+                            blurRadius: 8,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: Icon(
+                        Icons.notifications_active_rounded,
+                        color: Colors.white,
+                        size: isCompact ? 24 : 28,
+                      ),
+                    ),
+
+                    SizedBox(width: isCompact ? 12 : 16),
+
+                    // النص التوضيحي
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'فعّل الإشعارات',
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              color: Colors.white,
+                              fontWeight: FontWeight.bold,
+                              fontSize: isCompact ? 16 : 18,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'احصل على إشعارات فورية بأحدث العقارات والعروض المميزة',
+                            style: theme.textTheme.bodyMedium?.copyWith(
+                              color: Colors.white.withOpacity(0.9),
+                              fontSize: isCompact ? 13 : 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    SizedBox(width: isCompact ? 8 : 12),
+
+                    // زر التفعيل
+                    ElevatedButton(
+                      onPressed: _requestNotificationPermission,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.white,
+                        foregroundColor: Colors.orange.shade700,
+                        padding: EdgeInsets.symmetric(
+                          horizontal: isCompact ? 12 : 16,
+                          vertical: 12,
+                        ),
+                        elevation: 3,
+                        shadowColor: Colors.black.withOpacity(0.3),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.notifications_on_rounded,
+                            size: isCompact ? 16 : 18,
+                          ),
+                          if (!isCompact) const SizedBox(width: 6),
+                          if (!isCompact)
+                            const Text(
+                              'تفعيل',
+                              style: TextStyle(fontWeight: FontWeight.bold),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ],
+                );
+              },
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   // قسم النص المتحرك المحسن
   Widget _buildAnimatedTextSection() {
@@ -929,11 +1102,24 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // إضافة دالة مساعدة لإظهار الإشعارات مع نص مركزي
-  void _showCenteredTextMessage(String message, {bool isError = false}) {
+  void _showCenteredTextMessage(
+    String message, {
+    bool isError = false,
+    bool isSuccess = false,
+  }) {
     if (!mounted) return;
 
     // إلغاء أي إشعارات سابقة
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+    Color backgroundColor;
+    if (isError) {
+      backgroundColor = Colors.red.shade600;
+    } else if (isSuccess) {
+      backgroundColor = Colors.green.shade600;
+    } else {
+      backgroundColor = Theme.of(context).colorScheme.secondary;
+    }
 
     // إظهار الإشعار الجديد في أسفل الشاشة مع نص مركزي
     ScaffoldMessenger.of(context).showSnackBar(
@@ -941,15 +1127,28 @@ class _HomeScreenState extends State<HomeScreen>
         content: Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(fontWeight: FontWeight.bold),
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 16,
+            color: Colors.white,
+          ),
         ),
-        backgroundColor:
-            isError ? Colors.red : Theme.of(context).colorScheme.secondary,
-        behavior: SnackBarBehavior.fixed,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-        ),
-        duration: const Duration(seconds: 2),
+        backgroundColor: backgroundColor,
+        behavior: SnackBarBehavior.floating,
+        margin: const EdgeInsets.all(16),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+        duration: Duration(seconds: isSuccess ? 5 : 3),
+        elevation: 8,
+        action:
+            isSuccess
+                ? SnackBarAction(
+                  label: '✓',
+                  textColor: Colors.white,
+                  onPressed: () {
+                    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                  },
+                )
+                : null,
       ),
     );
   }
@@ -1072,6 +1271,131 @@ class _HomeScreenState extends State<HomeScreen>
 
   void _setupApartmentsListener() {
     // سيتم تنفيذها لاحقاً
+  }
+
+  // --- دوال إدارة أذونات الإشعارات ---
+
+  // فحص حالة أذونات الإشعارات
+  Future<void> _checkNotificationPermission() async {
+    if (!mounted) return;
+
+    try {
+      setState(() {
+        _isCheckingNotificationPermission = true;
+      });
+
+      // فحص أذونات OneSignal
+      final permission = OneSignal.Notifications.permission;
+
+      if (kDebugMode) {
+        _logger.info('حالة أذونات الإشعارات: $permission');
+      }
+
+      if (mounted) {
+        setState(() {
+          _notificationPermissionGranted = permission;
+          _isCheckingNotificationPermission = false;
+        });
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        _logger.warning('خطأ في فحص أذونات الإشعارات: $e');
+      }
+
+      if (mounted) {
+        setState(() {
+          _notificationPermissionGranted = false;
+          _isCheckingNotificationPermission = false;
+        });
+      }
+    }
+  }
+
+  // طلب أذونات الإشعارات مع تحسينات إضافية
+  Future<void> _requestNotificationPermission() async {
+    if (!mounted) return;
+
+    try {
+      if (kDebugMode) {
+        _logger.info('طلب أذونات الإشعارات...');
+      }
+
+      // إظهار مؤشر التحميل أثناء طلب الأذونات
+      setState(() {
+        _isCheckingNotificationPermission = true;
+      });
+
+      // إضافة تأخير قصير لإظهار مؤشر التحميل
+      await Future.delayed(const Duration(milliseconds: 500));
+
+      // طلب الأذونات من OneSignal
+      final granted = await OneSignal.Notifications.requestPermission(true);
+
+      if (kDebugMode) {
+        _logger.info('نتيجة طلب الأذونات: $granted');
+      }
+
+      if (mounted) {
+        setState(() {
+          _notificationPermissionGranted = granted;
+          _isCheckingNotificationPermission = false;
+        });
+
+        // إظهار رسالة للمستخدم مع تأثيرات بصرية محسنة
+        if (granted) {
+          _showCenteredTextMessage(
+            '🎉 تم تفعيل الإشعارات بنجاح!\nستصلك إشعارات فورية بأحدث العقارات والعروض المميزة',
+            isSuccess: true,
+          );
+
+          // إضافة تأثير اهتزاز خفيف للتأكيد
+          HapticFeedback.lightImpact();
+
+          // حفظ حالة الموافقة محلياً
+          await _saveNotificationPreference(true);
+        } else {
+          _showCenteredTextMessage(
+            '⚠️ لم يتم تفعيل الإشعارات\nيمكنك تفعيلها لاحقاً من إعدادات التطبيق',
+            isError: true,
+          );
+
+          // حفظ حالة الرفض محلياً
+          await _saveNotificationPreference(false);
+        }
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        _logger.severe('خطأ في طلب أذونات الإشعارات: $e');
+      }
+
+      if (mounted) {
+        setState(() {
+          _isCheckingNotificationPermission = false;
+        });
+
+        _showCenteredTextMessage(
+          '❌ حدث خطأ أثناء طلب أذونات الإشعارات\nيرجى المحاولة مرة أخرى',
+          isError: true,
+        );
+      }
+    }
+  }
+
+  // حفظ تفضيلات الإشعارات محلياً
+  Future<void> _saveNotificationPreference(bool enabled) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setBool('notification_permission_requested', true);
+      await prefs.setBool('notification_permission_granted', enabled);
+
+      if (kDebugMode) {
+        _logger.info('تم حفظ تفضيلات الإشعارات: $enabled');
+      }
+    } catch (e) {
+      if (kDebugMode) {
+        _logger.warning('خطأ في حفظ تفضيلات الإشعارات: $e');
+      }
+    }
   }
 
   // تعديل دالة تحديث البيانات لتشمل تحديث معلومات التحديث

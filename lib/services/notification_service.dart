@@ -30,8 +30,8 @@ class NotificationService {
 
   // Initialize Notification Services
   Future<void> initialize() async {
-    // Request permission for Firebase Messaging (legacy)
-    await _requestPermission();
+    // لا نطلب الأذونات تلقائياً - سيتم طلبها عند الحاجة من خلال واجهة المستخدم
+    // await _requestPermission(); // تم تعطيل الطلب التلقائي للأذونات
 
     // Configure Firebase messaging handlers (legacy)
     FirebaseMessaging.onBackgroundMessage(_firebaseMessagingBackgroundHandler);
@@ -57,19 +57,8 @@ class NotificationService {
     _logger.info('Firebase Messaging initialized for legacy support');
   }
 
-  // Request notification permission (legacy FCM method)
-  Future<void> _requestPermission() async {
-    NotificationSettings settings = await _messaging.requestPermission(
-      alert: true,
-      badge: true,
-      sound: true,
-      provisional: false,
-    );
-
-    _logger.info(
-      'User granted FCM permission: ${settings.authorizationStatus}',
-    );
-  }
+  // تم إزالة دالة _requestPermission لأنها لم تعد مستخدمة
+  // الأذونات ستُطلب يدوياً من خلال واجهة المستخدم عند الحاجة
 
   // Handle foreground message (legacy)
   void _handleForegroundMessage(RemoteMessage message) {

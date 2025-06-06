@@ -21,6 +21,7 @@ import 'firebase_options.dart';
 import 'screens/splash_screen.dart';
 import 'screens/error_screen.dart'; // تم إنشاء هذا الملف
 import 'screens/login_screen.dart'; // Import LoginScreen for routes
+
 // إضافة مفتاح Navigator عام للوصول إلى context بطريقة آمنة
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 // إضافة تحكم في زمن انتظار الاتصال
@@ -243,13 +244,12 @@ Future<void> _initializeOneSignal() async {
     // تكوين OneSignal
     OneSignal.initialize(oneSignalAppId);
 
-    // إضافة مستمع لحالة السماح بالإشعارات (تشخيص)
+    // فحص حالة السماح بالإشعارات (تشخيص فقط - بدون طلب أذونات)
     final permission = OneSignal.Notifications.permission;
     _logger.info('OneSignal Notification permission status: $permission');
 
-    // طلب إذن الإشعارات من المستخدم بشكل صريح
-    bool allowed = await OneSignal.Notifications.requestPermission(true);
-    _logger.info('OneSignal permission was granted: $allowed');
+    // لا نطلب الأذونات تلقائياً - سيتم طلبها عند الحاجة من خلال واجهة المستخدم
+    _logger.info('OneSignal initialized without automatic permission request');
 
     // تمكين الإشعارات في المقدمة بشكل صريح
     OneSignal.Notifications.clearAll();
