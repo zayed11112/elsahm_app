@@ -8,6 +8,10 @@ import '../screens/wallet_screen.dart';
 import 'booking_requests_screen.dart';
 import '../constants/theme.dart';
 import '../widgets/booking_success_dialog.dart';
+import '../widgets/insufficient_balance_dialog.dart';
+import '../widgets/booking_confirmation_dialog.dart';
+// ignore: unused_import
+import '../utils/currency_formatter.dart';
 
 // Define app bar color to match the wallet screen
 const Color appBarBlue = Color(0xFF1976d3);
@@ -447,160 +451,28 @@ class _CheckoutScreenState extends State<CheckoutScreen>
     }
   }
 
-  // عرض مربع حوار عدم كفاية الرصيد
+  // عرض مربع حوار عدم كفاية الرصيد المحسن
   void _showInsufficientBalanceDialog(
     double currentBalance,
     double requiredAmount,
   ) {
-    final formattedCurrentBalance = formatCurrency(currentBalance);
-    final formattedRequiredAmount = formatCurrency(requiredAmount);
-    final formattedMissingAmount = formatCurrency(
-      requiredAmount - currentBalance,
-    );
-
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder:
-          (context) => AlertDialog(
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            title: Row(
-              children: [
-                Icon(
-                  Icons.account_balance_wallet_outlined,
-                  color: Colors.red,
-                  size: 28,
-                ),
-                const SizedBox(width: 10),
-                const Text('رصيد غير كافي'),
-              ],
-            ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const Text(
-                  'رصيد محفظتك لا يكفي لإتمام عملية الحجز',
-                  style: TextStyle(fontWeight: FontWeight.bold),
-                ),
-                const SizedBox(height: 16),
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: Colors.grey.shade100,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: Colors.grey.shade300),
-                  ),
-                  child: Column(
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'رصيدك الحالي:',
-                            style: TextStyle(color: Colors.grey.shade700),
-                          ),
-                          Text(
-                            '$formattedCurrentBalance جنيه',
-                            style: const TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'المبلغ المطلوب:',
-                            style: TextStyle(color: Colors.grey.shade700),
-                          ),
-                          Text(
-                            '$formattedRequiredAmount جنيه',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 8),
-                        child: Divider(),
-                      ),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          const Text(
-                            'المبلغ الناقص:',
-                            style: TextStyle(fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            '$formattedMissingAmount جنيه',
-                            style: const TextStyle(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.red,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 16),
-                const Text(
-                  'يرجى شحن محفظتك بمبلغ كافٍ لإتمام عملية الحجز.',
-                  style: TextStyle(
-                    fontStyle: FontStyle.italic,
-                    color: Colors.grey,
-                  ),
-                ),
-              ],
-            ),
-            actions: [
-              OutlinedButton(
-                onPressed: () {
-                  _hideNotificationsOnBack();
-                  Navigator.of(context).pop(); // إغلاق الحوار
-                },
-                style: OutlinedButton.styleFrom(
-                  side: BorderSide(
-                    color: Theme.of(context).colorScheme.primary,
-                  ),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-                child: const Text('إلغاء'),
-              ),
-              ElevatedButton.icon(
-                onPressed: () {
-                  _hideNotificationsOnBack();
-                  Navigator.of(context).pop(); // إغلاق الحوار
-                  // الانتقال إلى شاشة شحن الرصيد
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => const WalletScreen(),
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.add_circle_outline, size: 18),
-                label: const Text('شحن المحفظة'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                ),
-              ),
-            ],
-            actionsPadding: const EdgeInsets.symmetric(
-              horizontal: 16,
-              vertical: 12,
-            ),
-            actionsAlignment: MainAxisAlignment.spaceBetween,
+          (context) => InsufficientBalanceDialog(
+            currentBalance: currentBalance,
+            requiredAmount: requiredAmount,
+            onClose: () {
+              _hideNotificationsOnBack();
+            },
+            onTopUp: () {
+              _hideNotificationsOnBack();
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const WalletScreen()),
+              );
+            },
           ),
     );
   }
@@ -628,87 +500,27 @@ class _CheckoutScreenState extends State<CheckoutScreen>
 
   // عرض مربع حوار التأكيد قبل إتمام الحجز
   Future<bool> _showConfirmationDialog(double totalAmount) async {
-    // المبلغ المطلوب بتنسيق مناسب
-    final String formattedAmount = formatCurrency(totalAmount);
+    // استخراج معلومات الحجز
+    final String propertyName =
+        _propertyDetails != null && _propertyDetails!['name'] != null
+            ? _propertyDetails!['name']
+            : widget.propertyName;
 
     return await showDialog<bool>(
           context: context,
           barrierDismissible: false, // يجب على المستخدم الاختيار
           builder: (BuildContext dialogContext) {
-            return AlertDialog(
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(16),
-              ),
-              title: Row(
-                children: [
-                  Icon(
-                    Icons.warning_amber_rounded,
-                    color: Colors.amber,
-                    size: 28,
-                  ),
-                  const SizedBox(width: 10),
-                  const Text('تأكيد الحجز'),
-                ],
-              ),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const Text(
-                    'هل أنت متأكد من إتمام عملية الحجز؟',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: 12),
-                  Text(
-                    'سيتم خصم المبلغ الإجمالي ($formattedAmount جنيه) من رصيد محفظتك.',
-                    style: TextStyle(color: Colors.grey.shade700, height: 1.5),
-                  ),
-                ],
-              ),
-              actions: [
-                OutlinedButton(
-                  onPressed: () {
-                    _hideNotificationsOnBack();
-                    Navigator.of(dialogContext).pop(false); // إلغاء
-                  },
-                  style: OutlinedButton.styleFrom(
-                    side: BorderSide(
-                      color: Theme.of(context).colorScheme.primary,
-                    ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                  ),
-                  child: const Text('إلغاء'),
-                ),
-                ElevatedButton(
-                  onPressed: () {
-                    _hideNotificationsOnBack();
-                    Navigator.of(dialogContext).pop(true); // تأكيد
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Theme.of(context).colorScheme.primary,
-                    foregroundColor: Colors.white,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 10,
-                    ),
-                  ),
-                  child: const Text('تأكيد الحجز'),
-                ),
-              ],
-              actionsPadding: const EdgeInsets.symmetric(
-                horizontal: 16,
-                vertical: 12,
-              ),
-              actionsAlignment: MainAxisAlignment.spaceBetween,
+            return BookingConfirmationDialog(
+              totalAmount: totalAmount,
+              propertyName: propertyName,
+              deposit: _propertyDeposit,
+              commission: _propertyCommission,
+              onConfirm: () {
+                _hideNotificationsOnBack();
+              },
+              onCancel: () {
+                _hideNotificationsOnBack();
+              },
             );
           },
         ) ??
@@ -1129,46 +941,7 @@ class _CheckoutScreenState extends State<CheckoutScreen>
                                   ),
                                   const SizedBox(height: 16),
 
-                                  // حقل العمولة
-                                  TextFormField(
-                                    controller: _commissionController,
-                                    decoration: InputDecoration(
-                                      labelText: 'العمولة',
-                                      prefixIcon: const Icon(
-                                        Icons.monetization_on,
-                                      ),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    readOnly: true,
-                                    enabled: false,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
-                                  const SizedBox(height: 16),
-
-                                  // حقل العربون
-                                  TextFormField(
-                                    controller: _depositController,
-                                    decoration: InputDecoration(
-                                      labelText: 'العربون',
-                                      prefixIcon: const Icon(Icons.payment),
-                                      border: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                    ),
-                                    keyboardType: TextInputType.number,
-                                    readOnly: true,
-                                    enabled: false,
-                                    style: TextStyle(
-                                      color: Colors.grey.shade700,
-                                      fontWeight: FontWeight.bold,
-                                    ),
-                                  ),
+                                  // تم إخفاء حقلي العمولة والعربون حسب الطلب
                                   const SizedBox(height: 24),
 
                                   // إظهار إجمالي المبلغ المطلوب بطريقة احترافية

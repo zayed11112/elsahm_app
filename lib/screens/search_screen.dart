@@ -174,7 +174,7 @@ class _SearchScreenState extends State<SearchScreen> {
   void _updatePaginatedResults() {
     final startIndex = _currentPage * _itemsPerPage;
     final endIndex = min(startIndex + _itemsPerPage, _searchResults.length);
-    
+
     if (startIndex < _searchResults.length) {
       _paginatedResults = _searchResults.sublist(startIndex, endIndex);
     } else {
@@ -188,7 +188,7 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() {
         _isLoadingPage = true;
       });
-      
+
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           setState(() {
@@ -196,7 +196,7 @@ class _SearchScreenState extends State<SearchScreen> {
             _updatePaginatedResults();
             _isLoadingPage = false;
           });
-          
+
           _scrollToTop();
         }
       });
@@ -209,7 +209,7 @@ class _SearchScreenState extends State<SearchScreen> {
       setState(() {
         _isLoadingPage = true;
       });
-      
+
       Future.delayed(const Duration(milliseconds: 300), () {
         if (mounted) {
           setState(() {
@@ -217,7 +217,7 @@ class _SearchScreenState extends State<SearchScreen> {
             _updatePaginatedResults();
             _isLoadingPage = false;
           });
-          
+
           _scrollToTop();
         }
       });
@@ -495,11 +495,7 @@ class _SearchScreenState extends State<SearchScreen> {
         title: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.search,
-              color: Colors.white,
-              size: 22,
-            ),
+            const Icon(Icons.search, color: Colors.white, size: 22),
             const SizedBox(width: 8),
             const Text(
               'البحث',
@@ -653,150 +649,203 @@ class _SearchScreenState extends State<SearchScreen> {
                   ),
                 )
                 : Column(
-                    children: [
-                      Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: GridView.builder(
-                          key: ValueKey('${_currentPage}_${_paginatedResults.length}'),
-                    shrinkWrap: true,
-                    physics: const NeverScrollableScrollPhysics(),
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
-                          crossAxisCount: 2,
-                          childAspectRatio: 0.75,
-                          crossAxisSpacing: 16,
-                          mainAxisSpacing: 16,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(16.0),
+                      child: GridView.builder(
+                        key: ValueKey(
+                          '${_currentPage}_${_paginatedResults.length}',
                         ),
-                          itemCount: _paginatedResults.length,
-                    itemBuilder: (context, index) {
-                            final apartment = _paginatedResults[index];
-                      return AnimatedContainer(
-                        duration: Duration(milliseconds: 300 + (index * 50)),
-                        curve: Curves.easeOutBack,
-                        child: _buildPropertyCard(apartment),
-                      );
-                    },
-                  ),
-                ),
-                      
-                      // Pagination controls
-                      if (_totalPages > 1)
-                        Container(
-                          margin: const EdgeInsets.only(top: 12, bottom: 24),
-                          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 8.0),
-                          child: Column(
-                            children: [
-                              // أزرار التنقل بتصميم جديد
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                                      Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                                    ],
-                                    begin: Alignment.topCenter,
-                                    end: Alignment.bottomCenter,
-                                  ),
-                                  borderRadius: BorderRadius.circular(20),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Theme.of(context).colorScheme.primary.withOpacity(0.08),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 2),
-                                    ),
-                                  ],
-                                ),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    _buildPaginationButton(
-                                      icon: Icons.keyboard_double_arrow_left_rounded,
-                                      onPressed: (_currentPage > 0 && !_isLoadingPage) ? () {
-                                        setState(() {
-                                          _currentPage = 0;
-                                          _isLoadingPage = true;
-                                        });
-                                        
-                                        Future.delayed(const Duration(milliseconds: 300), () {
-                                          if (mounted) {
-                                            setState(() {
-                                              _updatePaginatedResults();
-                                              _isLoadingPage = false;
-                                            });
-                                            _scrollToTop();
-                                          }
-                                        });
-                                      } : null,
-                                      isLoading: false,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    _buildPaginationButton(
-                                      icon: Icons.arrow_back_ios_rounded,
-                                      onPressed: (_currentPage > 0 && !_isLoadingPage) ? _previousPage : null,
-                                      isLoading: false,
-                                    ),
-                                    Container(
-                                      margin: const EdgeInsets.symmetric(horizontal: 12),
-                                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
-                                      decoration: BoxDecoration(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        borderRadius: BorderRadius.circular(16),
-                                        boxShadow: [
-                                          BoxShadow(
-                                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                                            blurRadius: 6,
-                                            offset: const Offset(0, 2),
-                                          ),
-                                        ],
-                                      ),
-                                      child: Text(
-                                        '${_currentPage + 1} / $_totalPages',
-                                        style: const TextStyle(
-                                          color: Colors.white,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                        ),
-                                      ),
-                                    ),
-                                    _buildPaginationButton(
-                                      icon: Icons.arrow_forward_ios_rounded,
-                                      onPressed: (_currentPage < _totalPages - 1 && !_isLoadingPage) ? _nextPage : null,
-                                      isLoading: _isLoadingPage,
-                                    ),
-                                    const SizedBox(width: 4),
-                                    _buildPaginationButton(
-                                      icon: Icons.keyboard_double_arrow_right_rounded,
-                                      onPressed: (_currentPage < _totalPages - 1 && !_isLoadingPage) ? () {
-                                        setState(() {
-                                          _currentPage = _totalPages - 1;
-                                          _isLoadingPage = true;
-                                        });
-                                        
-                                        Future.delayed(const Duration(milliseconds: 300), () {
-                                          if (mounted) {
-                                            setState(() {
-                                              _updatePaginatedResults();
-                                              _isLoadingPage = false;
-                                            });
-                                            _scrollToTop();
-                                          }
-                                        });
-                                      } : null,
-                                      isLoading: false,
-                                    ),
-                                  ],
-                                ),
+                        shrinkWrap: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        gridDelegate:
+                            const SliverGridDelegateWithFixedCrossAxisCount(
+                              crossAxisCount: 2,
+                              childAspectRatio: 0.75,
+                              crossAxisSpacing: 16,
+                              mainAxisSpacing: 16,
+                            ),
+                        itemCount: _paginatedResults.length,
+                        itemBuilder: (context, index) {
+                          final apartment = _paginatedResults[index];
+                          return AnimatedContainer(
+                            duration: Duration(
+                              milliseconds: 300 + (index * 50),
+                            ),
+                            curve: Curves.easeOutBack,
+                            child: _buildPropertyCard(apartment),
+                          );
+                        },
+                      ),
+                    ),
+
+                    // Pagination controls
+                    if (_totalPages > 1)
+                      Container(
+                        margin: const EdgeInsets.only(top: 12, bottom: 24),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 16.0,
+                          vertical: 8.0,
+                        ),
+                        child: Column(
+                          children: [
+                            // أزرار التنقل بتصميم جديد
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 10,
                               ),
-                            ],
-                          ),
+                              decoration: BoxDecoration(
+                                gradient: LinearGradient(
+                                  colors: [
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.05),
+                                    Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.1),
+                                  ],
+                                  begin: Alignment.topCenter,
+                                  end: Alignment.bottomCenter,
+                                ),
+                                borderRadius: BorderRadius.circular(20),
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Theme.of(
+                                      context,
+                                    ).colorScheme.primary.withOpacity(0.08),
+                                    blurRadius: 8,
+                                    offset: const Offset(0, 2),
+                                  ),
+                                ],
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  _buildPaginationButton(
+                                    icon:
+                                        Icons
+                                            .keyboard_double_arrow_left_rounded,
+                                    onPressed:
+                                        (_currentPage > 0 && !_isLoadingPage)
+                                            ? () {
+                                              setState(() {
+                                                _currentPage = 0;
+                                                _isLoadingPage = true;
+                                              });
+
+                                              Future.delayed(
+                                                const Duration(
+                                                  milliseconds: 300,
+                                                ),
+                                                () {
+                                                  if (mounted) {
+                                                    setState(() {
+                                                      _updatePaginatedResults();
+                                                      _isLoadingPage = false;
+                                                    });
+                                                    _scrollToTop();
+                                                  }
+                                                },
+                                              );
+                                            }
+                                            : null,
+                                    isLoading: false,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  _buildPaginationButton(
+                                    icon: Icons.arrow_back_ios_rounded,
+                                    onPressed:
+                                        (_currentPage > 0 && !_isLoadingPage)
+                                            ? _previousPage
+                                            : null,
+                                    isLoading: false,
+                                  ),
+                                  Container(
+                                    margin: const EdgeInsets.symmetric(
+                                      horizontal: 12,
+                                    ),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 14,
+                                      vertical: 8,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                      borderRadius: BorderRadius.circular(16),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.3),
+                                          blurRadius: 6,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: Text(
+                                      '${_currentPage + 1} / $_totalPages',
+                                      style: const TextStyle(
+                                        color: Colors.white,
+                                        fontWeight: FontWeight.bold,
+                                        fontSize: 14,
+                                      ),
+                                    ),
+                                  ),
+                                  _buildPaginationButton(
+                                    icon: Icons.arrow_forward_ios_rounded,
+                                    onPressed:
+                                        (_currentPage < _totalPages - 1 &&
+                                                !_isLoadingPage)
+                                            ? _nextPage
+                                            : null,
+                                    isLoading: _isLoadingPage,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  _buildPaginationButton(
+                                    icon:
+                                        Icons
+                                            .keyboard_double_arrow_right_rounded,
+                                    onPressed:
+                                        (_currentPage < _totalPages - 1 &&
+                                                !_isLoadingPage)
+                                            ? () {
+                                              setState(() {
+                                                _currentPage = _totalPages - 1;
+                                                _isLoadingPage = true;
+                                              });
+
+                                              Future.delayed(
+                                                const Duration(
+                                                  milliseconds: 300,
+                                                ),
+                                                () {
+                                                  if (mounted) {
+                                                    setState(() {
+                                                      _updatePaginatedResults();
+                                                      _isLoadingPage = false;
+                                                    });
+                                                    _scrollToTop();
+                                                  }
+                                                },
+                                              );
+                                            }
+                                            : null,
+                                    isLoading: false,
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
                         ),
-                      
-                      // إضافة مساحة في الأسفل لرفع أزرار التنقل للأعلى
-                      const SizedBox(height: 70),
-                    ],
-                  ),
+                      ),
+
+                    // إضافة مساحة في الأسفل لرفع أزرار التنقل للأعلى
+                    const SizedBox(height: 70),
+                  ],
+                ),
           ],
         ),
       ),
@@ -1012,7 +1061,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                   if (mounted) {
                                     // إلغاء أي إشعارات سابقة
                                     scaffoldMessenger.hideCurrentSnackBar();
-                                    
+
                                     // عرض الإشعار الجديد بنص مركزي
                                     scaffoldMessenger.showSnackBar(
                                       SnackBar(
@@ -1026,10 +1075,15 @@ class _SearchScreenState extends State<SearchScreen> {
                                           ),
                                         ),
                                         duration: const Duration(seconds: 2),
-                                        backgroundColor: Theme.of(context).colorScheme.secondary,
+                                        backgroundColor:
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.secondary,
                                         behavior: SnackBarBehavior.fixed,
                                         shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                                          borderRadius: BorderRadius.vertical(
+                                            top: Radius.circular(10),
+                                          ),
                                         ),
                                       ),
                                     );
@@ -1080,13 +1134,13 @@ class _SearchScreenState extends State<SearchScreen> {
                 ),
               ),
 
-              // Property Info with improved layout
+              // Property Info with enhanced layout and additional details
               Padding(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    // Title with better styling
+                    // Title with enhanced styling
                     Text(
                       apartment.name,
                       style: TextStyle(
@@ -1095,21 +1149,30 @@ class _SearchScreenState extends State<SearchScreen> {
                         color: isDarkMode ? Colors.white : Colors.black87,
                         height: 1.3,
                       ),
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(height: 12),
 
-                    // Location with improved icon alignment
+                    // Location with enhanced icon and styling
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(
-                          Icons.location_on,
-                          size: 16,
-                          color: theme.colorScheme.primary,
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(
+                            color: theme.colorScheme.primary.withValues(
+                              alpha: 0.1,
+                            ),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Icon(
+                            Icons.location_on_rounded,
+                            size: 14,
+                            color: theme.colorScheme.primary,
+                          ),
                         ),
-                        const SizedBox(width: 4),
+                        const SizedBox(width: 8),
                         Expanded(
                           child: Text(
                             apartment.location,
@@ -1120,6 +1183,7 @@ class _SearchScreenState extends State<SearchScreen> {
                                       ? Colors.grey[300]
                                       : Colors.grey[700],
                               height: 1.3,
+                              fontWeight: FontWeight.w500,
                             ),
                             maxLines: 2,
                             overflow: TextOverflow.ellipsis,
@@ -1128,10 +1192,19 @@ class _SearchScreenState extends State<SearchScreen> {
                       ],
                     ),
 
-                    // Add a subtle separator
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 8),
-                      child: Divider(height: 1),
+                    // Subtle separator with gradient
+                    Container(
+                      margin: const EdgeInsets.symmetric(vertical: 12),
+                      height: 1,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [
+                            Colors.transparent,
+                            theme.colorScheme.primary.withValues(alpha: 0.3),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -1182,7 +1255,10 @@ class _SearchScreenState extends State<SearchScreen> {
                 child: TextButton.icon(
                   onPressed: _resetFilters,
                   style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 6,
+                      vertical: 2,
+                    ),
                     minimumSize: const Size(0, 0),
                     tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                   ),
@@ -1269,10 +1345,7 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 0,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                 height: 32,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -1330,7 +1403,7 @@ class _SearchScreenState extends State<SearchScreen> {
           ),
         ),
         const SizedBox(height: 8),
-        
+
         // Second filter: Area (المنطقة)
         Container(
           padding: const EdgeInsets.all(8),
@@ -1376,10 +1449,7 @@ class _SearchScreenState extends State<SearchScreen> {
               ),
               const SizedBox(height: 4),
               Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 8,
-                  vertical: 0,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 0),
                 height: 32,
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
@@ -1765,60 +1835,69 @@ class _SearchScreenState extends State<SearchScreen> {
   }) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     return Material(
       color: Colors.transparent,
       child: Ink(
         decoration: BoxDecoration(
-          color: onPressed == null
-              ? (isDarkMode ? Colors.grey[800]!.withOpacity(0.5) : Colors.grey[200]!.withOpacity(0.7))
-              : isDarkMode 
-                ? theme.colorScheme.primary.withOpacity(0.2)
-                : Colors.white,
+          color:
+              onPressed == null
+                  ? (isDarkMode
+                      ? Colors.grey[800]!.withValues(alpha: 0.5)
+                      : Colors.grey[200]!.withValues(alpha: 0.7))
+                  : isDarkMode
+                  ? theme.colorScheme.primary.withValues(alpha: 0.2)
+                  : Colors.white,
           borderRadius: BorderRadius.circular(14),
           border: Border.all(
-            color: onPressed == null
-                ? Colors.transparent
-                : theme.colorScheme.primary.withOpacity(0.3),
+            color:
+                onPressed == null
+                    ? Colors.transparent
+                    : theme.colorScheme.primary.withValues(alpha: 0.3),
             width: 1,
           ),
-          boxShadow: onPressed == null
-              ? null
-              : [
-                  BoxShadow(
-                    color: theme.colorScheme.primary.withOpacity(0.1),
-                    blurRadius: 4,
-                    offset: const Offset(0, 2),
-                  ),
-                ],
+          boxShadow:
+              onPressed == null
+                  ? null
+                  : [
+                    BoxShadow(
+                      color: theme.colorScheme.primary.withValues(alpha: 0.1),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
         ),
         child: InkWell(
           onTap: onPressed,
           borderRadius: BorderRadius.circular(14),
-          splashColor: theme.colorScheme.primary.withOpacity(0.1),
-          highlightColor: theme.colorScheme.primary.withOpacity(0.05),
+          splashColor: theme.colorScheme.primary.withValues(alpha: 0.1),
+          highlightColor: theme.colorScheme.primary.withValues(alpha: 0.05),
           child: Container(
             padding: const EdgeInsets.all(10),
             width: 36,
             height: 36,
-            child: isLoading 
-                ? SizedBox(
-                    width: 16,
-                    height: 16,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      valueColor: AlwaysStoppedAnimation<Color>(
-                        theme.colorScheme.primary,
+            child:
+                isLoading
+                    ? SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          theme.colorScheme.primary,
+                        ),
                       ),
+                    )
+                    : Icon(
+                      icon,
+                      size: 16,
+                      color:
+                          onPressed == null
+                              ? (isDarkMode
+                                  ? Colors.grey[600]
+                                  : Colors.grey[400])
+                              : theme.colorScheme.primary,
                     ),
-                  )
-                : Icon(
-                    icon,
-                    size: 16,
-                    color: onPressed == null
-                        ? (isDarkMode ? Colors.grey[600] : Colors.grey[400])
-                        : theme.colorScheme.primary,
-                  ),
           ),
         ),
       ),

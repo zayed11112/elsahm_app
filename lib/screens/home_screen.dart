@@ -85,21 +85,21 @@ class _HomeScreenState extends State<HomeScreen>
   List<Apartment> _latestApartments = [];
   List<Apartment> _featuredProperties = [];
   AppUpdate? _appUpdate; // متغير بيانات التحديث
-  
+
   // متغيرات حالة التحميل
   bool _isLoading = true;
   bool _isCategoriesLoading = true;
   bool _isFeaturedLoading = true;
   bool _isUpdateLoading = true; // حالة تحميل بيانات التحديث
   int _currentBannerIndex = 0;
-  
+
   // متغيرات التحكم في التحديثات
   StreamSubscription<List<Apartment>>? _apartmentsStreamSubscription;
   late ScrollController _scrollController;
-  
+
   // توقيت لإعادة جلب البيانات - للتحكم في عدد الطلبات
   Timer? _refreshTimer;
-  
+
   // تحسين الأداء من خلال تخزين القيم السابقة
 
   @override
@@ -112,25 +112,24 @@ class _HomeScreenState extends State<HomeScreen>
   // دالة جديدة لتنظيم وتسلسل تهيئة البيانات
   void _initializeData() {
     Future.microtask(() async {
-      // الترتيب الأمثل للتحميل: 
+      // الترتيب الأمثل للتحميل:
       // 1. البانرات (صغيرة وسريعة)
       // 2. الفئات (صغيرة وضرورية)
       // 3. العقارات المميزة (محدودة وذات أولوية عالية)
       // 4. أحدث العقارات (قد تكون أكثر عدداً)
-      
+
       try {
         await Future.wait([
           _fetchBanners(),
           _fetchCategories(),
           _fetchAppUpdate(), // إضافة استدعاء دالة جلب بيانات التحديث
         ]);
-        
+
         if (!mounted) return;
-        
+
         // تحديث الواجهة بعد تحميل البانرات والفئات
-        setState(() {
-        });
-        
+        setState(() {});
+
         // استكمال التحميل بشكل متوازٍ
         await Future.wait([
           _fetchFeaturedProperties(),
@@ -173,19 +172,19 @@ class _HomeScreenState extends State<HomeScreen>
       // حساب موضع العناصر المرئية حالياً
       final offset = _scrollController.offset;
       final screenHeight = MediaQuery.of(context).size.height;
-      
+
       // البانرات: تحديث إذا كان المستخدم لا يشاهدها حالياً
       if (offset > 250) {
         await _fetchBanners(silent: true);
       }
-      
+
       // الفئات: تحديث إذا كان المستخدم لا يشاهدها حالياً
       if (offset > 400 || offset < 100) {
         await _fetchCategories(silent: true);
       }
-      
+
       // العقارات المميزة والأحدث: تحديث بناءً على موضع التمرير
-      if (offset > screenHeight || offset < screenHeight/2) {
+      if (offset > screenHeight || offset < screenHeight / 2) {
         await _fetchFeaturedProperties(silent: true);
         await _fetchLatestApartments(silent: true);
       }
@@ -225,10 +224,10 @@ class _HomeScreenState extends State<HomeScreen>
 
             // 2. النص المتحرك - لعرض الميزات والترويج
             _buildAnimatedTextSection(),
-            
+
             // 3. قسم تحديث التطبيق - للإشعار بالتحديثات الجديدة
             _buildAppUpdateSection(),
-            
+
             // 4. بنر تسجيل الدخول - للمستخدمين غير المسجلين
             _buildLoginPromotionBanner(),
 
@@ -254,13 +253,13 @@ class _HomeScreenState extends State<HomeScreen>
 
             const SizedBox(height: 16.0),
 
-            // 9. قسم تواصل معنا - تصميم عصري ومتجاوب
-            _buildContactUsSection(),
-            
-            const SizedBox(height: 24.0),
-            
-            // 10. قسم معلومات المصمم - في نهاية الصفحة
+            // 9. قسم معلومات المصمم - معلومات المطور
             _buildDesignerInfoSection(),
+
+            const SizedBox(height: 24.0),
+
+            // 10. قسم تواصل معنا - تصميم عصري ومتجاوب
+            _buildContactUsSection(),
           ],
         ),
       ),
@@ -268,7 +267,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // --- أقسام الواجهة المقسمة لتسهيل الصيانة ---
-  
+
   // قسم النص المتحرك المحسن
   Widget _buildAnimatedTextSection() {
     return Padding(
@@ -294,7 +293,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-  
+
   // عنوان قسم الفئات - تم تحسينه بإضافة رموز وتأثيرات
   Widget _buildCategoriesHeader() {
     return Padding(
@@ -304,11 +303,14 @@ class _HomeScreenState extends State<HomeScreen>
         children: [
           TextButton.icon(
             onPressed: () {
-              Provider.of<NavigationProvider>(context, listen: false).setIndex(2);
+              Provider.of<NavigationProvider>(
+                context,
+                listen: false,
+              ).setIndex(2);
             },
             icon: Icon(
-              Icons.grid_view_rounded, 
-              size: 18, 
+              Icons.grid_view_rounded,
+              size: 18,
               color: Theme.of(context).colorScheme.primary,
             ),
             label: Text(
@@ -323,9 +325,9 @@ class _HomeScreenState extends State<HomeScreen>
             children: [
               Text(
                 'تصفح حسب الفئات',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: 8),
               Container(
@@ -346,7 +348,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-  
+
   // عنوان أحدث العقارات - تصميم جديد أكثر وضوحاً
   Widget _buildLatestPropertiesSectionHeader() {
     return Padding(
@@ -359,12 +361,14 @@ class _HomeScreenState extends State<HomeScreen>
               onPressed: () {
                 Navigator.push(
                   context,
-                  MaterialPageRoute(builder: (context) => const ApartmentsListScreen()),
+                  MaterialPageRoute(
+                    builder: (context) => const ApartmentsListScreen(),
+                  ),
                 );
               },
               icon: Icon(
-                Icons.arrow_back_ios_rounded, 
-                size: 14, 
+                Icons.arrow_back_ios_rounded,
+                size: 14,
                 color: Theme.of(context).colorScheme.primary,
               ),
               label: Text(
@@ -379,9 +383,9 @@ class _HomeScreenState extends State<HomeScreen>
             children: [
               Text(
                 'أحدث العقارات',
-                style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                  fontWeight: FontWeight.bold,
-                ),
+                style: Theme.of(
+                  context,
+                ).textTheme.titleLarge?.copyWith(fontWeight: FontWeight.bold),
               ),
               const SizedBox(width: 8),
               Container(
@@ -404,9 +408,9 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // --- دوال جلب البيانات المحسنة ---
-  
+
   // سيتم لاحقاً تنفيذ بقية دوال جلب البيانات وبناء الأقسام المختلفة
-  
+
   // دالة البانر المُحسنة
   Widget _buildBannerCarousel() {
     // إذا كانت البانرات قيد التحميل، نعرض مؤشر تحميل محسن
@@ -438,9 +442,10 @@ class _HomeScreenState extends State<HomeScreen>
     }
 
     // تحضير مصادر البانر (من API أو استخدام الصور الاحتياطية)
-    final List<String> bannerSources = _banners.isNotEmpty
-        ? _banners.map((banner) => banner.imageUrl).toList()
-        : fallbackBannerImages;
+    final List<String> bannerSources =
+        _banners.isNotEmpty
+            ? _banners.map((banner) => banner.imageUrl).toList()
+            : fallbackBannerImages;
 
     // تصميم محسن للبانر مع تأثيرات انتقالية
     return Column(
@@ -462,54 +467,55 @@ class _HomeScreenState extends State<HomeScreen>
                 });
               },
             ),
-            items: bannerSources.map((item) {
-              return Builder(
-                builder: (BuildContext context) {
-                  return Container(
-                    width: MediaQuery.of(context).size.width,
-                    margin: const EdgeInsets.symmetric(horizontal: 5.0),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(16.0),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.15),
-                          blurRadius: 10,
-                          offset: const Offset(0, 5),
-                        ),
-                      ],
-                    ),
-                    child: ClipRRect(
-                      borderRadius: BorderRadius.circular(16.0),
-                      child: Stack(
-                        fit: StackFit.expand,
-                        children: [
-                          // الصورة الأساسية
-                          _buildOptimizedBannerImage(
-                            imageUrl: item,
-                            isAsset: !item.startsWith('http'),
-                          ),
-
-                          // طبقة تظليل تدريجية لتحسين قراءة النصوص
-                          Container(
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topCenter,
-                                end: Alignment.bottomCenter,
-                                colors: [
-                                  Colors.black.withOpacity(0.0),
-                                  Colors.black.withOpacity(0.4),
-                                ],
-                                stops: const [0.7, 1.0],
-                              ),
+            items:
+                bannerSources.map((item) {
+                  return Builder(
+                    builder: (BuildContext context) {
+                      return Container(
+                        width: MediaQuery.of(context).size.width,
+                        margin: const EdgeInsets.symmetric(horizontal: 5.0),
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(16.0),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.15),
+                              blurRadius: 10,
+                              offset: const Offset(0, 5),
                             ),
+                          ],
+                        ),
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16.0),
+                          child: Stack(
+                            fit: StackFit.expand,
+                            children: [
+                              // الصورة الأساسية
+                              _buildOptimizedBannerImage(
+                                imageUrl: item,
+                                isAsset: !item.startsWith('http'),
+                              ),
+
+                              // طبقة تظليل تدريجية لتحسين قراءة النصوص
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: LinearGradient(
+                                    begin: Alignment.topCenter,
+                                    end: Alignment.bottomCenter,
+                                    colors: [
+                                      Colors.black.withOpacity(0.0),
+                                      Colors.black.withOpacity(0.4),
+                                    ],
+                                    stops: const [0.7, 1.0],
+                                  ),
+                                ),
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   );
-                },
-              );
-            }).toList(),
+                }).toList(),
           ),
         ),
 
@@ -519,34 +525,39 @@ class _HomeScreenState extends State<HomeScreen>
           duration: const Duration(milliseconds: 300),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: bannerSources.asMap().entries.map((entry) {
-              return Container(
-                width: _currentBannerIndex == entry.key ? 24.0 : 12.0,
-                height: 6.0,
-                margin: const EdgeInsets.symmetric(horizontal: 3.0),
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(3.0),
-                  color: _currentBannerIndex == entry.key
-                      ? Theme.of(context).colorScheme.primary
-                      : Colors.grey.withOpacity(0.3),
-                  boxShadow: _currentBannerIndex == entry.key
-                      ? [
-                          BoxShadow(
-                            color: Theme.of(context).colorScheme.primary.withOpacity(0.3),
-                            blurRadius: 4,
-                            offset: const Offset(0, 1),
-                          ),
-                        ]
-                      : null,
-                ),
-              );
-            }).toList(),
+            children:
+                bannerSources.asMap().entries.map((entry) {
+                  return Container(
+                    width: _currentBannerIndex == entry.key ? 24.0 : 12.0,
+                    height: 6.0,
+                    margin: const EdgeInsets.symmetric(horizontal: 3.0),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(3.0),
+                      color:
+                          _currentBannerIndex == entry.key
+                              ? Theme.of(context).colorScheme.primary
+                              : Colors.grey.withOpacity(0.3),
+                      boxShadow:
+                          _currentBannerIndex == entry.key
+                              ? [
+                                BoxShadow(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withOpacity(0.3),
+                                  blurRadius: 4,
+                                  offset: const Offset(0, 1),
+                                ),
+                              ]
+                              : null,
+                    ),
+                  );
+                }).toList(),
           ),
         ),
       ],
     );
   }
-  
+
   // بنر ترويجي لتسجيل الدخول مع تصميم محسن
   Widget _buildLoginPromotionBanner() {
     return Consumer<AuthProvider>(
@@ -642,7 +653,9 @@ class _HomeScreenState extends State<HomeScreen>
                               children: [
                                 Text(
                                   'سجل دخولك الآن',
-                                  style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.titleMedium?.copyWith(
                                     color: Colors.white,
                                     fontWeight: FontWeight.bold,
                                     fontSize: isCompact ? 16 : 18,
@@ -651,7 +664,9 @@ class _HomeScreenState extends State<HomeScreen>
                                 const SizedBox(height: 4),
                                 Text(
                                   'واستمتع بمزايا حصرية تنتظرك',
-                                  style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+                                  style: Theme.of(
+                                    context,
+                                  ).textTheme.bodyMedium?.copyWith(
                                     color: Colors.white.withOpacity(0.9),
                                     fontSize: isCompact ? 13 : 14,
                                   ),
@@ -666,7 +681,8 @@ class _HomeScreenState extends State<HomeScreen>
                             onPressed: () => _navigateToLogin(),
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.white,
-                              foregroundColor: Theme.of(context).colorScheme.primary,
+                              foregroundColor:
+                                  Theme.of(context).colorScheme.primary,
                               padding: EdgeInsets.symmetric(
                                 horizontal: isCompact ? 12 : 16,
                                 vertical: 12,
@@ -710,9 +726,9 @@ class _HomeScreenState extends State<HomeScreen>
       },
     );
   }
-  
+
   // --- Helper widgets for banner section ---
-  
+
   // تحميل الصور بطريقة محسنة للبانر
   Widget _buildOptimizedBannerImage({
     required String imageUrl,
@@ -741,46 +757,52 @@ class _HomeScreenState extends State<HomeScreen>
       memCacheHeight: (200 * MediaQuery.of(context).devicePixelRatio).round(),
     );
   }
-  
+
   // Widget for shimmer loading effect
   Widget _buildShimmerLoadingBanner() {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.grey[800]!
-          : Colors.grey[300]!,
-      highlightColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.grey[700]!
-          : Colors.grey[100]!,
+      baseColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[800]!
+              : Colors.grey[300]!,
+      highlightColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[700]!
+              : Colors.grey[100]!,
       child: Container(
         height: 200.0,
         margin: const EdgeInsets.symmetric(horizontal: 16.0),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(16.0),
-          color: Theme.of(context).brightness == Brightness.dark
-              ? Colors.black
-              : Colors.white,
+          color:
+              Theme.of(context).brightness == Brightness.dark
+                  ? Colors.black
+                  : Colors.white,
         ),
       ),
     );
   }
-  
+
   // Widget for shimmer placeholder
   Widget _buildShimmerPlaceholder() {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.grey[800]!
-          : Colors.grey[300]!,
-      highlightColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.grey[700]!
-          : Colors.grey[100]!,
+      baseColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[800]!
+              : Colors.grey[300]!,
+      highlightColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[700]!
+              : Colors.grey[100]!,
       child: Container(
-        color: Theme.of(context).brightness == Brightness.dark
-            ? Colors.black
-            : Colors.white,
+        color:
+            Theme.of(context).brightness == Brightness.dark
+                ? Colors.black
+                : Colors.white,
       ),
     );
   }
-  
+
   // Widget for banner error state
   Widget _buildBannerErrorWidget() {
     return Container(
@@ -804,7 +826,7 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-  
+
   // التنقل إلى شاشة تسجيل الدخول
   void _navigateToLogin() {
     Navigator.push(
@@ -812,7 +834,7 @@ class _HomeScreenState extends State<HomeScreen>
       MaterialPageRoute(builder: (_) => const LoginScreen()),
     );
   }
-  
+
   // تحديث بانرات تطبيقنا
   Future<void> _fetchBanners({bool silent = false}) async {
     if (!mounted) return;
@@ -866,7 +888,7 @@ class _HomeScreenState extends State<HomeScreen>
       }
     }
   }
-  
+
   Future<void> _fetchCategories({bool silent = false}) async {
     if (!mounted) return;
 
@@ -905,25 +927,24 @@ class _HomeScreenState extends State<HomeScreen>
       });
     }
   }
-  
+
   // إضافة دالة مساعدة لإظهار الإشعارات مع نص مركزي
   void _showCenteredTextMessage(String message, {bool isError = false}) {
     if (!mounted) return;
-    
+
     // إلغاء أي إشعارات سابقة
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
-    
+
     // إظهار الإشعار الجديد في أسفل الشاشة مع نص مركزي
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
         content: Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
-        backgroundColor: isError ? Colors.red : Theme.of(context).colorScheme.secondary,
+        backgroundColor:
+            isError ? Colors.red : Theme.of(context).colorScheme.secondary,
         behavior: SnackBarBehavior.fixed,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
@@ -952,17 +973,19 @@ class _HomeScreenState extends State<HomeScreen>
 
       // مسح التخزين المؤقت
       _propertyService.clearCache(key: 'latest_properties');
-      
+
       // جلب البيانات - تحديد العدد بـ 10 عقارات فقط
       List<Apartment> apartments = [];
-      
+
       try {
         apartments = await _propertyService.getLatestProperties(limit: 10);
       } catch (innerError) {
         if (kDebugMode) {
-          _logger.warning('خطأ في جلب أحدث العقارات. محاولة جلب العقارات المتاحة: $innerError');
+          _logger.warning(
+            'خطأ في جلب أحدث العقارات. محاولة جلب العقارات المتاحة: $innerError',
+          );
         }
-        
+
         // جلب العقارات المتاحة كخيار بديل - أيضاً 10 عقارات فقط
         apartments = await _propertyService.getAvailableProperties(limit: 10);
       }
@@ -993,11 +1016,14 @@ class _HomeScreenState extends State<HomeScreen>
       });
 
       if (!silent && mounted) {
-        _showCenteredTextMessage('حدث خطأ أثناء تحميل البيانات، يرجى المحاولة مرة أخرى', isError: true);
+        _showCenteredTextMessage(
+          'حدث خطأ أثناء تحميل البيانات، يرجى المحاولة مرة أخرى',
+          isError: true,
+        );
       }
     }
   }
-  
+
   Future<void> _fetchFeaturedProperties({bool silent = false}) async {
     if (!mounted) return;
 
@@ -1013,7 +1039,9 @@ class _HomeScreenState extends State<HomeScreen>
       }
 
       // تحديد العدد بـ 10 عقارات فقط للعقارات المميزة
-      final featuredProperties = await _propertyService.getFeaturedProperties(limit: 10);
+      final featuredProperties = await _propertyService.getFeaturedProperties(
+        limit: 10,
+      );
 
       if (!mounted) return;
 
@@ -1041,11 +1069,11 @@ class _HomeScreenState extends State<HomeScreen>
       });
     }
   }
-  
+
   void _setupApartmentsListener() {
     // سيتم تنفيذها لاحقاً
   }
-  
+
   // تعديل دالة تحديث البيانات لتشمل تحديث معلومات التحديث
   Future<void> _refreshAllData() async {
     if (!mounted) return;
@@ -1076,7 +1104,10 @@ class _HomeScreenState extends State<HomeScreen>
       }
 
       if (mounted) {
-        _showCenteredTextMessage('حدث خطأ أثناء تحديث البيانات، يرجى المحاولة مرة أخرى', isError: true);
+        _showCenteredTextMessage(
+          'حدث خطأ أثناء تحديث البيانات، يرجى المحاولة مرة أخرى',
+          isError: true,
+        );
       }
     } finally {
       if (mounted) {
@@ -1091,7 +1122,7 @@ class _HomeScreenState extends State<HomeScreen>
   }
 
   // --- قسم الفئات ---
-  
+
   // قسم الفئات المحسن
   Widget _buildCategoriesSection() {
     if (_isCategoriesLoading) {
@@ -1112,14 +1143,15 @@ class _HomeScreenState extends State<HomeScreen>
       itemBuilder: (context, index) {
         // حساب الفهرس المعكوس للترتيب من اليمين إلى اليسار
         final crossAxisCount = 2;
-        final rowIndex = index ~/ crossAxisCount; 
+        final rowIndex = index ~/ crossAxisCount;
         final rowStartIndex = rowIndex * crossAxisCount;
-        final reverseIndex = rowStartIndex + crossAxisCount - 1 - (index % crossAxisCount);
-        
+        final reverseIndex =
+            rowStartIndex + crossAxisCount - 1 - (index % crossAxisCount);
+
         // التأكد من أن الفهرس المعكوس في نطاق مقبول
         final maxIndex = _categories.length > 6 ? 6 : _categories.length;
         final safeIndex = reverseIndex < maxIndex ? reverseIndex : index;
-        
+
         final category = _categories[safeIndex];
         return _buildCategoryCard(
           category['iconUrl'] ?? category['icon'],
@@ -1128,7 +1160,7 @@ class _HomeScreenState extends State<HomeScreen>
       },
     );
   }
-  
+
   // واجهة تحميل الفئات
   Widget _buildCategoriesLoadingSection() {
     return GridView.builder(
@@ -1145,7 +1177,7 @@ class _HomeScreenState extends State<HomeScreen>
       itemBuilder: (_, __) => _buildCategoryShimmerCard(),
     );
   }
-  
+
   // بطاقة فئة محسنة
   Widget _buildCategoryCard(dynamic icon, String label) {
     final theme = Theme.of(context);
@@ -1174,9 +1206,7 @@ class _HomeScreenState extends State<HomeScreen>
                   color: theme.colorScheme.primary.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(10.0),
                 ),
-                child: Center(
-                  child: _buildCategoryIcon(icon),
-                ),
+                child: Center(child: _buildCategoryIcon(icon)),
               ),
 
               const SizedBox(width: 12.0),
@@ -1186,32 +1216,33 @@ class _HomeScreenState extends State<HomeScreen>
                 child: Container(
                   height: 22.0,
                   alignment: Alignment.centerRight,
-                  child: isLongText
-                      ? Marquee(
-                          animationDuration: const Duration(seconds: 2),
-                          backDuration: const Duration(milliseconds: 1000),
-                          pauseDuration: const Duration(milliseconds: 1000),
-                          direction: Axis.horizontal,
-                          textDirection: TextDirection.rtl,
-                          autoRepeat: true,
-                          child: Text(
+                  child:
+                      isLongText
+                          ? Marquee(
+                            animationDuration: const Duration(seconds: 2),
+                            backDuration: const Duration(milliseconds: 1000),
+                            pauseDuration: const Duration(milliseconds: 1000),
+                            direction: Axis.horizontal,
+                            textDirection: TextDirection.rtl,
+                            autoRepeat: true,
+                            child: Text(
+                              label,
+                              style: theme.textTheme.bodyLarge?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15.0,
+                              ),
+                            ),
+                          )
+                          : Text(
                             label,
                             style: theme.textTheme.bodyLarge?.copyWith(
                               fontWeight: FontWeight.bold,
                               fontSize: 15.0,
                             ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
                           ),
-                        )
-                      : Text(
-                          label,
-                          style: theme.textTheme.bodyLarge?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15.0,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          textAlign: TextAlign.right,
-                        ),
                 ),
               ),
             ],
@@ -1220,19 +1251,23 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-  
+
   // تحميل بطاقة فئة
   Widget _buildCategoryShimmerCard() {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.grey[800]!
-          : Colors.grey[300]!,
-      highlightColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.grey[700]!
-          : Colors.grey[100]!,
+      baseColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[800]!
+              : Colors.grey[300]!,
+      highlightColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[700]!
+              : Colors.grey[100]!,
       child: Card(
         margin: const EdgeInsets.all(4.0),
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14.0)),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(14.0),
+        ),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 12.0),
           child: Row(
@@ -1247,19 +1282,14 @@ class _HomeScreenState extends State<HomeScreen>
                 ),
               ),
               const SizedBox(width: 12.0),
-              Expanded(
-                child: Container(
-                  height: 22.0,
-                  color: Colors.white,
-                ),
-              ),
+              Expanded(child: Container(height: 22.0, color: Colors.white)),
             ],
           ),
         ),
       ),
     );
   }
-  
+
   // أيقونة الفئة
   Widget _buildCategoryIcon(dynamic icon) {
     if (icon is String && icon.startsWith('http')) {
@@ -1270,29 +1300,31 @@ class _HomeScreenState extends State<HomeScreen>
           width: 24.0,
           height: 24.0,
           fit: BoxFit.cover,
-          placeholder: (context, url) => const Center(
-            child: SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            ),
-          ),
-          errorWidget: (context, url, error) => Icon(
-            Icons.category_rounded,
-            size: 24.0,
-            color: Theme.of(context).colorScheme.primary,
-          ),
+          placeholder:
+              (context, url) => const Center(
+                child: SizedBox(
+                  width: 16,
+                  height: 16,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+          errorWidget:
+              (context, url, error) => Icon(
+                Icons.category_rounded,
+                size: 24.0,
+                color: Theme.of(context).colorScheme.primary,
+              ),
         ),
       );
     }
-    
+
     return Icon(
       Icons.category_rounded,
       size: 24.0,
       color: Theme.of(context).colorScheme.primary,
     );
   }
-  
+
   // التنقل إلى فئة محددة
   void _navigateToCategory(String category) {
     Navigator.push(
@@ -1366,9 +1398,10 @@ class _HomeScreenState extends State<HomeScreen>
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: isDarkMode 
-                ? Colors.black.withOpacity(0.2)
-                : Colors.black.withOpacity(0.07),
+            color:
+                isDarkMode
+                    ? Colors.black.withOpacity(0.2)
+                    : Colors.black.withOpacity(0.07),
             blurRadius: 15,
             offset: const Offset(0, 5),
           ),
@@ -1376,15 +1409,13 @@ class _HomeScreenState extends State<HomeScreen>
         gradient: LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: isDarkMode 
-              ? [
-                  theme.colorScheme.surface.withOpacity(0.8),
-                  theme.colorScheme.surface,
-                ] 
-              : [
-                  Colors.white,
-                  theme.colorScheme.surface.withOpacity(0.05),
-                ],
+          colors:
+              isDarkMode
+                  ? [
+                    theme.colorScheme.surface.withOpacity(0.8),
+                    theme.colorScheme.surface,
+                  ]
+                  : [Colors.white, theme.colorScheme.surface.withOpacity(0.05)],
         ),
       ),
       child: Center(
@@ -1395,9 +1426,10 @@ class _HomeScreenState extends State<HomeScreen>
               width: 86,
               height: 86,
               decoration: BoxDecoration(
-                color: isDarkMode
-                    ? theme.colorScheme.primary.withOpacity(0.12)
-                    : theme.colorScheme.primary.withOpacity(0.06),
+                color:
+                    isDarkMode
+                        ? theme.colorScheme.primary.withOpacity(0.12)
+                        : theme.colorScheme.primary.withOpacity(0.06),
                 shape: BoxShape.circle,
               ),
               child: Icon(
@@ -1447,12 +1479,14 @@ class _HomeScreenState extends State<HomeScreen>
   // بطاقة تحميل العقار
   Widget _buildPropertyShimmerCard() {
     return Shimmer.fromColors(
-      baseColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.grey[800]!
-          : Colors.grey[300]!,
-      highlightColor: Theme.of(context).brightness == Brightness.dark
-          ? Colors.grey[700]!
-          : Colors.grey[100]!,
+      baseColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[800]!
+              : Colors.grey[300]!,
+      highlightColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[700]!
+              : Colors.grey[100]!,
       child: Container(
         decoration: BoxDecoration(
           color: Colors.white,
@@ -1466,9 +1500,7 @@ class _HomeScreenState extends State<HomeScreen>
               width: double.infinity,
               height: 180,
               decoration: const BoxDecoration(
-                borderRadius: BorderRadius.vertical(
-                  top: Radius.circular(16),
-                ),
+                borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
                 color: Colors.white,
               ),
             ),
@@ -1480,20 +1512,12 @@ class _HomeScreenState extends State<HomeScreen>
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // العنوان المتلألئ
-                  Container(
-                    width: 150,
-                    height: 20,
-                    color: Colors.white,
-                  ),
+                  Container(width: 150, height: 20, color: Colors.white),
 
                   const SizedBox(height: 10),
 
                   // الموقع المتلألئ
-                  Container(
-                    width: 200,
-                    height: 14,
-                    color: Colors.white,
-                  ),
+                  Container(width: 200, height: 14, color: Colors.white),
 
                   const SizedBox(height: 15),
 
@@ -1522,7 +1546,10 @@ class _HomeScreenState extends State<HomeScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 14.0,
+            ),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
@@ -1538,7 +1565,9 @@ class _HomeScreenState extends State<HomeScreen>
                     Container(
                       padding: const EdgeInsets.all(6),
                       decoration: BoxDecoration(
-                        color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.secondary.withOpacity(0.1),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(
@@ -1561,7 +1590,11 @@ class _HomeScreenState extends State<HomeScreen>
               itemBuilder: (context, index) {
                 return Container(
                   width: 200,
-                  margin: const EdgeInsets.only(left: 6.0, right: 6.0, bottom: 10.0),
+                  margin: const EdgeInsets.only(
+                    left: 6.0,
+                    right: 6.0,
+                    bottom: 10.0,
+                  ),
                   child: _buildPropertyShimmerCard(),
                 );
               },
@@ -1595,7 +1628,9 @@ class _HomeScreenState extends State<HomeScreen>
                   Container(
                     padding: const EdgeInsets.all(6),
                     decoration: BoxDecoration(
-                      color: Theme.of(context).colorScheme.secondary.withOpacity(0.1),
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.secondary.withOpacity(0.1),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
@@ -1619,7 +1654,11 @@ class _HomeScreenState extends State<HomeScreen>
               final property = _featuredProperties[index];
               return Container(
                 width: 200,
-                margin: const EdgeInsets.only(left: 6.0, right: 6.0, bottom: 10.0),
+                margin: const EdgeInsets.only(
+                  left: 6.0,
+                  right: 6.0,
+                  bottom: 10.0,
+                ),
                 child: PropertyCardWidget(
                   apartment: property,
                   showFavoriteButton: true,
@@ -1632,12 +1671,12 @@ class _HomeScreenState extends State<HomeScreen>
       ],
     );
   }
-  
+
   // قسم "لماذا نحن"
   Widget _buildWhyChooseUsSection() {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     // قائمة المميزات
     final List<_Feature> features = [
       _Feature(
@@ -1665,18 +1704,20 @@ class _HomeScreenState extends State<HomeScreen>
         color: Colors.indigo,
       ),
     ];
-    
+
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 24),
       decoration: BoxDecoration(
-        color: isDarkMode 
-            ? theme.colorScheme.surface.withOpacity(0.5)
-            : theme.colorScheme.primary.withOpacity(0.04),
+        color:
+            isDarkMode
+                ? theme.colorScheme.surface.withOpacity(0.5)
+                : theme.colorScheme.primary.withOpacity(0.04),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDarkMode 
-              ? theme.colorScheme.primary.withOpacity(0.1)
-              : theme.colorScheme.primary.withOpacity(0.05),
+          color:
+              isDarkMode
+                  ? theme.colorScheme.primary.withOpacity(0.1)
+                  : theme.colorScheme.primary.withOpacity(0.05),
         ),
       ),
       margin: const EdgeInsets.symmetric(horizontal: 16),
@@ -1704,7 +1745,7 @@ class _HomeScreenState extends State<HomeScreen>
               ],
             ),
           ),
-          
+
           // المميزات
           ListView.builder(
             shrinkWrap: true,
@@ -1717,9 +1758,7 @@ class _HomeScreenState extends State<HomeScreen>
                 margin: const EdgeInsets.only(bottom: 16),
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: isDarkMode 
-                      ? theme.cardColor
-                      : Colors.white,
+                  color: isDarkMode ? theme.cardColor : Colors.white,
                   borderRadius: BorderRadius.circular(12),
                   boxShadow: [
                     BoxShadow(
@@ -1762,9 +1801,10 @@ class _HomeScreenState extends State<HomeScreen>
                             feature.description,
                             style: TextStyle(
                               fontSize: 14,
-                              color: isDarkMode 
-                                  ? Colors.grey[400]
-                                  : Colors.grey[600],
+                              color:
+                                  isDarkMode
+                                      ? Colors.grey[400]
+                                      : Colors.grey[600],
                             ),
                           ),
                         ],
@@ -1779,19 +1819,35 @@ class _HomeScreenState extends State<HomeScreen>
       ),
     );
   }
-  
+
   // قسم تواصل معنا
   Widget _buildContactUsSection() {
     final theme = Theme.of(context);
-    
+
     // وسائل التواصل الاجتماعي
     final socialMedia = [
-      {'icon': FontAwesomeIcons.whatsapp, 'color': const Color(0xFF25D366), 'url': 'https://wa.me/+201093130120'},
-      {'icon': FontAwesomeIcons.facebook, 'color': const Color(0xFF1877F2), 'url': 'https://www.facebook.com/elsahm.arish'},
-      {'icon': FontAwesomeIcons.envelope, 'color': const Color(0xFFEA4335), 'url': 'mailto:elsahm.arish@gmail.com'},
-      {'icon': FontAwesomeIcons.phone, 'color': const Color(0xFF34B7F1), 'url': 'tel:+201093130120'},
+      {
+        'icon': FontAwesomeIcons.whatsapp,
+        'color': const Color(0xFF25D366),
+        'url': 'https://wa.me/+201093130120',
+      },
+      {
+        'icon': FontAwesomeIcons.facebook,
+        'color': const Color(0xFF1877F2),
+        'url': 'https://www.facebook.com/elsahm.arish',
+      },
+      {
+        'icon': FontAwesomeIcons.envelope,
+        'color': const Color(0xFFEA4335),
+        'url': 'mailto:elsahm.arish@gmail.com',
+      },
+      {
+        'icon': FontAwesomeIcons.phone,
+        'color': const Color(0xFF34B7F1),
+        'url': 'tel:+201093130120',
+      },
     ];
-    
+
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       padding: const EdgeInsets.all(24),
@@ -1799,10 +1855,7 @@ class _HomeScreenState extends State<HomeScreen>
         gradient: LinearGradient(
           begin: Alignment.topRight,
           end: Alignment.bottomLeft,
-          colors: [
-            theme.colorScheme.secondary,
-            theme.colorScheme.primary,
-          ],
+          colors: [theme.colorScheme.secondary, theme.colorScheme.primary],
         ),
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
@@ -1831,52 +1884,56 @@ class _HomeScreenState extends State<HomeScreen>
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 20),
-          
+
           // أزرار وسائل التواصل الاجتماعي
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: socialMedia.map((social) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 8),
-                child: InkWell(
-                  onTap: () async {
-                    try {
-                      final url = social['url'] as String;
-                      final Uri uri = Uri.parse(url);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      }
-                    } catch (e) {
-                      if (kDebugMode) {
-                        _logger.warning('خطأ في فتح رابط التواصل: $e');
-                      }
-                    }
-                  },
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(24),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 8,
-                          offset: const Offset(0, 4),
+            children:
+                socialMedia.map((social) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 8),
+                    child: InkWell(
+                      onTap: () async {
+                        try {
+                          final url = social['url'] as String;
+                          final Uri uri = Uri.parse(url);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        } catch (e) {
+                          if (kDebugMode) {
+                            _logger.warning('خطأ في فتح رابط التواصل: $e');
+                          }
+                        }
+                      },
+                      child: Container(
+                        width: 48,
+                        height: 48,
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(24),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 8,
+                              offset: const Offset(0, 4),
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                    child: Center(
-                      child: FaIcon(
-                        social['icon'] as IconData,
-                        color: social['color'] as Color,
-                        size: 24,
+                        child: Center(
+                          child: FaIcon(
+                            social['icon'] as IconData,
+                            color: social['color'] as Color,
+                            size: 24,
+                          ),
+                        ),
                       ),
                     ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }).toList(),
           ),
         ],
       ),
@@ -1887,15 +1944,31 @@ class _HomeScreenState extends State<HomeScreen>
   Widget _buildDesignerInfoSection() {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     // وسائل التواصل الاجتماعي الجديدة
     final socialMedia = [
-      {'icon': FontAwesomeIcons.phone, 'color': const Color(0xFF34B7F1), 'url': 'tel:+201003193622'},
-      {'icon': FontAwesomeIcons.whatsapp, 'color': const Color(0xFF25D366), 'url': 'https://wa.me/+201003193622'},
-      {'icon': FontAwesomeIcons.facebook, 'color': const Color(0xFF1877F2), 'url': 'https://www.facebook.com/eslammosalah'},
-      {'icon': FontAwesomeIcons.instagram, 'color': const Color(0xFFE4405F), 'url': 'https://www.instagram.com/eslamz11'},
+      {
+        'icon': FontAwesomeIcons.phone,
+        'color': const Color(0xFF34B7F1),
+        'url': 'tel:+201003193622',
+      },
+      {
+        'icon': FontAwesomeIcons.whatsapp,
+        'color': const Color(0xFF25D366),
+        'url': 'https://wa.me/+201003193622',
+      },
+      {
+        'icon': FontAwesomeIcons.facebook,
+        'color': const Color(0xFF1877F2),
+        'url': 'https://www.facebook.com/eslammosalah',
+      },
+      {
+        'icon': FontAwesomeIcons.instagram,
+        'color': const Color(0xFFE4405F),
+        'url': 'https://www.instagram.com/eslamz11',
+      },
     ];
-    
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 24, 16, 32),
       padding: const EdgeInsets.all(16),
@@ -1954,60 +2027,62 @@ class _HomeScreenState extends State<HomeScreen>
             ),
           ),
           const SizedBox(height: 12),
-          
+
           // وسائل التواصل الاجتماعي المحدثة
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: socialMedia.map((social) {
-              return Container(
-                margin: const EdgeInsets.symmetric(horizontal: 6),
-                child: InkWell(
-                  onTap: () async {
-                    try {
-                      final url = social['url'] as String;
-                      final Uri uri = Uri.parse(url);
-                      if (await canLaunchUrl(uri)) {
-                        await launchUrl(uri, mode: LaunchMode.externalApplication);
-                      }
-                    } catch (e) {
-                      if (kDebugMode) {
-                        _logger.warning('خطأ في فتح رابط التواصل: $e');
-                      }
-                    }
-                  },
-                  child: Container(
-                    width: 42,
-                    height: 42,
-                    decoration: BoxDecoration(
-                      color: isDarkMode
-                          ? Colors.grey[800]
-                          : Colors.white,
-                      borderRadius: BorderRadius.circular(21),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.1),
-                          blurRadius: 6,
-                          offset: const Offset(0, 3),
+            children:
+                socialMedia.map((social) {
+                  return Container(
+                    margin: const EdgeInsets.symmetric(horizontal: 6),
+                    child: InkWell(
+                      onTap: () async {
+                        try {
+                          final url = social['url'] as String;
+                          final Uri uri = Uri.parse(url);
+                          if (await canLaunchUrl(uri)) {
+                            await launchUrl(
+                              uri,
+                              mode: LaunchMode.externalApplication,
+                            );
+                          }
+                        } catch (e) {
+                          if (kDebugMode) {
+                            _logger.warning('خطأ في فتح رابط التواصل: $e');
+                          }
+                        }
+                      },
+                      child: Container(
+                        width: 42,
+                        height: 42,
+                        decoration: BoxDecoration(
+                          color: isDarkMode ? Colors.grey[800] : Colors.white,
+                          borderRadius: BorderRadius.circular(21),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.black.withOpacity(0.1),
+                              blurRadius: 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                          border: Border.all(
+                            color: (social['color'] as Color).withOpacity(0.2),
+                            width: 1,
+                          ),
                         ),
-                      ],
-                      border: Border.all(
-                        color: (social['color'] as Color).withOpacity(0.2),
-                        width: 1,
+                        child: Center(
+                          child: FaIcon(
+                            social['icon'] as IconData,
+                            color: social['color'] as Color,
+                            size: 22,
+                          ),
+                        ),
                       ),
                     ),
-                    child: Center(
-                      child: FaIcon(
-                        social['icon'] as IconData,
-                        color: social['color'] as Color,
-                        size: 22,
-                      ),
-                    ),
-                  ),
-                ),
-              );
-            }).toList(),
+                  );
+                }).toList(),
           ),
-          
+
           const SizedBox(height: 12),
           Text(
             '© ${DateTime.now().year} السهم - جميع الحقوق محفوظة',
@@ -2025,22 +2100,24 @@ class _HomeScreenState extends State<HomeScreen>
   // دالة جلب بيانات تحديث التطبيق
   Future<void> _fetchAppUpdate({bool silent = false}) async {
     if (!mounted) return;
-    
+
     try {
       if (!silent) {
         setState(() {
           _isUpdateLoading = true;
         });
       }
-      
+
       final update = await _updateService.getLatestUpdate();
-      
+
       if (!mounted) return;
-      
+
       if (kDebugMode) {
-        _logger.info('تم جلب بيانات التحديث: ${update != null ? 'متاح' : 'غير متاح'}');
+        _logger.info(
+          'تم جلب بيانات التحديث: ${update != null ? 'متاح' : 'غير متاح'}',
+        );
       }
-      
+
       setState(() {
         _appUpdate = update;
         if (!silent) {
@@ -2049,11 +2126,11 @@ class _HomeScreenState extends State<HomeScreen>
       });
     } catch (e) {
       if (!mounted) return;
-      
+
       if (kDebugMode) {
         _logger.warning('خطأ في جلب بيانات التحديث: $e');
       }
-      
+
       setState(() {
         if (!silent) {
           _isUpdateLoading = false;
@@ -2068,11 +2145,11 @@ class _HomeScreenState extends State<HomeScreen>
     if (_isUpdateLoading || _appUpdate == null || !_appUpdate!.isActive) {
       return const SizedBox.shrink();
     }
-    
+
     final theme = Theme.of(context);
     // ignore: unused_local_variable
     final isDarkMode = theme.brightness == Brightness.dark;
-    
+
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
       decoration: BoxDecoration(
@@ -2087,7 +2164,9 @@ class _HomeScreenState extends State<HomeScreen>
         borderRadius: BorderRadius.circular(20),
         boxShadow: [
           BoxShadow(
-            color: Color(int.parse('0xFF${_appUpdate!.primaryColor ?? '3498db'}')).withOpacity(0.4),
+            color: Color(
+              int.parse('0xFF${_appUpdate!.primaryColor ?? '3498db'}'),
+            ).withOpacity(0.4),
             blurRadius: 12,
             offset: const Offset(0, 5),
           ),
@@ -2120,7 +2199,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
           ),
-          
+
           // الأيقونة المتحركة
           Positioned(
             left: 15,
@@ -2134,7 +2213,7 @@ class _HomeScreenState extends State<HomeScreen>
               ),
             ),
           ),
-          
+
           Padding(
             padding: const EdgeInsets.all(20.0),
             child: Row(
@@ -2177,7 +2256,10 @@ class _HomeScreenState extends State<HomeScreen>
                       Row(
                         children: [
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 4,
+                            ),
                             decoration: BoxDecoration(
                               color: Colors.white.withOpacity(0.3),
                               borderRadius: BorderRadius.circular(12),
@@ -2194,7 +2276,9 @@ class _HomeScreenState extends State<HomeScreen>
                           const SizedBox(width: 8),
                           Text(
                             'تحديث جديد متاح!',
-                            style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                            style: Theme.of(
+                              context,
+                            ).textTheme.titleMedium?.copyWith(
                               color: Colors.white,
                               fontWeight: FontWeight.bold,
                             ),
@@ -2222,21 +2306,25 @@ class _HomeScreenState extends State<HomeScreen>
                   onPressed: () async {
                     try {
                       final url = _appUpdate!.downloadUrl;
-                      
+
                       if (kDebugMode) {
                         _logger.info('محاولة فتح الرابط: $url');
                       }
-                      
+
                       // التأكد من أن الرابط يحتوي على بروتوكول
-                      final Uri uri = Uri.parse(url.startsWith('http') ? url : 'https://$url');
-                      
+                      final Uri uri = Uri.parse(
+                        url.startsWith('http') ? url : 'https://$url',
+                      );
+
                       // استخدام الطرق الحديثة للتحقق وفتح الروابط
                       if (await canLaunchUrl(uri)) {
                         final bool launched = await launchUrl(
                           uri,
-                          mode: LaunchMode.externalApplication, // إجبار الفتح في متصفح خارجي
+                          mode:
+                              LaunchMode
+                                  .externalApplication, // إجبار الفتح في متصفح خارجي
                         );
-                        
+
                         if (!launched) {
                           throw 'فشل في فتح الرابط';
                         }
@@ -2247,12 +2335,17 @@ class _HomeScreenState extends State<HomeScreen>
                       if (kDebugMode) {
                         _logger.severe('خطأ في فتح رابط التحديث: $e');
                       }
-                      _showCenteredTextMessage('لا يمكن فتح رابط التحديث', isError: true);
+                      _showCenteredTextMessage(
+                        'لا يمكن فتح رابط التحديث',
+                        isError: true,
+                      );
                     }
                   },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.white,
-                    foregroundColor: Color(int.parse('0xFF${_appUpdate!.primaryColor ?? '3498db'}')),
+                    foregroundColor: Color(
+                      int.parse('0xFF${_appUpdate!.primaryColor ?? '3498db'}'),
+                    ),
                     padding: const EdgeInsets.symmetric(
                       horizontal: 16,
                       vertical: 12,
@@ -2270,9 +2363,7 @@ class _HomeScreenState extends State<HomeScreen>
                       SizedBox(width: 6),
                       Text(
                         'تحميل',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
+                        style: TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],
                   ),
