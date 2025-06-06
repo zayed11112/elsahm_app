@@ -324,6 +324,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
       pinned: true,
       backgroundColor: Colors.transparent,
       elevation: 0,
+      automaticallyImplyLeading: false,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
           decoration: BoxDecoration(
@@ -488,14 +489,15 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
             child: Image.asset(
               'assets/images/su.webp',
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Colors.white.withValues(alpha: 0.2),
-                child: const Icon(
-                  Icons.person_outline,
-                  size: 50,
-                  color: Colors.white,
-                ),
-              ),
+              errorBuilder:
+                  (context, error, stackTrace) => Container(
+                    color: Colors.white.withValues(alpha: 0.2),
+                    child: const Icon(
+                      Icons.person_outline,
+                      size: 50,
+                      color: Colors.white,
+                    ),
+                  ),
             ),
           ),
         ),
@@ -543,7 +545,9 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
             if (isLoggedIn) {
               Navigator.push(
                 context,
-                MaterialPageRoute(builder: (context) => const ComplaintsScreen()),
+                MaterialPageRoute(
+                  builder: (context) => const ComplaintsScreen(),
+                ),
               );
             } else {
               _showLoginRequiredDialog(context);
@@ -708,14 +712,15 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
 
   Widget _buildUserDetailsCard(BuildContext context, UserProfile userProfile) {
     final isDarkMode = context.isDarkMode;
-    
+
     // Check if all user profile fields are empty
-    final bool allFieldsEmpty = userProfile.status.isEmpty &&
+    final bool allFieldsEmpty =
+        userProfile.status.isEmpty &&
         userProfile.studentId.isEmpty &&
         userProfile.phoneNumber.isEmpty &&
         userProfile.faculty.isEmpty &&
         userProfile.branch.isEmpty;
-    
+
     // If all fields are empty, show a prompt message instead of the details card
     if (allFieldsEmpty) {
       return EnhancedCard(
@@ -745,7 +750,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                 ],
               ),
               const SizedBox(height: defaultPadding * 1.5),
-              
+
               // Empty profile info icon
               Container(
                 width: 60,
@@ -761,7 +766,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                 ),
               ),
               const SizedBox(height: defaultPadding),
-              
+
               // Bold message text
               Text(
                 "اضغط علي زر تعديل بياناتي بالأسفل وادخل بياناتك حتي تتمتع بتجربة مميزة",
@@ -852,7 +857,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     if (value.isEmpty) {
       return Container();
     }
-    
+
     final isDarkMode = context.isDarkMode;
     final primaryColor = isDarkMode ? skyBlue : const Color(0xFF1976d3);
 
@@ -1169,7 +1174,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     required VoidCallback onPressed,
   }) {
     final isDarkMode = context.isDarkMode;
-// Check if screen is wide enough
+    // Check if screen is wide enough
 
     // Text style for wallet buttons
     final TextStyle textStyle = TextStyle(
@@ -1236,10 +1241,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                       direction: Axis.horizontal,
                       textDirection: TextDirection.rtl,
                       autoRepeat: true,
-                      child: Text(
-                        title,
-                        style: textStyle,
-                      ),
+                      child: Text(title, style: textStyle),
                     ),
                   ),
                 ),
@@ -1613,7 +1615,10 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: defaultPadding),
       decoration: BoxDecoration(
-        color: isDarkMode ? const Color(0xFF1A2A36).withOpacity(0.7) : const Color(0xFFEDF4FC),
+        color:
+            isDarkMode
+                ? const Color(0xFF1A2A36).withOpacity(0.7)
+                : const Color(0xFFEDF4FC),
         borderRadius: BorderRadius.circular(20),
       ),
       child: Column(
@@ -1629,7 +1634,10 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                 Container(
                   padding: const EdgeInsets.all(8),
                   decoration: BoxDecoration(
-                    color: isDarkMode ? darkBackground.withOpacity(0.6) : Colors.white,
+                    color:
+                        isDarkMode
+                            ? darkBackground.withOpacity(0.6)
+                            : Colors.white,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Icon(
@@ -1652,7 +1660,8 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                     Text(
                       'جميع الخدمات في مكان واحد',
                       style: context.bodySmall?.copyWith(
-                        color: isDarkMode ? darkTextSecondary : lightTextSecondary,
+                        color:
+                            isDarkMode ? darkTextSecondary : lightTextSecondary,
                       ),
                     ),
                   ],
@@ -1660,12 +1669,17 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
               ],
             ),
           ),
-          
+
           // Services grid
           GridView.builder(
             shrinkWrap: true,
             physics: const NeverScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(defaultPadding, 0, defaultPadding, defaultPadding),
+            padding: const EdgeInsets.fromLTRB(
+              defaultPadding,
+              0,
+              defaultPadding,
+              defaultPadding,
+            ),
             gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
               crossAxisCount: 2,
               crossAxisSpacing: defaultPadding,
@@ -1696,12 +1710,13 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
     return Material(
       color: Colors.transparent,
       child: InkWell(
-        onTap: canAccess
-            ? () {
-                HapticFeedback.lightImpact();
-                service.onTap();
-              }
-            : () => _showLoginRequiredDialog(context),
+        onTap:
+            canAccess
+                ? () {
+                  HapticFeedback.lightImpact();
+                  service.onTap();
+                }
+                : () => _showLoginRequiredDialog(context),
         borderRadius: BorderRadius.circular(15),
         child: Container(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -1733,54 +1748,61 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
                 ),
               ),
               const SizedBox(width: 12),
-              
+
               // Service title - using exactly the same approach as in home_screen.dart
               Expanded(
                 child: Container(
                   height: 22.0,
                   alignment: Alignment.centerRight,
-                  child: isLongText
-                    ? Marquee(
-                        animationDuration: const Duration(seconds: 2),
-                        backDuration: const Duration(milliseconds: 1000),
-                        pauseDuration: const Duration(milliseconds: 1000),
-                        direction: Axis.horizontal,
-                        textDirection: TextDirection.rtl,
-                        autoRepeat: true,
-                        child: Text(
-                          service.title,
-                          style: context.bodyMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            fontSize: 15.0,
-                            color: canAccess
-                              ? (isDarkMode ? darkTextPrimary : lightTextPrimary)
-                              : (isDarkMode ? darkTextSecondary : lightTextSecondary),
+                  child:
+                      isLongText
+                          ? Marquee(
+                            animationDuration: const Duration(seconds: 2),
+                            backDuration: const Duration(milliseconds: 1000),
+                            pauseDuration: const Duration(milliseconds: 1000),
+                            direction: Axis.horizontal,
+                            textDirection: TextDirection.rtl,
+                            autoRepeat: true,
+                            child: Text(
+                              service.title,
+                              style: context.bodyMedium?.copyWith(
+                                fontWeight: FontWeight.bold,
+                                fontSize: 15.0,
+                                color:
+                                    canAccess
+                                        ? (isDarkMode
+                                            ? darkTextPrimary
+                                            : lightTextPrimary)
+                                        : (isDarkMode
+                                            ? darkTextSecondary
+                                            : lightTextSecondary),
+                              ),
+                            ),
+                          )
+                          : Text(
+                            service.title,
+                            style: context.bodyMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 15.0,
+                              color:
+                                  canAccess
+                                      ? (isDarkMode
+                                          ? darkTextPrimary
+                                          : lightTextPrimary)
+                                      : (isDarkMode
+                                          ? darkTextSecondary
+                                          : lightTextSecondary),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            textAlign: TextAlign.right,
                           ),
-                        ),
-                      )
-                    : Text(
-                        service.title,
-                        style: context.bodyMedium?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 15.0,
-                          color: canAccess
-                            ? (isDarkMode ? darkTextPrimary : lightTextPrimary)
-                            : (isDarkMode ? darkTextSecondary : lightTextSecondary),
-                        ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        textAlign: TextAlign.right,
-                      ),
                 ),
               ),
-              
+
               // Lock icon for auth-required services
               if (!canAccess)
-                Icon(
-                  Icons.lock_outline,
-                  size: 16,
-                  color: Colors.grey,
-                ),
+                Icon(Icons.lock_outline, size: 16, color: Colors.grey),
             ],
           ),
         ),
@@ -1804,7 +1826,6 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
   }
 
   Widget _buildLogoutButton(BuildContext context) {
-    
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: defaultPadding),
       child: Material(
@@ -1816,10 +1837,7 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
             padding: const EdgeInsets.symmetric(vertical: 12),
             decoration: BoxDecoration(
               gradient: LinearGradient(
-                colors: [
-                  const Color(0xFFFF5963),
-                  const Color(0xFFFF7B7B),
-                ],
+                colors: [const Color(0xFFFF5963), const Color(0xFFFF7B7B)],
                 begin: Alignment.centerRight,
                 end: Alignment.centerLeft,
               ),
@@ -2077,205 +2095,219 @@ class _EnhancedMoreScreenState extends State<EnhancedMoreScreen>
 
   void _showLogoutDialog(BuildContext context) {
     final isDarkMode = context.isDarkMode;
-    
+
     showDialog(
       context: context,
       barrierDismissible: true,
       barrierColor: Colors.black.withOpacity(0.5),
-      builder: (context) => Dialog(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        insetPadding: const EdgeInsets.symmetric(horizontal: 20),
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: isDarkMode ? const Color(0xFF1A2A36) : Colors.white,
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.2),
-                blurRadius: 15,
-                offset: const Offset(0, 8),
-                spreadRadius: 1,
-              ),
-            ],
-            border: Border.all(
-              color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
-              width: 1,
-            ),
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Header with icon
-              Container(
-                padding: const EdgeInsets.symmetric(vertical: 20),
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    colors: [
-                      const Color(0xFFFF5963),
-                      const Color(0xFFFF7B7B),
-                    ],
-                    begin: Alignment.topRight,
-                    end: Alignment.bottomLeft,
+      builder:
+          (context) => Dialog(
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            insetPadding: const EdgeInsets.symmetric(horizontal: 20),
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: isDarkMode ? const Color(0xFF1A2A36) : Colors.white,
+                borderRadius: BorderRadius.circular(20),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.2),
+                    blurRadius: 15,
+                    offset: const Offset(0, 8),
+                    spreadRadius: 1,
                   ),
-                  borderRadius: const BorderRadius.only(
-                    topLeft: Radius.circular(20),
-                    topRight: Radius.circular(20),
-                  ),
+                ],
+                border: Border.all(
+                  color:
+                      isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
+                  width: 1,
                 ),
-                child: Center(
-                  child: Container(
-                    width: 70,
-                    height: 70,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // Header with icon
+                  Container(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.5),
-                        width: 2,
+                      gradient: LinearGradient(
+                        colors: [
+                          const Color(0xFFFF5963),
+                          const Color(0xFFFF7B7B),
+                        ],
+                        begin: Alignment.topRight,
+                        end: Alignment.bottomLeft,
+                      ),
+                      borderRadius: const BorderRadius.only(
+                        topLeft: Radius.circular(20),
+                        topRight: Radius.circular(20),
                       ),
                     ),
-                    child: const Icon(
-                      Icons.logout_rounded,
-                      color: Colors.white,
-                      size: 36,
-                    ),
-                  ),
-                ),
-              ),
-
-              // Content
-              Padding(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  children: [
-                    Text(
-                      'تسجيل الخروج',
-                      style: context.titleLarge?.copyWith(
-                        fontWeight: FontWeight.bold,
-                        color: isDarkMode ? Colors.white : Colors.black87,
-                        fontSize: 20,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 12),
-                    Text(
-                      'هل أنت متأكد من أنك تريد تسجيل الخروج؟',
-                      style: context.bodyMedium?.copyWith(
-                        color: isDarkMode ? Colors.grey.shade300 : Colors.grey.shade700,
-                        fontSize: 14,
-                        height: 1.5,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-
-                    // Buttons
-                    Row(
-                      children: [
-                        // Cancel Button
-                        Expanded(
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () {
-                                HapticFeedback.lightImpact();
-                                Navigator.of(context).pop();
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  color: isDarkMode ? Colors.grey.shade800 : Colors.grey.shade200,
-                                  borderRadius: BorderRadius.circular(12),
-                                ),
-                                alignment: Alignment.center,
-                                child: Text(
-                                  'إلغاء',
-                                  style: context.titleSmall?.copyWith(
-                                    color: isDarkMode ? Colors.white : Colors.black87,
-                                    fontWeight: FontWeight.w500,
-                                  ),
-                                ),
-                              ),
-                            ),
+                    child: Center(
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.2),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.5),
+                            width: 2,
                           ),
                         ),
-                        const SizedBox(width: 12),
+                        child: const Icon(
+                          Icons.logout_rounded,
+                          color: Colors.white,
+                          size: 36,
+                        ),
+                      ),
+                    ),
+                  ),
 
-                        // Logout Button
-                        Expanded(
-                          flex: 2,
-                          child: Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () async {
-                                HapticFeedback.mediumImpact();
-                                Navigator.of(context).pop();
-                                final authProvider = Provider.of<AuthProvider>(
-                                  context,
-                                  listen: false,
-                                );
-                                await authProvider.signOut(context);
-                              },
-                              borderRadius: BorderRadius.circular(12),
-                              child: Container(
-                                padding: const EdgeInsets.symmetric(
-                                  vertical: 12,
-                                ),
-                                decoration: BoxDecoration(
-                                  gradient: LinearGradient(
-                                    colors: [
-                                      const Color(0xFFFF5963),
-                                      const Color(0xFFFF7B7B),
-                                    ],
-                                    begin: Alignment.centerRight,
-                                    end: Alignment.centerLeft,
-                                  ),
+                  // Content
+                  Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      children: [
+                        Text(
+                          'تسجيل الخروج',
+                          style: context.titleLarge?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isDarkMode ? Colors.white : Colors.black87,
+                            fontSize: 20,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'هل أنت متأكد من أنك تريد تسجيل الخروج؟',
+                          style: context.bodyMedium?.copyWith(
+                            color:
+                                isDarkMode
+                                    ? Colors.grey.shade300
+                                    : Colors.grey.shade700,
+                            fontSize: 14,
+                            height: 1.5,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Buttons
+                        Row(
+                          children: [
+                            // Cancel Button
+                            Expanded(
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () {
+                                    HapticFeedback.lightImpact();
+                                    Navigator.of(context).pop();
+                                  },
                                   borderRadius: BorderRadius.circular(12),
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: const Color(0xFFFF5963).withOpacity(0.3),
-                                      blurRadius: 8,
-                                      offset: const Offset(0, 4),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
                                     ),
-                                  ],
-                                ),
-                                alignment: Alignment.center,
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    const Icon(
-                                      Icons.logout,
-                                      color: Colors.white,
-                                      size: 20,
+                                    decoration: BoxDecoration(
+                                      color:
+                                          isDarkMode
+                                              ? Colors.grey.shade800
+                                              : Colors.grey.shade200,
+                                      borderRadius: BorderRadius.circular(12),
                                     ),
-                                    const SizedBox(width: 8),
-                                    Text(
-                                      'تسجيل الخروج',
+                                    alignment: Alignment.center,
+                                    child: Text(
+                                      'إلغاء',
                                       style: context.titleSmall?.copyWith(
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.white
+                                                : Colors.black87,
+                                        fontWeight: FontWeight.w500,
                                       ),
                                     ),
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
-                          ),
+                            const SizedBox(width: 12),
+
+                            // Logout Button
+                            Expanded(
+                              flex: 2,
+                              child: Material(
+                                color: Colors.transparent,
+                                child: InkWell(
+                                  onTap: () async {
+                                    HapticFeedback.mediumImpact();
+                                    Navigator.of(context).pop();
+                                    final authProvider =
+                                        Provider.of<AuthProvider>(
+                                          context,
+                                          listen: false,
+                                        );
+                                    await authProvider.signOut(context);
+                                  },
+                                  borderRadius: BorderRadius.circular(12),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 12,
+                                    ),
+                                    decoration: BoxDecoration(
+                                      gradient: LinearGradient(
+                                        colors: [
+                                          const Color(0xFFFF5963),
+                                          const Color(0xFFFF7B7B),
+                                        ],
+                                        begin: Alignment.centerRight,
+                                        end: Alignment.centerLeft,
+                                      ),
+                                      borderRadius: BorderRadius.circular(12),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: const Color(
+                                            0xFFFF5963,
+                                          ).withOpacity(0.3),
+                                          blurRadius: 8,
+                                          offset: const Offset(0, 4),
+                                        ),
+                                      ],
+                                    ),
+                                    alignment: Alignment.center,
+                                    child: Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        const Icon(
+                                          Icons.logout,
+                                          color: Colors.white,
+                                          size: 20,
+                                        ),
+                                        const SizedBox(width: 8),
+                                        Text(
+                                          'تسجيل الخروج',
+                                          style: context.titleSmall?.copyWith(
+                                            color: Colors.white,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
-      ),
     );
   }
 }

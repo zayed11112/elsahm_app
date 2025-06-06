@@ -27,12 +27,15 @@ class PaymentRequestsScreen extends StatefulWidget {
 }
 
 class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   // تخزين الاستعلامات المختلفة
   final Map<String, Stream<List<Map<String, dynamic>>>> _streams = {};
 
   // Tab controller for switching between request types
   late TabController _tabController;
+
+  // Animation controller for modal bottom sheet
+  AnimationController? _modalAnimationController;
 
   // Animation for card reveal
   final List<GlobalKey<AnimatedListState>> _listKeys = [
@@ -54,7 +57,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
     'approved': Icons.check_circle,
     'rejected': Icons.cancel,
   };
-  
+
   // Cache for request cards to avoid unnecessary rebuilds
   final Map<String, Widget> _requestCardCache = {};
 
@@ -62,7 +65,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    
+
     // Listen for tab changes to trigger animations
     _tabController.addListener(_handleTabChange);
   }
@@ -80,6 +83,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
   void dispose() {
     _tabController.removeListener(_handleTabChange);
     _tabController.dispose();
+    _modalAnimationController?.dispose();
     _streams.clear();
     _requestCardCache.clear();
     super.dispose();
@@ -106,26 +110,27 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
       return 'تاريخ غير معروف';
     }
   }
-  
+
   // Get request card with caching for performance
   Widget _getCachedRequestCard(Map<String, dynamic> request, bool isDarkMode) {
     final String requestId = request['id']?.toString() ?? '';
-    final String cacheKey = '$requestId-${request['updatedAt'] ?? request['createdAt']}';
-    
+    final String cacheKey =
+        '$requestId-${request['updatedAt'] ?? request['createdAt']}';
+
     if (!_requestCardCache.containsKey(cacheKey)) {
       _requestCardCache[cacheKey] = _buildRequestCard(request, isDarkMode);
     }
-    
+
     return _requestCardCache[cacheKey]!;
   }
-  
+
   // Clear all caches to refresh data
   Future<void> _refreshData() async {
     setState(() {
       _streams.clear();
       _requestCardCache.clear();
     });
-    
+
     // Show refresh confirmation
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -159,7 +164,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
         ),
       );
     }
-    
+
     // انتظار قليلاً لإعطاء شعور بالتحديث
     return Future.delayed(const Duration(milliseconds: 800));
   }
@@ -184,7 +189,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
               Container(
                 padding: const EdgeInsets.all(24),
                 decoration: BoxDecoration(
-                  color: isDarkMode ? Colors.grey[800]!.withOpacity(0.3) : Colors.grey[200]!.withOpacity(0.5),
+                  color:
+                      isDarkMode
+                          ? Colors.grey[800]!.withOpacity(0.3)
+                          : Colors.grey[200]!.withOpacity(0.5),
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
@@ -256,9 +264,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                 bottom: 20,
                 right: 0,
                 left: 0,
-                child: Center(
-                  child: _buildComplaintsButton(),
-                ),
+                child: Center(child: _buildComplaintsButton()),
               ),
             ],
           ),
@@ -272,10 +278,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
     return AppBar(
       title: const Text(
         'طلبات الدفع',
-        style: TextStyle(
-          color: Colors.white,
-          fontWeight: FontWeight.bold,
-        ),
+        style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
       ),
       centerTitle: true,
       backgroundColor: appBarBlue,
@@ -326,7 +329,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
             labelColor: Colors.white,
             unselectedLabelColor: Colors.white70,
             indicatorSize: TabBarIndicatorSize.label, // More precise indicator
-            labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+            labelStyle: const TextStyle(
+              fontWeight: FontWeight.bold,
+              fontSize: 14,
+            ),
             unselectedLabelStyle: const TextStyle(fontSize: 14),
             tabs: const [
               Tab(text: 'قيد المراجعة'),
@@ -387,10 +393,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                     const SizedBox(height: 8),
                     Text(
                       'يتم استرجاع البيانات',
-                      style: TextStyle(
-                        color: Colors.grey[600],
-                        fontSize: 14,
-                      ),
+                      style: TextStyle(color: Colors.grey[600], fontSize: 14),
                     ),
                   ],
                 ),
@@ -448,7 +451,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                         Text(
                           snapshot.error.toString(),
                           style: TextStyle(
-                            color: context.isDarkMode ? Colors.grey[400] : Colors.grey[700],
+                            color:
+                                context.isDarkMode
+                                    ? Colors.grey[400]
+                                    : Colors.grey[700],
                             fontSize: 14,
                           ),
                           textAlign: TextAlign.center,
@@ -504,7 +510,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                 // Only animate if this is the current tab
                 final shouldAnimate =
                     _tabController.index == _getTabIndexForStatus(status);
-                
+
                 return TweenAnimationBuilder<double>(
                   tween: Tween<double>(begin: 0, end: shouldAnimate ? 1 : 0),
                   duration: Duration(milliseconds: 300 + (index * 50)),
@@ -520,7 +526,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                   },
                   child: Padding(
                     padding: const EdgeInsets.only(bottom: 12),
-                    child: _getCachedRequestCard(requests[index], context.isDarkMode),
+                    child: _getCachedRequestCard(
+                      requests[index],
+                      context.isDarkMode,
+                    ),
                   ),
                 );
               },
@@ -551,7 +560,8 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
       physics: const AlwaysScrollableScrollPhysics(),
       children: [
         SizedBox(
-          height: MediaQuery.of(context).size.height * 0.3, // Enough space for pull
+          height:
+              MediaQuery.of(context).size.height * 0.3, // Enough space for pull
         ),
         Center(
           child: Column(
@@ -589,7 +599,8 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.w500,
-                  color: context.isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                  color:
+                      context.isDarkMode ? Colors.grey[300] : Colors.grey[700],
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -598,7 +609,8 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                 'اسحب للأسفل لتحديث البيانات',
                 style: TextStyle(
                   fontSize: 14,
-                  color: context.isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                  color:
+                      context.isDarkMode ? Colors.grey[400] : Colors.grey[600],
                 ),
                 textAlign: TextAlign.center,
               ),
@@ -697,7 +709,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                             date,
                             style: TextStyle(
                               fontSize: 12,
-                              color: isDarkMode ? darkTextSecondary : lightTextSecondary,
+                              color:
+                                  isDarkMode
+                                      ? darkTextSecondary
+                                      : lightTextSecondary,
                             ),
                           ),
                         ],
@@ -872,7 +887,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                           label: const Text('عرض التفاصيل'),
                           style: TextButton.styleFrom(
                             foregroundColor: primarySkyBlue,
-                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(20),
                             ),
@@ -906,11 +924,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
             color: iconColor.withOpacity(0.1),
             borderRadius: BorderRadius.circular(8),
           ),
-          child: Icon(
-            icon,
-            size: 18,
-            color: iconColor,
-          ),
+          child: Icon(icon, size: 18, color: iconColor),
         ),
         const SizedBox(width: 12),
         Expanded(
@@ -946,31 +960,27 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
     final status = request['status'] as String;
     final statusColor = context.getStatusColor(status);
 
-    // Use const where possible for performance
-    const Duration animationDuration = Duration(milliseconds: 400);
+    // Create or reset the animation controller for the modal
+    _modalAnimationController ??= AnimationController(
+      duration: const Duration(milliseconds: 400),
+      vsync: this,
+    );
+    _modalAnimationController!.reset();
 
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      transitionAnimationController: AnimationController(
-        duration: animationDuration,
-        vsync: this,
-      ),
+      transitionAnimationController: _modalAnimationController,
       builder: (context) {
         return Container(
           height: MediaQuery.of(context).size.height * 0.85,
           decoration: BoxDecoration(
             gradient: LinearGradient(
-              colors: isDarkMode
-                  ? [
-                      const Color(0xFF1F1F1F),
-                      const Color(0xFF121212),
-                    ]
-                  : [
-                      Colors.white,
-                      const Color(0xFFF5F5F5),
-                    ],
+              colors:
+                  isDarkMode
+                      ? [const Color(0xFF1F1F1F), const Color(0xFF121212)]
+                      : [Colors.white, const Color(0xFFF5F5F5)],
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
             ),
@@ -1006,10 +1016,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                 builder: (context, value, child) {
                   return Transform.translate(
                     offset: Offset(0, -30 * (1 - value)),
-                    child: Opacity(
-                      opacity: value,
-                      child: child,
-                    ),
+                    child: Opacity(opacity: value, child: child),
                   );
                 },
                 child: Container(
@@ -1250,7 +1257,9 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                       if (request['userName'] != null &&
                               request['userName'].toString().isNotEmpty ||
                           request['universityId'] != null &&
-                              request['universityId'].toString().isNotEmpty) ...[
+                              request['universityId']
+                                  .toString()
+                                  .isNotEmpty) ...[
                         const SizedBox(height: 24),
                         _buildAnimatedCard(
                           delay: 400,
@@ -1297,10 +1306,11 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                             const SizedBox(height: 16),
                             if (request['paymentProofUrl'] != null)
                               GestureDetector(
-                                onTap: () => _showFullScreenImage(
-                                  context,
-                                  request['paymentProofUrl'],
-                                ),
+                                onTap:
+                                    () => _showFullScreenImage(
+                                      context,
+                                      request['paymentProofUrl'],
+                                    ),
                                 child: Container(
                                   width: double.infinity,
                                   height: 200,
@@ -1322,32 +1332,39 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                                         Hero(
                                           tag: 'payment_proof_${request['id']}',
                                           child: CachedNetworkImage(
-                                            imageUrl: request['paymentProofUrl'],
+                                            imageUrl:
+                                                request['paymentProofUrl'],
                                             fit: BoxFit.cover,
-                                            placeholder: (context, url) => Container(
-                                              color: isDarkMode
-                                                  ? Colors.grey[850]
-                                                  : Colors.grey[200],
-                                              child: const Center(
-                                                child: CircularProgressIndicator(
-                                                  color: primarySkyBlue,
-                                                  strokeWidth: 2,
+                                            placeholder:
+                                                (context, url) => Container(
+                                                  color:
+                                                      isDarkMode
+                                                          ? Colors.grey[850]
+                                                          : Colors.grey[200],
+                                                  child: const Center(
+                                                    child:
+                                                        CircularProgressIndicator(
+                                                          color: primarySkyBlue,
+                                                          strokeWidth: 2,
+                                                        ),
+                                                  ),
                                                 ),
-                                              ),
-                                            ),
-                                            errorWidget: (context, url, error) =>
-                                                Container(
-                                              color: isDarkMode
-                                                  ? Colors.grey[850]
-                                                  : Colors.grey[200],
-                                              child: const Center(
-                                                child: Icon(
-                                                  Icons.error,
-                                                  color: rejectedColor,
-                                                  size: 40,
-                                                ),
-                                              ),
-                                            ),
+                                            errorWidget:
+                                                (context, url, error) =>
+                                                    Container(
+                                                      color:
+                                                          isDarkMode
+                                                              ? Colors.grey[850]
+                                                              : Colors
+                                                                  .grey[200],
+                                                      child: const Center(
+                                                        child: Icon(
+                                                          Icons.error,
+                                                          color: rejectedColor,
+                                                          size: 40,
+                                                        ),
+                                                      ),
+                                                    ),
                                           ),
                                         ),
                                         // Gradient overlay
@@ -1379,11 +1396,15 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                                               vertical: 8,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: Colors.white.withOpacity(0.9),
-                                              borderRadius: BorderRadius.circular(20),
+                                              color: Colors.white.withOpacity(
+                                                0.9,
+                                              ),
+                                              borderRadius:
+                                                  BorderRadius.circular(20),
                                               boxShadow: [
                                                 BoxShadow(
-                                                  color: Colors.black.withOpacity(0.2),
+                                                  color: Colors.black
+                                                      .withOpacity(0.2),
                                                   blurRadius: 8,
                                                   offset: const Offset(0, 2),
                                                 ),
@@ -1420,9 +1441,10 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                                 width: double.infinity,
                                 height: 150,
                                 decoration: BoxDecoration(
-                                  color: isDarkMode
-                                      ? Colors.grey[800]
-                                      : Colors.grey[200],
+                                  color:
+                                      isDarkMode
+                                          ? Colors.grey[800]
+                                          : Colors.grey[200],
                                   borderRadius: BorderRadius.circular(16),
                                 ),
                                 child: const Center(
@@ -1493,7 +1515,8 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                                             shape: BoxShape.circle,
                                             boxShadow: [
                                               BoxShadow(
-                                                color: approvedColor.withOpacity(0.2),
+                                                color: approvedColor
+                                                    .withOpacity(0.2),
                                                 blurRadius: 10,
                                                 spreadRadius: 0,
                                               ),
@@ -1523,8 +1546,12 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
                                       Container(
                                         padding: const EdgeInsets.all(12),
                                         decoration: BoxDecoration(
-                                          color: approvedColor.withOpacity(0.08),
-                                          borderRadius: BorderRadius.circular(10),
+                                          color: approvedColor.withOpacity(
+                                            0.08,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            10,
+                                          ),
                                         ),
                                         child: Row(
                                           children: [
@@ -1565,10 +1592,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
   }
 
   // Helper to create animated cards in details view
-  Widget _buildAnimatedCard({
-    required int delay,
-    required Widget child,
-  }) {
+  Widget _buildAnimatedCard({required int delay, required Widget child}) {
     return TweenAnimationBuilder<double>(
       tween: Tween<double>(begin: 0, end: 1),
       duration: const Duration(milliseconds: 800),
@@ -1577,10 +1601,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
       builder: (context, value, child) {
         return Transform.translate(
           offset: Offset(0, 40 * (1 - value)),
-          child: Opacity(
-            opacity: value,
-            child: child,
-          ),
+          child: Opacity(opacity: value, child: child),
         );
       },
       child: child,
@@ -1724,9 +1745,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
         onPressed: () {
           Navigator.push(
             context,
-            MaterialPageRoute(
-              builder: (context) => const ComplaintsScreen(),
-            ),
+            MaterialPageRoute(builder: (context) => const ComplaintsScreen()),
           );
         },
         icon: Container(
@@ -1745,10 +1764,7 @@ class _PaymentRequestsScreenState extends State<PaymentRequestsScreen>
           padding: EdgeInsets.only(left: 8.0),
           child: Text(
             'تقديم شكوى جديدة',
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 16,
-            ),
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ),
         style: ElevatedButton.styleFrom(

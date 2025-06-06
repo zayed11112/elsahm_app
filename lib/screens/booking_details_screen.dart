@@ -4,6 +4,8 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import '../models/booking.dart';
 import '../services/booking_service.dart';
+import '../constants/theme.dart';
+import '../widgets/enhanced_loading.dart';
 import '../screens/complaints_screen.dart';
 
 class BookingDetailsScreen extends StatefulWidget {
@@ -103,20 +105,46 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: theme.scaffoldBackgroundColor,
+      backgroundColor: isDarkMode ? darkBackground : lightBackground,
       appBar: AppBar(
         elevation: 0,
+        flexibleSpace: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [primaryBlueDark, primaryBlue],
+            ),
+          ),
+        ),
+        foregroundColor: Colors.white,
         title: const Text(
           'تفاصيل الحجز',
-          style: TextStyle(fontWeight: FontWeight.bold),
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 20,
+            color: Colors.white,
+          ),
         ),
         centerTitle: true,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back_ios_rounded, color: Colors.white),
+          onPressed: () => Navigator.of(context).pop(),
+        ),
       ),
       body:
           _isLoading
-              ? const Center(child: CircularProgressIndicator())
+              ? const Center(
+                child: EnhancedLoading(
+                  style: LoadingStyle.pulse,
+                  size: 60,
+                  message: 'جاري تحميل تفاصيل الحجز...',
+                  showMessage: true,
+                ),
+              )
               : _hasError
               ? _buildErrorView()
               : _booking == null
@@ -126,115 +154,172 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
   }
 
   Widget _buildErrorView() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.error_outline, size: 80, color: Colors.red[300]),
-          const SizedBox(height: 24),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 32),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.red.shade50,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.red.withAlpha(26),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Text(
-              _errorMessage,
-              style: TextStyle(fontSize: 16, color: Colors.red[700]),
-              textAlign: TextAlign.center,
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: _loadBookingDetails,
-            icon: const Icon(Icons.refresh),
-            label: const Text('إعادة المحاولة'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(24),
+              decoration: BoxDecoration(
+                color: Colors.red.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.error_outline_rounded,
+                size: 64,
+                color: Colors.red[400],
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 24),
+            Text(
+              'حدث خطأ أثناء تحميل التفاصيل',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.red[400] : Colors.red[700],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color:
+                    isDarkMode
+                        ? Colors.red.withValues(alpha: 0.1)
+                        : Colors.red.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.red.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                _errorMessage,
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDarkMode ? Colors.red[300] : Colors.red[700],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: _loadBookingDetails,
+              icon: const Icon(Icons.refresh_rounded),
+              label: const Text('إعادة المحاولة'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildNotFoundView() {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Icon(Icons.search_off, size: 120, color: Colors.grey[400]),
-          const SizedBox(height: 32),
-          Container(
-            margin: const EdgeInsets.symmetric(horizontal: 32),
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: Colors.blue.shade50,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.blue.withAlpha(26),
-                  blurRadius: 10,
-                  offset: const Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Column(
-              children: const [
-                Text(
-                  'لم يتم العثور على الحجز',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                ),
-                SizedBox(height: 8),
-                Text(
-                  'قد يكون الحجز غير موجود أو تم حذفه',
-                  style: TextStyle(fontSize: 14, color: Colors.grey),
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 32),
-          ElevatedButton.icon(
-            onPressed: () => Navigator.pop(context),
-            icon: const Icon(Icons.arrow_back),
-            label: const Text('العودة'),
-            style: ElevatedButton.styleFrom(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.all(24.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(32),
+              decoration: BoxDecoration(
+                color: primaryBlue.withValues(alpha: 0.1),
+                shape: BoxShape.circle,
+              ),
+              child: Icon(
+                Icons.search_off_rounded,
+                size: 64,
+                color: primaryBlue.withValues(alpha: 0.7),
               ),
             ),
-          ),
-        ],
+            const SizedBox(height: 32),
+            Text(
+              'لم يتم العثور على الحجز',
+              style: TextStyle(
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                color: isDarkMode ? Colors.white : Colors.grey[800],
+              ),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color:
+                    isDarkMode
+                        ? primaryBlue.withValues(alpha: 0.1)
+                        : Colors.blue.shade50,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: primaryBlue.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Text(
+                'قد يكون الحجز غير موجود أو تم حذفه',
+                style: TextStyle(
+                  fontSize: 16,
+                  color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                ),
+                textAlign: TextAlign.center,
+              ),
+            ),
+            const SizedBox(height: 32),
+            ElevatedButton.icon(
+              onPressed: () => Navigator.pop(context),
+              icon: const Icon(Icons.arrow_back_ios_rounded),
+              label: const Text('العودة'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: primaryBlue,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(12),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildBookingDetails(ThemeData theme) {
     final booking = _booking!;
+    final isDarkMode = theme.brightness == Brightness.dark;
 
     return FadeTransition(
       opacity: _fadeInAnimation,
       child: SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(20),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
-          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            // Status card with animation
+            // Enhanced status card with animation
             SlideTransition(
               position: Tween<Offset>(
                 begin: const Offset(0, 0.3),
@@ -245,15 +330,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
                   curve: const Interval(0.0, 0.6, curve: Curves.easeOut),
                 ),
               ),
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.95,
-                child: _buildStatusCard(booking, theme),
-              ),
+              child: _buildEnhancedStatusCard(booking, isDarkMode),
             ),
 
             const SizedBox(height: 24),
 
-            // Property details with animation
+            // Enhanced property details with animation
             SlideTransition(
               position: Tween<Offset>(
                 begin: const Offset(0, 0.3),
@@ -264,15 +346,12 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
                   curve: const Interval(0.2, 0.7, curve: Curves.easeOut),
                 ),
               ),
-              child: SizedBox(
-                width: MediaQuery.of(context).size.width * 0.95,
-                child: _buildPropertyDetailsCard(booking, theme),
-              ),
+              child: _buildEnhancedPropertyDetailsCard(booking, isDarkMode),
             ),
 
             const SizedBox(height: 24),
 
-            // Notes with animation
+            // Enhanced notes with animation
             if (booking.notes != null && booking.notes!.isNotEmpty)
               SlideTransition(
                 position: Tween<Offset>(
@@ -284,38 +363,59 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
                     curve: const Interval(0.4, 0.8, curve: Curves.easeOut),
                   ),
                 ),
-                child: SizedBox(
-                  width: MediaQuery.of(context).size.width * 0.95,
-                  child: _buildNotesCard(booking, theme),
-                ),
+                child: _buildEnhancedNotesCard(booking, isDarkMode),
               ),
 
             const SizedBox(height: 40),
 
-            // Action button with animation
+            // Enhanced action button with animation
             if (booking.status == BookingStatus.pending)
               ScaleTransition(
                 scale: CurvedAnimation(
                   parent: _animationController,
                   curve: const Interval(0.6, 1.0, curve: Curves.elasticOut),
                 ),
-                child: ElevatedButton.icon(
-                  onPressed: () {
-                    _showCancelConfirmationDialog(context, booking.id);
-                  },
-                  icon: const Icon(Icons.report_problem_outlined),
-                  label: const Text('تقديم شكوى'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.orange.shade700,
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 16,
+                child: Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(20),
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [Colors.orange.shade600, Colors.orange.shade700],
                     ),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.orange.withValues(alpha: 0.3),
+                        blurRadius: 12,
+                        spreadRadius: 0,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: ElevatedButton.icon(
+                    onPressed: () {
+                      _showCancelConfirmationDialog(context, booking.id);
+                    },
+                    icon: const Icon(Icons.report_problem_outlined, size: 24),
+                    label: const Text(
+                      'تقديم شكوى',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                    elevation: 4,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.transparent,
+                      foregroundColor: Colors.white,
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 32,
+                        vertical: 16,
+                      ),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(20),
+                      ),
+                    ),
                   ),
                 ),
               ),
@@ -325,171 +425,127 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
     );
   }
 
-  Widget _buildStatusCard(Booking booking, ThemeData theme) {
-    return Card(
-      elevation: 8,
-      shadowColor: _getStatusColor(booking.status).withAlpha(102),
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      child: Container(
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(16),
-          gradient: LinearGradient(
-            colors: [
-              _getStatusColor(booking.status).withAlpha(179),
-              _getStatusColor(booking.status).withAlpha(230),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            children: [
-              Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(
-                      color: Colors.white,
-                      borderRadius: BorderRadius.circular(50),
-                    ),
-                    child: Icon(
-                      _getStatusIcon(booking.status),
-                      color: _getStatusColor(booking.status),
-                      size: 36,
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'حالة الحجز',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.white.withAlpha(230),
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        Booking.bookingStatusToString(booking.status),
-                        style: const TextStyle(
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Spacer(),
-                  if (booking.status == BookingStatus.pending)
-                    ElevatedButton.icon(
-                      onPressed: () {
-                        _showCancelConfirmationDialog(context, booking.id);
-                      },
-                      icon: const Icon(Icons.report_problem_outlined, size: 18),
-                      label: const Text('تقديم شكوى'),
-                      style: ElevatedButton.styleFrom(
-                        foregroundColor: Colors.white,
-                        backgroundColor: Colors.orange.shade700,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 16,
-                          vertical: 12,
-                        ),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
+  Widget _buildEnhancedStatusCard(Booking booking, bool isDarkMode) {
+    final statusColor = _getStatusColor(booking.status);
+    final cardBgColor = isDarkMode ? const Color(0xFF2D3035) : Colors.white;
 
-  Widget _buildPropertyDetailsCard(Booking booking, ThemeData theme) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            cardBgColor,
+            isDarkMode ? const Color(0xFF353A47) : const Color(0xFFFAFBFC),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                isDarkMode
+                    ? Colors.black.withValues(alpha: 0.4)
+                    : statusColor.withValues(alpha: 0.15),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color:
+                isDarkMode
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.white.withValues(alpha: 0.8),
+            blurRadius: 8,
+            spreadRadius: -2,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(28),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Enhanced status icon with animation
+            ScaleTransition(
+              scale: Tween<double>(begin: 0.5, end: 1.0).animate(
+                CurvedAnimation(
+                  parent: _animationController,
+                  curve: const Interval(0.0, 0.5, curve: Curves.elasticOut),
+                ),
+              ),
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [statusColor, statusColor.withValues(alpha: 0.8)],
+                  ),
+                  shape: BoxShape.circle,
+                  boxShadow: [
+                    BoxShadow(
+                      color: statusColor.withValues(alpha: 0.4),
+                      blurRadius: 20,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Icon(
+                  _getStatusIcon(booking.status),
+                  size: 48,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Enhanced status text
+            Text(
+              Booking.bookingStatusToString(booking.status),
+              style: TextStyle(
+                fontSize: 26,
+                fontWeight: FontWeight.bold,
+                color: statusColor,
+                height: 1.2,
+              ),
+            ),
+
+            const SizedBox(height: 16),
+
+            // Enhanced booking date
             Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
               decoration: BoxDecoration(
-                color: theme.primaryColor.withAlpha(26),
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: [
+                    statusColor.withValues(alpha: 0.1),
+                    statusColor.withValues(alpha: 0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: statusColor.withValues(alpha: 0.3),
+                  width: 1,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.apartment_rounded,
-                    color: theme.primaryColor,
-                    size: 24,
+                    Icons.calendar_today_rounded,
+                    size: 20,
+                    color: statusColor,
                   ),
-                  const SizedBox(width: 8),
-                  const Text(
-                    'تفاصيل العقار',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                  ),
-                ],
-              ),
-            ),
-
-            const Divider(height: 24),
-
-            // Property details rows
-            _buildDetailRow(
-              'اسم العقار',
-              booking.apartmentName,
-              Icons.home_rounded,
-              theme,
-            ),
-            _buildDetailRow(
-              'السعر الإجمالي',
-              '${booking.totalPrice} جنيه',
-              Icons.attach_money_rounded,
-              theme,
-            ),
-            _buildDetailRow(
-              'آخر تحديث',
-              _formatDate(booking.updatedAt),
-              Icons.update_rounded,
-              theme,
-            ),
-
-            // Action buttons
-            Padding(
-              padding: const EdgeInsets.only(top: 16),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  _buildActionButton(
-                    icon: Icons.phone_outlined,
-                    label: 'اتصال',
-                    color: Colors.green,
-                    onTap: () {
-                      _launchPhone('01093130120');
-                    },
-                  ),
-                  const SizedBox(width: 24),
-                  _buildActionButton(
-                    icon: FontAwesomeIcons.whatsapp,
-                    label: 'واتساب',
-                    color: Colors.green.shade700,
-                    onTap: () {
-                      _launchWhatsapp('+201093130120');
-                    },
+                  const SizedBox(width: 12),
+                  Text(
+                    'تاريخ الحجز: ${_formatDate(booking.createdAt)}',
+                    style: TextStyle(
+                      fontWeight: FontWeight.w600,
+                      fontSize: 16,
+                      color: isDarkMode ? Colors.white : Colors.grey[800],
+                    ),
                   ),
                 ],
               ),
@@ -500,46 +556,255 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
     );
   }
 
-  Widget _buildNotesCard(Booking booking, ThemeData theme) {
-    return Card(
-      elevation: 4,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+  Widget _buildEnhancedPropertyDetailsCard(Booking booking, bool isDarkMode) {
+    final cardBgColor = isDarkMode ? const Color(0xFF2D3035) : Colors.white;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            cardBgColor,
+            isDarkMode ? const Color(0xFF353A47) : const Color(0xFFFAFBFC),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                isDarkMode
+                    ? Colors.black.withValues(alpha: 0.4)
+                    : primaryBlue.withValues(alpha: 0.08),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color:
+                isDarkMode
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.white.withValues(alpha: 0.8),
+            blurRadius: 8,
+            spreadRadius: -2,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
       child: Padding(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(28),
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
+            // Enhanced header
             Container(
-              margin: const EdgeInsets.only(bottom: 16),
-              padding: const EdgeInsets.all(12),
+              padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: Colors.amber.withAlpha(26),
-                borderRadius: BorderRadius.circular(12),
+                gradient: LinearGradient(
+                  colors: [
+                    primaryBlue.withValues(alpha: 0.1),
+                    primaryBlueLight.withValues(alpha: 0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: primaryBlue.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
-                children: const [
-                  Icon(Icons.notes_rounded, color: Colors.amber, size: 24),
-                  SizedBox(width: 8),
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: primaryBlue.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.apartment_rounded,
+                      color: primaryBlue,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
                   Text(
-                    'ملاحظات',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                    'تفاصيل العقار',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.grey[800],
+                    ),
                   ),
                 ],
               ),
             ),
-            const Divider(height: 24),
+
+            const SizedBox(height: 24),
+
+            // Enhanced property details rows
+            _buildEnhancedDetailRow(
+              'اسم العقار',
+              booking.apartmentName,
+              Icons.home_rounded,
+              isDarkMode,
+            ),
+            const SizedBox(height: 16),
+            _buildEnhancedDetailRow(
+              'السعر الإجمالي',
+              '${booking.totalPrice} جنيه',
+              Icons.payments_rounded,
+              isDarkMode,
+            ),
+            const SizedBox(height: 16),
+            _buildEnhancedDetailRow(
+              'آخر تحديث',
+              _formatDate(booking.updatedAt),
+              Icons.update_rounded,
+              isDarkMode,
+            ),
+
+            const SizedBox(height: 32),
+
+            // Enhanced action buttons
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _buildEnhancedActionButton(
+                  icon: Icons.phone_rounded,
+                  label: 'اتصال',
+                  color: Colors.green,
+                  isDarkMode: isDarkMode,
+                  onTap: () {
+                    _launchPhone('01093130120');
+                  },
+                ),
+                const SizedBox(width: 20),
+                _buildEnhancedActionButton(
+                  icon: FontAwesomeIcons.whatsapp,
+                  label: 'واتساب',
+                  color: Colors.green.shade700,
+                  isDarkMode: isDarkMode,
+                  onTap: () {
+                    _launchWhatsapp('+201093130120');
+                  },
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEnhancedNotesCard(Booking booking, bool isDarkMode) {
+    final cardBgColor = isDarkMode ? const Color(0xFF2D3035) : Colors.white;
+
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            cardBgColor,
+            isDarkMode ? const Color(0xFF353A47) : const Color(0xFFFAFBFC),
+          ],
+        ),
+        boxShadow: [
+          BoxShadow(
+            color:
+                isDarkMode
+                    ? Colors.black.withValues(alpha: 0.4)
+                    : Colors.amber.withValues(alpha: 0.08),
+            blurRadius: 20,
+            spreadRadius: 0,
+            offset: const Offset(0, 8),
+          ),
+          BoxShadow(
+            color:
+                isDarkMode
+                    ? Colors.black.withValues(alpha: 0.2)
+                    : Colors.white.withValues(alpha: 0.8),
+            blurRadius: 8,
+            spreadRadius: -2,
+            offset: const Offset(0, -2),
+          ),
+        ],
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          children: [
+            // Enhanced header
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  colors: [
+                    Colors.amber.withValues(alpha: 0.1),
+                    Colors.amber.withValues(alpha: 0.05),
+                  ],
+                ),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.amber.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(
+                      color: Colors.amber.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      Icons.notes_rounded,
+                      color: Colors.amber[700],
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Text(
+                    'ملاحظات',
+                    style: TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: isDarkMode ? Colors.white : Colors.grey[800],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 24),
+
+            // Enhanced notes content
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
+              padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
-                color: Colors.grey.withAlpha(13),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.grey.withAlpha(51)),
+                color:
+                    isDarkMode
+                        ? Colors.amber.withValues(alpha: 0.05)
+                        : Colors.amber.withValues(alpha: 0.03),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(
+                  color: Colors.amber.withValues(alpha: 0.2),
+                  width: 1,
+                ),
               ),
               child: Text(
                 booking.notes!,
-                style: const TextStyle(fontSize: 18, height: 1.5),
+                style: TextStyle(
+                  fontSize: 16,
+                  height: 1.6,
+                  color: isDarkMode ? Colors.grey[300] : Colors.grey[700],
+                ),
                 textAlign: TextAlign.center,
               ),
             ),
@@ -549,41 +814,67 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
     );
   }
 
-  Widget _buildDetailRow(
+  Widget _buildEnhancedDetailRow(
     String label,
     String value,
     IconData icon,
-    ThemeData theme,
+    bool isDarkMode,
   ) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color:
+            isDarkMode
+                ? Colors.white.withValues(alpha: 0.05)
+                : Colors.black.withValues(alpha: 0.02),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color:
+              isDarkMode
+                  ? Colors.white.withValues(alpha: 0.1)
+                  : Colors.black.withValues(alpha: 0.05),
+          width: 1,
+        ),
+      ),
       child: Row(
         children: [
           Container(
-            padding: const EdgeInsets.all(8),
+            padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: theme.primaryColor.withAlpha(26),
-              borderRadius: BorderRadius.circular(8),
+              gradient: LinearGradient(
+                colors: [
+                  primaryBlue.withValues(alpha: 0.2),
+                  primaryBlue.withValues(alpha: 0.1),
+                ],
+              ),
+              borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: theme.primaryColor, size: 24),
+            child: Icon(icon, color: primaryBlue, size: 24),
           ),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: TextStyle(color: Colors.grey.shade600, fontSize: 14),
-              ),
-              const SizedBox(height: 4),
-              Text(
-                value,
-                style: const TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isDarkMode ? Colors.grey[400] : Colors.grey[600],
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
                 ),
-              ),
-            ],
+                const SizedBox(height: 6),
+                Text(
+                  value,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: isDarkMode ? Colors.white : Colors.grey[800],
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -746,9 +1037,7 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
         content: Text(
           message,
           textAlign: TextAlign.center,
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontWeight: FontWeight.bold),
         ),
         backgroundColor: Colors.red,
         duration: const Duration(seconds: 2),
@@ -760,36 +1049,62 @@ class _BookingDetailsScreenState extends State<BookingDetailsScreen>
     );
   }
 
-  // Action button widget
-  Widget _buildActionButton({
+  // Enhanced action button widget
+  Widget _buildEnhancedActionButton({
     required IconData icon,
     required String label,
     required Color color,
+    required bool isDarkMode,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: onTap,
-      borderRadius: BorderRadius.circular(12),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-        decoration: BoxDecoration(
-          color: color.withAlpha(26),
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: color.withAlpha(77)),
+    return Container(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color.withValues(alpha: 0.1), color.withValues(alpha: 0.05)],
         ),
-        child: Column(
-          children: [
-            Icon(icon, color: color, size: 22),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                color: color,
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-              ),
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.2),
+            blurRadius: 8,
+            spreadRadius: 0,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        borderRadius: BorderRadius.circular(16),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(16),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: color.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Icon(icon, color: color, size: 24),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: color,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
