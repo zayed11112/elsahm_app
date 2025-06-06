@@ -897,10 +897,7 @@ class _LoginScreenState extends State<LoginScreen>
                                               listen: false,
                                             );
 
-                                            // إضافة محاولة جديدة لتسجيل الدخول مع رسائل أخطاء مفصلة
-                                            debugPrint('بدء محاولة تسجيل الدخول عبر جوجل...');
                                             final success = await authProvider.signInWithGoogle();
-                                            debugPrint('نتيجة محاولة تسجيل الدخول: $success');
 
                                             if (!mounted) return;
 
@@ -946,7 +943,7 @@ class _LoginScreenState extends State<LoginScreen>
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 SnackBar(
                                                   content: const Text(
-                                                    'فشل تسجيل الدخول عبر جوجل. الرجاء المحاولة مرة أخرى.',
+                                                    'فشل تسجيل الدخول عبر جوجل',
                                                     textAlign: TextAlign.center,
                                                     style: TextStyle(
                                                       fontWeight: FontWeight.bold,
@@ -962,14 +959,13 @@ class _LoginScreenState extends State<LoginScreen>
                                               );
                                             }
                                           } catch (e) {
-                                            debugPrint('خطأ أثناء تسجيل الدخول: $e');
                                             if (mounted) {
                                               // Fourth notification - Google sign in error
                                               ScaffoldMessenger.of(context).hideCurrentSnackBar();
                                               ScaffoldMessenger.of(context).showSnackBar(
                                                 SnackBar(
                                                   content: Text(
-                                                    'حدث خطأ غير متوقع. الرجاء المحاولة مرة أخرى.',
+                                                    'حدث خطأ: ${e.toString()}',
                                                     textAlign: TextAlign.center,
                                                     style: const TextStyle(
                                                       fontWeight: FontWeight.bold,

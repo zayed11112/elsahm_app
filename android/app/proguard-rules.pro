@@ -19,6 +19,20 @@
 -dontwarn com.google.firebase.**
 -dontwarn com.google.android.gms.**
 
+# Keep Google Sign In classes specifically
+-keep class com.google.android.gms.auth.** { *; }
+-keep class com.google.android.gms.common.** { *; }
+-keep class com.google.android.gms.signin.** { *; }
+-keep class com.google.android.gms.tasks.** { *; }
+-dontwarn com.google.android.gms.auth.**
+-dontwarn com.google.android.gms.common.**
+-dontwarn com.google.android.gms.signin.**
+-dontwarn com.google.android.gms.tasks.**
+
+# Keep Google Sign In plugin classes
+-keep class io.flutter.plugins.googlesignin.** { *; }
+-dontwarn io.flutter.plugins.googlesignin.**
+
 # Keep Supabase/PostgreSQL classes
 -keep class io.supabase.** { *; }
 -keep class org.postgresql.** { *; }

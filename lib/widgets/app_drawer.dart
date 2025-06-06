@@ -26,9 +26,10 @@ class AppDrawer extends StatefulWidget {
   State<AppDrawer> createState() => _AppDrawerState();
 }
 
-class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMixin {
+class _AppDrawerState extends State<AppDrawer>
+    with SingleTickerProviderStateMixin {
   late AnimationController _animationController;
-  
+
   @override
   void initState() {
     super.initState();
@@ -50,10 +51,11 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
     final themeProvider = Provider.of<ThemeProvider>(context);
     final authProvider = Provider.of<AuthProvider>(context);
     final navigationProvider = Provider.of<NavigationProvider>(context);
-    final isDarkMode = themeProvider.themeMode == ThemeMode.dark ||
+    final isDarkMode =
+        themeProvider.themeMode == ThemeMode.dark ||
         (themeProvider.themeMode == ThemeMode.system &&
             MediaQuery.platformBrightnessOf(context) == Brightness.dark);
-    
+
     // Current active index
     final currentIndex = navigationProvider.selectedIndex;
 
@@ -73,9 +75,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: isDarkMode
-                    ? [const Color(0xFF1E222A), const Color(0xFF161A21)]
-                    : [Colors.white, const Color(0xFFF8F9FA)],
+                colors:
+                    isDarkMode
+                        ? [const Color(0xFF1E222A), const Color(0xFF161A21)]
+                        : [Colors.white, const Color(0xFFF8F9FA)],
               ),
               borderRadius: const BorderRadius.only(
                 topRight: Radius.circular(24),
@@ -105,7 +108,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                               angle: _animationController.value * 1.0,
                               child: Container(
                                 decoration: BoxDecoration(
-                                  color: Theme.of(context).colorScheme.surfaceVariant,
+                                  color:
+                                      Theme.of(
+                                        context,
+                                      ).colorScheme.surfaceVariant,
                                   shape: BoxShape.circle,
                                   boxShadow: [
                                     BoxShadow(
@@ -124,7 +130,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                                       padding: const EdgeInsets.all(8.0),
                                       child: Icon(
                                         Icons.close_rounded,
-                                        color: Theme.of(context).colorScheme.onSurfaceVariant,
+                                        color:
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.onSurfaceVariant,
                                         size: 22,
                                       ),
                                     ),
@@ -138,14 +147,14 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                     ),
                   ),
                   const SizedBox(height: 16),
-                  
+
                   Expanded(
                     child: ListView(
                       padding: const EdgeInsets.symmetric(vertical: 16),
                       children: [
                         _buildProfileSection(context, authProvider),
                         const SizedBox(height: 24),
-                        
+
                         // Main Navigation Section
                         _buildSectionTitle(context, 'القائمة الرئيسية'),
                         _buildNavigationItem(
@@ -183,15 +192,19 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                           isActive: currentIndex == 4,
                           onTap: () => _navigateToTab(context, 4),
                         ),
-                        
+
                         // إضافة جروبات إلى القائمة الرئيسية لجميع المستخدمين
                         _buildNavigationItem(
                           context: context,
                           svgPath: 'assets/icons/group.svg',
                           text: 'جروبات',
-                          onTap: () => _navigateToScreen(context, const GroupsScreen()),
+                          onTap:
+                              () => _navigateToScreen(
+                                context,
+                                const GroupsScreen(),
+                              ),
                         ),
-                        
+
                         // Features Section (only for authenticated users)
                         if (authProvider.isAuthenticated) ...[
                           const SizedBox(height: 16),
@@ -200,22 +213,34 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                             context: context,
                             svgPath: 'assets/icons/money.svg',
                             text: 'شحن رصيد',
-                            onTap: () => _navigateToScreen(context, const WalletScreen()),
+                            onTap:
+                                () => _navigateToScreen(
+                                  context,
+                                  const WalletScreen(),
+                                ),
                           ),
                           _buildNavigationItem(
                             context: context,
                             svgPath: 'assets/icons/request-money.svg',
                             text: 'طلبات الدفع',
-                            onTap: () => _navigateToScreen(context, const PaymentRequestsScreen()),
+                            onTap:
+                                () => _navigateToScreen(
+                                  context,
+                                  const PaymentRequestsScreen(),
+                                ),
                           ),
                           _buildNavigationItem(
                             context: context,
                             svgPath: 'assets/icons/booking.svg',
                             text: 'طلبات الحجز',
-                            onTap: () => _navigateToScreen(context, const BookingRequestsScreen()),
+                            onTap:
+                                () => _navigateToScreen(
+                                  context,
+                                  const BookingRequestsScreen(),
+                                ),
                           ),
                         ],
-                        
+
                         // Support & Settings Section
                         const SizedBox(height: 16),
                         _buildSectionTitle(context, 'الإعدادات والدعم'),
@@ -223,7 +248,11 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                           context: context,
                           svgPath: 'assets/icons/settings.svg',
                           text: 'الإعدادات',
-                          onTap: () => _navigateToScreen(context, const SettingsScreen()),
+                          onTap:
+                              () => _navigateToScreen(
+                                context,
+                                const SettingsScreen(),
+                              ),
                         ),
                         // Complaints item - only visible for authenticated users
                         if (authProvider.isAuthenticated)
@@ -231,21 +260,29 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                             context: context,
                             svgPath: 'assets/icons/Complaints.svg',
                             text: 'الشكاوى',
-                            onTap: () => _navigateToScreen(context, const ComplaintsScreen()),
+                            onTap:
+                                () => _navigateToScreen(
+                                  context,
+                                  const ComplaintsScreen(),
+                                ),
                           ),
                         _buildNavigationItem(
                           context: context,
                           svgPath: 'assets/icons/phone.svg',
                           text: 'تواصل معنا',
-                          onTap: () => _navigateToScreen(context, const ContactUsScreen()),
+                          onTap:
+                              () => _navigateToScreen(
+                                context,
+                                const ContactUsScreen(),
+                              ),
                         ),
                       ],
                     ),
                   ),
-                  
+
                   // Dark Mode Toggle - إضافة هنا كعنصر ثابت
                   _buildThemeToggle(context, themeProvider, isDarkMode),
-                  
+
                   // Auth Button Section (Login/Logout)
                   _buildAuthButton(context, authProvider),
                 ],
@@ -256,14 +293,14 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
       },
     );
   }
-  
+
   Widget _buildProfileSection(BuildContext context, AuthProvider authProvider) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     if (!authProvider.isAuthenticated) {
       return _buildNotAuthenticatedProfile(context, isDarkMode);
     }
-    
+
     // استخدام FutureBuilder لجلب بيانات المستخدم من Firestore
     return FutureBuilder<UserProfile?>(
       future: FirestoreService().getUserProfile(authProvider.user!.uid),
@@ -304,15 +341,16 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
             ),
           );
         }
-        
+
         // بيانات المستخدم
         final userProfile = snapshot.data;
-        final userName = userProfile?.name.isNotEmpty == true 
-            ? userProfile!.name 
-            : authProvider.user?.email?.split('@').first ?? 'مرحباً بك';
+        final userName =
+            userProfile?.name.isNotEmpty == true
+                ? userProfile!.name
+                : authProvider.user?.email?.split('@').first ?? 'مرحباً بك';
         final userEmail = userProfile?.email ?? authProvider.user?.email ?? '';
         final avatarUrl = userProfile?.avatarUrl;
-        
+
         return Padding(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
           child: Row(
@@ -320,21 +358,29 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
               // صورة المستخدم
               ClipRRect(
                 borderRadius: BorderRadius.circular(28),
-                child: avatarUrl != null && avatarUrl.isNotEmpty
-                    ? CachedNetworkImage(
-                        imageUrl: avatarUrl,
-                        width: 56,
-                        height: 56,
-                        fit: BoxFit.cover,
-                        placeholder: (context, url) => Container(
+                child:
+                    avatarUrl != null && avatarUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                          imageUrl: avatarUrl,
                           width: 56,
                           height: 56,
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          child: Center(child: CircularProgressIndicator()),
-                        ),
-                        errorWidget: (context, url, error) => _buildUserInitial(context, userName),
-                      )
-                    : _buildUserInitial(context, userName),
+                          fit: BoxFit.cover,
+                          placeholder:
+                              (context, url) => Container(
+                                width: 56,
+                                height: 56,
+                                color: Theme.of(
+                                  context,
+                                ).colorScheme.primary.withOpacity(0.1),
+                                child: Center(
+                                  child: CircularProgressIndicator(),
+                                ),
+                              ),
+                          errorWidget:
+                              (context, url, error) =>
+                                  _buildUserInitial(context, userName),
+                        )
+                        : _buildUserInitial(context, userName),
               ),
               const SizedBox(width: 16),
               Expanded(
@@ -366,7 +412,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
       },
     );
   }
-  
+
   // بناء حالة عدم تسجيل الدخول
   Widget _buildNotAuthenticatedProfile(BuildContext context, bool isDarkMode) {
     return Padding(
@@ -375,9 +421,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
         padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
         decoration: BoxDecoration(
           gradient: LinearGradient(
-            colors: isDarkMode
-                ? [const Color(0xFF2E3A59), const Color(0xFF1E2A45)]
-                : [const Color(0xFFE3F2FD), const Color(0xFFBBDEFB)],
+            colors:
+                isDarkMode
+                    ? [const Color(0xFF2E3A59), const Color(0xFF1E2A45)]
+                    : [const Color(0xFFE3F2FD), const Color(0xFFBBDEFB)],
           ),
           borderRadius: BorderRadius.circular(16),
         ),
@@ -402,7 +449,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
       ),
     );
   }
-  
+
   // بناء حرف اختصار اسم المستخدم
   Widget _buildUserInitial(BuildContext context, String name) {
     return Container(
@@ -428,7 +475,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
       ),
     );
   }
-  
+
   // هيكل تحميل معلومات المستخدم
   Widget _buildProfileSkeleton() {
     return Container(
@@ -463,10 +510,11 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
     bool isActive = false,
   }) {
     final Color activeColor = Theme.of(context).colorScheme.primary;
-    final Color inactiveColor = Theme.of(context).brightness == Brightness.dark
-        ? Colors.white.withOpacity(0.7)
-        : Colors.black87;
-    
+    final Color inactiveColor =
+        Theme.of(context).brightness == Brightness.dark
+            ? Colors.white.withOpacity(0.7)
+            : Colors.black87;
+
     return AnimatedBuilder(
       animation: _animationController,
       builder: (context, child) {
@@ -474,7 +522,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
           parent: _animationController,
           curve: const Interval(0.2, 1.0, curve: Curves.easeOutCubic),
         );
-        
+
         return FadeTransition(
           opacity: itemAnimation,
           child: SlideTransition(
@@ -485,9 +533,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
             child: Container(
               margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
               decoration: BoxDecoration(
-                color: isActive 
-                    ? activeColor.withOpacity(0.15) 
-                    : Colors.transparent,
+                color:
+                    isActive
+                        ? activeColor.withOpacity(0.15)
+                        : Colors.transparent,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Material(
@@ -498,21 +547,21 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
                   splashColor: activeColor.withOpacity(0.1),
                   highlightColor: activeColor.withOpacity(0.05),
                   child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 16,
+                      vertical: 12,
+                    ),
                     child: Row(
                       children: [
-                        SvgPicture.asset(
-                          svgPath,
-                          width: 22,
-                          height: 22,
-                        ),
+                        SvgPicture.asset(svgPath, width: 22, height: 22),
                         const SizedBox(width: 16),
                         Expanded(
                           child: Text(
                             text,
                             style: TextStyle(
                               fontSize: 15,
-                              fontWeight: isActive ? FontWeight.bold : FontWeight.w500,
+                              fontWeight:
+                                  isActive ? FontWeight.bold : FontWeight.w500,
                               color: isActive ? activeColor : inactiveColor,
                             ),
                           ),
@@ -569,10 +618,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
             Expanded(
               child: Text(
                 'الوضع الليلي',
-                style: TextStyle(
-                  fontWeight: FontWeight.w500,
-                  fontSize: 15,
-                ),
+                style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15),
               ),
             ),
             Switch.adaptive(
@@ -593,65 +639,73 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
   Widget _buildAuthButton(BuildContext context, AuthProvider authProvider) {
     return Padding(
       padding: const EdgeInsets.all(16),
-      child: authProvider.isAuthenticated
-          ? ElevatedButton.icon(
-              onPressed: () => _confirmLogout(context, authProvider),
-              icon: const Icon(Icons.logout),
-              label: const Text('تسجيل الخروج'),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Colors.red.shade600,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+      child:
+          authProvider.isAuthenticated
+              ? ElevatedButton.icon(
+                onPressed: () => _confirmLogout(context, authProvider),
+                icon: const Icon(Icons.logout),
+                label: const Text('تسجيل الخروج'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Colors.red.shade600,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                  minimumSize: const Size(double.infinity, 50),
                 ),
-                elevation: 0,
-                minimumSize: const Size(double.infinity, 50),
-              ),
-            )
-          : ElevatedButton.icon(
-              onPressed: () => _navigateToScreen(context, const LoginScreen()),
-              icon: const Icon(Icons.login),
-              label: const Text('تسجيل الدخول'),
-              style: ElevatedButton.styleFrom(
-                foregroundColor: Colors.white,
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
+              )
+              : ElevatedButton.icon(
+                onPressed:
+                    () => _navigateToScreen(context, const LoginScreen()),
+                icon: const Icon(Icons.login),
+                label: const Text('تسجيل الدخول'),
+                style: ElevatedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  elevation: 0,
+                  minimumSize: const Size(double.infinity, 50),
                 ),
-                elevation: 0,
-                minimumSize: const Size(double.infinity, 50),
               ),
-            ),
     );
   }
 
   void _navigateToTab(BuildContext context, int tabIndex) {
     _closeDrawer(context).then((_) {
-      Provider.of<NavigationProvider>(context, listen: false).setIndex(tabIndex);
+      if (mounted) {
+        Provider.of<NavigationProvider>(
+          context,
+          listen: false,
+        ).setIndex(tabIndex);
+      }
     });
   }
 
   void _navigateToScreen(BuildContext context, Widget screen) {
     _closeDrawer(context).then((_) {
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => screen),
-      );
+      if (mounted) {
+        Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
+      }
     });
   }
 
   Future<void> _closeDrawer(BuildContext context) async {
+    if (!mounted) return;
+
     await _animationController.reverse();
-    if (mounted) {
+    if (mounted && Navigator.canPop(context)) {
       Navigator.pop(context);
     }
   }
 
   void _confirmLogout(BuildContext context, AuthProvider authProvider) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -663,11 +717,7 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
           backgroundColor: isDarkMode ? const Color(0xFF222831) : Colors.white,
           title: Row(
             children: [
-              Icon(
-                Icons.logout_rounded,
-                color: Colors.red,
-                size: 24,
-              ),
+              Icon(Icons.logout_rounded, color: Colors.red, size: 24),
               const SizedBox(width: 12),
               const Text('تأكيد تسجيل الخروج'),
             ],
@@ -681,7 +731,10 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
               onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
                 foregroundColor: Theme.of(context).colorScheme.secondary,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),
                 ),
@@ -691,14 +744,16 @@ class _AppDrawerState extends State<AppDrawer> with SingleTickerProviderStateMix
             ElevatedButton(
               onPressed: () {
                 Navigator.of(context).pop();
-                _closeDrawer(context).then((_) {
-                  authProvider.signOut(context);
-                });
+                Navigator.of(context).pop(); // Close drawer
+                authProvider.signOut(context);
               },
               style: ElevatedButton.styleFrom(
                 foregroundColor: Colors.white,
                 backgroundColor: Colors.red.shade600,
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 10,
+                ),
                 elevation: 0,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(12),

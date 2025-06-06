@@ -22,6 +22,14 @@
           }
         },
         {
+          "client_id": "992039187831-kur9gqt8si72679c37qj73u13fjnihe5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.elsahm_app",
+            "certificate_hash": "f3d68e57400492655937cdc04f6806cdd82c7624"
+          }
+        },
+        {
           "client_id": "992039187831-uij89qkjunu5ahglo0ejm3mlvk8craan.apps.googleusercontent.com",
           "client_type": 3
         }

@@ -29,7 +29,7 @@ class AuthProvider with ChangeNotifier {
   AuthStatus _status = AuthStatus.uninitialized;
   bool _isNewUser = false;
   bool _isLoading = false;
-  
+
   // Password reset attempt tracking
   int _passwordResetAttempts = 0;
   DateTime? _firstResetAttemptTime;
@@ -51,53 +51,54 @@ class AuthProvider with ChangeNotifier {
   bool get isAuthenticated => status == AuthStatus.authenticated;
   bool get isLoading => _isLoading;
   String? get userId => _user?.uid;
-  
+
   // Password reset attempt tracking getters
   int get passwordResetAttempts => _passwordResetAttempts;
   int get maxResetAttempts => _maxResetAttempts;
   DateTime? get firstResetAttemptTime => _firstResetAttemptTime;
   Duration get resetAttemptsWindow => _resetAttemptsWindow;
-  
+
   // Get remaining attempts
   int get remainingResetAttempts => _maxResetAttempts - _passwordResetAttempts;
-  
+
   // Check if reset attempts are allowed
   bool get canRequestPasswordReset {
     // If no attempts have been made yet
     if (_passwordResetAttempts == 0) return true;
-    
+
     // If max attempts reached, check if the time window has passed
     if (_passwordResetAttempts >= _maxResetAttempts) {
       if (_firstResetAttemptTime == null) return true;
-      
+
       final now = DateTime.now();
       final windowEnd = _firstResetAttemptTime!.add(_resetAttemptsWindow);
-      
+
       // If the time window has passed, reset counter and allow
       if (now.isAfter(windowEnd)) {
         _resetAttemptsCounter();
         return true;
       }
-      
+
       return false;
     }
-    
+
     return true;
   }
-  
+
   // Get time remaining until new attempts are allowed
   Duration? get timeUntilNextAttempt {
-    if (_firstResetAttemptTime == null || _passwordResetAttempts < _maxResetAttempts) {
+    if (_firstResetAttemptTime == null ||
+        _passwordResetAttempts < _maxResetAttempts) {
       return null;
     }
-    
+
     final now = DateTime.now();
     final windowEnd = _firstResetAttemptTime!.add(_resetAttemptsWindow);
-    
+
     if (now.isAfter(windowEnd)) {
       return null;
     }
-    
+
     return windowEnd.difference(now);
   }
 
@@ -106,11 +107,11 @@ class AuthProvider with ChangeNotifier {
     try {
       final prefs = await SharedPreferences.getInstance();
       _passwordResetAttempts = prefs.getInt('password_reset_attempts') ?? 0;
-      
+
       final timestamp = prefs.getInt('first_reset_attempt_time');
       if (timestamp != null) {
         _firstResetAttemptTime = DateTime.fromMillisecondsSinceEpoch(timestamp);
-        
+
         // Check if the time window has passed
         final now = DateTime.now();
         final windowEnd = _firstResetAttemptTime!.add(_resetAttemptsWindow);
@@ -123,16 +124,18 @@ class AuthProvider with ChangeNotifier {
       _resetAttemptsCounter();
     }
   }
-  
+
   // Save reset attempts data to SharedPreferences
   Future<void> _saveResetAttemptsData() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt('password_reset_attempts', _passwordResetAttempts);
-      
+
       if (_firstResetAttemptTime != null) {
-        await prefs.setInt('first_reset_attempt_time', 
-            _firstResetAttemptTime!.millisecondsSinceEpoch);
+        await prefs.setInt(
+          'first_reset_attempt_time',
+          _firstResetAttemptTime!.millisecondsSinceEpoch,
+        );
       } else {
         await prefs.remove('first_reset_attempt_time');
       }
@@ -140,20 +143,20 @@ class AuthProvider with ChangeNotifier {
       _logger.severe('Failed to save reset attempts data: $e');
     }
   }
-  
+
   // Reset the attempts counter
   void _resetAttemptsCounter() {
     _passwordResetAttempts = 0;
     _firstResetAttemptTime = null;
     _saveResetAttemptsData();
   }
-  
+
   // Track a password reset attempt
   void _trackResetAttempt() {
     if (_passwordResetAttempts == 0) {
       _firstResetAttemptTime = DateTime.now();
     }
-    
+
     _passwordResetAttempts++;
     _saveResetAttemptsData();
   }
@@ -299,7 +302,7 @@ class AuthProvider with ChangeNotifier {
     try {
       _isLoading = true;
       notifyListeners();
-      
+
       // قم بإزالة ربط OneSignal قبل تسجيل الخروج
       await main.removeOneSignalExternalUserId();
       // تسجيل الخروج من Firebase
@@ -309,12 +312,12 @@ class AuthProvider with ChangeNotifier {
       // Clear any locally stored auth data
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('user_token');
-      
+
       _user = null;
       _status = AuthStatus.unauthenticated;
       _isLoading = false;
       notifyListeners();
-      
+
       // Show success message if context is provided
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -323,9 +326,7 @@ class AuthProvider with ChangeNotifier {
             content: const Text(
               'تم تسجيل الخروج بنجاح',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: Theme.of(context).colorScheme.secondary,
             behavior: SnackBarBehavior.fixed,
@@ -342,7 +343,7 @@ class AuthProvider with ChangeNotifier {
       await _auth.signOut();
       _isLoading = false;
       notifyListeners();
-      
+
       // Show error message if context is provided
       if (context != null && context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentSnackBar();
@@ -351,9 +352,7 @@ class AuthProvider with ChangeNotifier {
             content: Text(
               'حدث خطأ أثناء تسجيل الخروج: ${e.toString()}',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: Colors.red,
             behavior: SnackBarBehavior.fixed,
@@ -405,14 +404,14 @@ class AuthProvider with ChangeNotifier {
       final timeLeft = timeUntilNextAttempt;
       final hours = timeLeft?.inHours ?? 0;
       final minutes = (timeLeft?.inMinutes ?? 0) % 60;
-      
+
       throw 'لقد تجاوزت الحد المسموح به من المحاولات، يرجى المحاولة مرة أخرى بعد $hours ساعة و $minutes دقيقة';
     }
-    
+
     try {
       // Track this attempt
       _trackResetAttempt();
-      
+
       await _auth.sendPasswordResetEmail(email: email);
       _logger.info('Password reset email sent to $email');
     } on FirebaseAuthException catch (e) {
@@ -436,7 +435,7 @@ class AuthProvider with ChangeNotifier {
       _logger.info('🔍 بدء عملية تسجيل الدخول بجوجل');
       _isNewUser = true; // Assume new user before authentication
 
-      // إعادة تهيئة مكون GoogleSignIn
+      // إعادة تهيئة مكون GoogleSignIn مع إعدادات محددة للـ release
       try {
         // تدمير المكون الحالي وإعادة إنشائه
         await _googleSignIn.signOut();
@@ -446,17 +445,41 @@ class AuthProvider with ChangeNotifier {
         // نتجاهل الخطأ ونستمر
       }
 
-      // Trigger the Google sign-in flow
+      // Trigger the Google sign-in flow مع معالجة أفضل للأخطاء
       _logger.info('🔍 جاري استدعاء واجهة تسجيل الدخول من جوجل...');
       GoogleSignInAccount? googleUser;
+
       try {
-        googleUser = await _googleSignIn.signIn();
+        // محاولة تسجيل الدخول مع timeout
+        googleUser = await _googleSignIn.signIn().timeout(
+          const Duration(seconds: 30),
+          onTimeout: () {
+            _logger.warning('⏰ انتهت مهلة تسجيل الدخول بجوجل');
+            return null;
+          },
+        );
       } catch (signInError) {
         _logger.severe('❌ خطأ في استدعاء واجهة تسجيل الدخول: $signInError');
-        
-        // محاولة مرة أخرى بطريقة بديلة
+        _logger.severe('❌ نوع الخطأ: ${signInError.runtimeType}');
+
+        // محاولة مرة أخرى بطريقة بديلة مع إعدادات مختلفة
         _logger.info('🔄 محاولة استخدام طريقة بديلة للتسجيل...');
-        googleUser = await GoogleSignIn().signIn();
+        try {
+          // إنشاء مكون جديد تماماً
+          final alternativeGoogleSignIn = GoogleSignIn(
+            scopes: ['email', 'profile'],
+          );
+          googleUser = await alternativeGoogleSignIn.signIn().timeout(
+            const Duration(seconds: 30),
+            onTimeout: () {
+              _logger.warning('⏰ انتهت مهلة المحاولة البديلة');
+              return null;
+            },
+          );
+        } catch (alternativeError) {
+          _logger.severe('❌ فشلت المحاولة البديلة أيضاً: $alternativeError');
+          googleUser = null;
+        }
       }
 
       // If user cancels the sign-in flow
@@ -477,8 +500,12 @@ class AuthProvider with ChangeNotifier {
             await googleUser.authentication;
 
         _logger.info('✅ تم الحصول على معلومات المصادقة:');
-        _logger.info('   - accessToken: ${googleAuth.accessToken != null ? "موجود" : "غير موجود"}');
-        _logger.info('   - idToken: ${googleAuth.idToken != null ? "موجود" : "غير موجود"}');
+        _logger.info(
+          '   - accessToken: ${googleAuth.accessToken != null ? "موجود" : "غير موجود"}',
+        );
+        _logger.info(
+          '   - idToken: ${googleAuth.idToken != null ? "موجود" : "غير موجود"}',
+        );
 
         // التأكد من وجود الرموز المطلوبة
         if (googleAuth.idToken == null) {
@@ -510,13 +537,13 @@ class AuthProvider with ChangeNotifier {
         return true;
       } catch (innerError) {
         _logger.severe('❌ خطأ أثناء عملية المصادقة: ${innerError.toString()}');
-        
+
         // تفاصيل الخطأ
         if (innerError is FirebaseAuthException) {
           _logger.severe('❌ رمز الخطأ: ${innerError.code}');
           _logger.severe('❌ رسالة الخطأ: ${innerError.message}');
         }
-        
+
         _status = AuthStatus.unauthenticated;
         notifyListeners();
         _isLoading = false;
@@ -531,10 +558,10 @@ class AuthProvider with ChangeNotifier {
       return false;
     } catch (e) {
       _logger.severe('❌ خطأ عام أثناء تسجيل الدخول بجوجل: ${e.toString()}');
-      
+
       // طباعة نوع الخطأ
       _logger.severe('❌ نوع الخطأ: ${e.runtimeType}');
-      
+
       _status = AuthStatus.unauthenticated;
       notifyListeners();
       _isLoading = false;
@@ -565,7 +592,7 @@ class AuthProvider with ChangeNotifier {
 
   Future<Map<String, dynamic>?> getUserProfile() async {
     if (_user == null) return null;
-    
+
     try {
       final doc = await _firestore.collection('users').doc(_user!.uid).get();
       if (doc.exists) {

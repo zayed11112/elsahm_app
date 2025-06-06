@@ -7,6 +7,7 @@ import 'package:firebase_auth/firebase_auth.dart' as firebase_auth;
 import '../screens/wallet_screen.dart';
 import 'booking_requests_screen.dart';
 import '../constants/theme.dart';
+import '../widgets/booking_success_dialog.dart';
 
 // Define app bar color to match the wallet screen
 const Color appBarBlue = Color(0xFF1976d3);
@@ -29,11 +30,13 @@ class CheckoutScreen extends StatefulWidget {
   State<CheckoutScreen> createState() => _CheckoutScreenState();
 }
 
-class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObserver {
+class _CheckoutScreenState extends State<CheckoutScreen>
+    with WidgetsBindingObserver {
   final _formKey = GlobalKey<FormState>();
   final Logger _logger = Logger('CheckoutScreen');
   final CheckoutService _checkoutService = CheckoutService();
-  final firebase_auth.FirebaseAuth _firebaseAuth = firebase_auth.FirebaseAuth.instance;
+  final firebase_auth.FirebaseAuth _firebaseAuth =
+      firebase_auth.FirebaseAuth.instance;
 
   // حقول النموذج
   final TextEditingController _nameController = TextEditingController();
@@ -45,7 +48,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
 
   final String _status = 'جاري المعالجة';
   bool _isLoading = false;
-  
+
   // معلومات العقار من قاعدة البيانات
   Map<String, dynamic>? _propertyDetails;
   double _propertyCommission = 0.0;
@@ -84,7 +87,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
   void didChangeAppLifecycleState(AppLifecycleState state) {
     super.didChangeAppLifecycleState(state);
     // Hide banners when app is paused or inactive
-    if (state == AppLifecycleState.paused || state == AppLifecycleState.inactive) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive) {
       if (mounted && context.mounted) {
         ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
       }
@@ -102,10 +106,12 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
   Future<void> _checkCurrentUser() async {
     try {
       final firebaseUser = _firebaseAuth.currentUser;
-      
+
       if (firebaseUser != null) {
-        _logger.info('المستخدم مسجل الدخول في Firebase - المعرف: ${firebaseUser.uid}, البريد: ${firebaseUser.email}');
-        
+        _logger.info(
+          'المستخدم مسجل الدخول في Firebase - المعرف: ${firebaseUser.uid}, البريد: ${firebaseUser.email}',
+        );
+
         setState(() {
           _userId = firebaseUser.uid;
         });
@@ -124,13 +130,17 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
   Future<void> _loadUserProfileFromFirestore(String userId) async {
     try {
       _logger.info('جلب بيانات المستخدم من Firestore: $userId');
-      
-      final docSnapshot = await FirebaseFirestore.instance.collection('users').doc(userId).get();
-      
+
+      final docSnapshot =
+          await FirebaseFirestore.instance
+              .collection('users')
+              .doc(userId)
+              .get();
+
       if (docSnapshot.exists) {
         final userData = docSnapshot.data() as Map<String, dynamic>;
         _logger.info('تم جلب بيانات المستخدم بنجاح: ${userData.keys.toList()}');
-        
+
         setState(() {
           // ملء بيانات المستخدم في حقول النموذج
           _nameController.text = userData['name'] ?? '';
@@ -151,28 +161,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
       setState(() {
         _isLoading = true;
       });
-      
+
       _logger.info('جلب معلومات العقار بالمعرف: ${widget.propertyId}');
-      
+
       // جلب معلومات العقار من Supabase
-      final propertyDetails = await _checkoutService.getPropertyDetails(widget.propertyId);
-      
+      final propertyDetails = await _checkoutService.getPropertyDetails(
+        widget.propertyId,
+      );
+
       if (propertyDetails != null) {
         _logger.info('تم استلام بيانات العقار: $propertyDetails');
-        
+
         // طباعة جميع مفاتيح الكائن للتشخيص
-        _logger.info('مفاتيح العقار المستلمة: ${propertyDetails.keys.toList()}');
-        
+        _logger.info(
+          'مفاتيح العقار المستلمة: ${propertyDetails.keys.toList()}',
+        );
+
         // طباعة قيم العمولة والعربون كما وردت من قاعدة البيانات
         _logger.info('قيمة العمولة الخام: ${propertyDetails['commission']}');
-        _logger.info('نوع قيمة العمولة: ${propertyDetails['commission']?.runtimeType}');
+        _logger.info(
+          'نوع قيمة العمولة: ${propertyDetails['commission']?.runtimeType}',
+        );
         _logger.info('قيمة العربون الخام: ${propertyDetails['deposit']}');
-        _logger.info('نوع قيمة العربون: ${propertyDetails['deposit']?.runtimeType}');
-        
+        _logger.info(
+          'نوع قيمة العربون: ${propertyDetails['deposit']?.runtimeType}',
+        );
+
         // استخراج قيم العمولة والعربون بشكل آمن
         double? commission;
         double? deposit;
-        
+
         // استخراج العمولة
         try {
           if (propertyDetails.containsKey('commission')) {
@@ -197,8 +215,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
         } catch (e) {
           _logger.severe('خطأ في استخراج العمولة: $e');
         }
-        
-        // استخراج العربون 
+
+        // استخراج العربون
         try {
           if (propertyDetails.containsKey('deposit')) {
             var depositValue = propertyDetails['deposit'];
@@ -222,20 +240,24 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
         } catch (e) {
           _logger.severe('خطأ في استخراج العربون: $e');
         }
-        
+
         setState(() {
           _propertyDetails = propertyDetails;
-          
+
           // تعيين العمولة والعربون من بيانات العقار إن وجدت
           _propertyCommission = commission ?? 0.0;
           _propertyDeposit = deposit ?? 0.0;
-          
+
           // تعبئة حقول العمولة والعربون تلقائياً
-          _commissionController.text = _propertyCommission > 0 ? _propertyCommission.toString() : '';
-          _depositController.text = _propertyDeposit > 0 ? _propertyDeposit.toString() : '';
+          _commissionController.text =
+              _propertyCommission > 0 ? _propertyCommission.toString() : '';
+          _depositController.text =
+              _propertyDeposit > 0 ? _propertyDeposit.toString() : '';
         });
       } else {
-        _logger.warning('لم يتم العثور على بيانات للعقار بالمعرف: ${widget.propertyId}');
+        _logger.warning(
+          'لم يتم العثور على بيانات للعقار بالمعرف: ${widget.propertyId}',
+        );
       }
     } catch (e) {
       _logger.severe('خطأ في جلب معلومات العقار: $e');
@@ -271,9 +293,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
       try {
         // حساب المبلغ الإجمالي المطلوب
         final double totalAmount = _propertyDeposit + _propertyCommission;
-        
+
         // التحقق من رصيد المحفظة قبل المتابعة
-        final DocumentSnapshot userDoc = await FirebaseFirestore.instance.collection('users').doc(_userId).get();
+        final DocumentSnapshot userDoc =
+            await FirebaseFirestore.instance
+                .collection('users')
+                .doc(_userId)
+                .get();
         if (!userDoc.exists) {
           _showErrorDialog('لم يتم العثور على بيانات المستخدم');
           setState(() {
@@ -281,11 +307,11 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
           });
           return;
         }
-        
+
         // استخراج رصيد المحفظة
         final userData = userDoc.data() as Map<String, dynamic>;
         double userBalance = 0.0;
-        
+
         if (userData.containsKey('balance')) {
           dynamic rawBalance = userData['balance'];
           if (rawBalance is num) {
@@ -294,46 +320,52 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
             userBalance = double.tryParse(rawBalance) ?? 0.0;
           }
         }
-        
-        _logger.info('رصيد المحفظة: $userBalance | المبلغ المطلوب: $totalAmount');
-        
+
+        _logger.info(
+          'رصيد المحفظة: $userBalance | المبلغ المطلوب: $totalAmount',
+        );
+
         // التحقق من كفاية الرصيد
         if (userBalance < totalAmount) {
           setState(() {
             _isLoading = false;
           });
-          
+
           // عرض رسالة خطأ عدم كفاية الرصيد
           _showInsufficientBalanceDialog(userBalance, totalAmount);
           return;
         }
-        
+
         // إذا كان الرصيد كافي، عرض مربع حوار التأكيد
         setState(() {
           _isLoading = false;
         });
-        
+
         // عرض مربع حوار التأكيد
         bool confirmed = await _showConfirmationDialog(totalAmount);
-        
+
         if (!confirmed) {
           // إذا ألغى المستخدم العملية
           return;
         }
-        
+
         setState(() {
           _isLoading = true;
         });
 
         // استخدام البيانات من قاعدة البيانات إذا كانت متوفرة
-        final String propertyName = _propertyDetails != null && _propertyDetails!['name'] != null 
-            ? _propertyDetails!['name'] 
-            : widget.propertyName;
-            
-        final double propertyPrice = _propertyDetails != null && _propertyDetails!['price'] != null 
-            ? (_propertyDetails!['price'] is num ? _propertyDetails!['price'].toDouble() : 0.0)
-            : widget.propertyPrice;
-            
+        final String propertyName =
+            _propertyDetails != null && _propertyDetails!['name'] != null
+                ? _propertyDetails!['name']
+                : widget.propertyName;
+
+        final double propertyPrice =
+            _propertyDetails != null && _propertyDetails!['price'] != null
+                ? (_propertyDetails!['price'] is num
+                    ? _propertyDetails!['price'].toDouble()
+                    : 0.0)
+                : widget.propertyPrice;
+
         // إنشاء كائن طلب الحجز
         final checkoutData = {
           'user_id': _userId,
@@ -344,55 +376,62 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
           'university_id': _universityIdController.text,
           'college': _collegeController.text,
           'status': _status,
-          'commission': double.tryParse(_commissionController.text) ?? _propertyCommission,
-          'deposit': double.tryParse(_depositController.text) ?? _propertyDeposit,
+          'commission':
+              double.tryParse(_commissionController.text) ??
+              _propertyCommission,
+          'deposit':
+              double.tryParse(_depositController.text) ?? _propertyDeposit,
           'property_price': propertyPrice,
           'created_at': DateTime.now().toIso8601String(),
           'updated_at': DateTime.now().toIso8601String(),
         };
 
         bool isSuccess = false;
-        
+
         // إرسال البيانات إلى Supabase
         try {
           _logger.info('محاولة إرسال البيانات إلى Supabase');
           await _checkoutService.addCheckoutRequest(checkoutData);
           _logger.info('تم إرسال البيانات بنجاح إلى Supabase');
-          
+
           // خصم المبلغ من رصيد المستخدم في Firestore
           await _updateUserBalance(totalAmount);
-          
+
           isSuccess = true;
         } catch (e) {
           _logger.severe('خطأ في إرسال البيانات إلى Supabase: $e');
-          
+
           // محاولة حفظ البيانات في Firestore كنسخة احتياطية
           try {
             _logger.info('محاولة حفظ البيانات في Firestore كنسخة احتياطية');
-            await FirebaseFirestore.instance.collection('checkout_requests_backup').add(checkoutData);
+            await FirebaseFirestore.instance
+                .collection('checkout_requests_backup')
+                .add(checkoutData);
             _logger.info('تم حفظ البيانات بنجاح في Firestore');
-            
+
             // خصم المبلغ من رصيد المستخدم في Firestore
             await _updateUserBalance(totalAmount);
-            
+
             isSuccess = true;
           } catch (backupError) {
             _logger.severe('فشل النسخة الاحتياطية أيضًا: $backupError');
             isSuccess = false;
           }
         }
-        
+
         if (!mounted) return;
-        
+
         setState(() {
           _isLoading = false;
         });
-        
+
         if (isSuccess) {
           // عرض رسالة نجاح الحجز ثم العودة للشاشة الرئيسية
           _showSuccessAndReturnHome();
         } else {
-          _showErrorDialog('حدث خطأ أثناء إرسال طلب الحجز، يرجى المحاولة مرة أخرى');
+          _showErrorDialog(
+            'حدث خطأ أثناء إرسال طلب الحجز، يرجى المحاولة مرة أخرى',
+          );
         }
       } catch (e) {
         _logger.severe('خطأ في إرسال النموذج: $e');
@@ -400,164 +439,169 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
           setState(() {
             _isLoading = false;
           });
-          _showErrorDialog('حدث خطأ أثناء إرسال طلب الحجز، يرجى المحاولة مرة أخرى');
+          _showErrorDialog(
+            'حدث خطأ أثناء إرسال طلب الحجز، يرجى المحاولة مرة أخرى',
+          );
         }
       }
     }
   }
 
   // عرض مربع حوار عدم كفاية الرصيد
-  void _showInsufficientBalanceDialog(double currentBalance, double requiredAmount) {
+  void _showInsufficientBalanceDialog(
+    double currentBalance,
+    double requiredAmount,
+  ) {
     final formattedCurrentBalance = formatCurrency(currentBalance);
     final formattedRequiredAmount = formatCurrency(requiredAmount);
-    final formattedMissingAmount = formatCurrency(requiredAmount - currentBalance);
-    
+    final formattedMissingAmount = formatCurrency(
+      requiredAmount - currentBalance,
+    );
+
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(16),
-        ),
-        title: Row(
-          children: [
-            Icon(
-              Icons.account_balance_wallet_outlined,
-              color: Colors.red,
-              size: 28,
+      builder:
+          (context) => AlertDialog(
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(16),
             ),
-            const SizedBox(width: 10),
-            const Text('رصيد غير كافي'),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'رصيد محفظتك لا يكفي لإتمام عملية الحجز',
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: Colors.grey.shade100,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Colors.grey.shade300),
-              ),
-              child: Column(
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'رصيدك الحالي:',
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      Text(
-                        '$formattedCurrentBalance جنيه',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 8),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'المبلغ المطلوب:',
-                        style: TextStyle(
-                          color: Colors.grey.shade700,
-                        ),
-                      ),
-                      Text(
-                        '$formattedRequiredAmount جنيه',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 8),
-                    child: Divider(),
-                  ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      const Text(
-                        'المبلغ الناقص:',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      Text(
-                        '$formattedMissingAmount جنيه',
-                        style: const TextStyle(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.red,
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 16),
-            const Text(
-              'يرجى شحن محفظتك بمبلغ كافٍ لإتمام عملية الحجز.',
-              style: TextStyle(
-                fontStyle: FontStyle.italic,
-                color: Colors.grey,
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          OutlinedButton(
-            onPressed: () {
-              _hideNotificationsOnBack();
-              Navigator.of(context).pop(); // إغلاق الحوار
-            },
-            style: OutlinedButton.styleFrom(
-              side: BorderSide(color: Theme.of(context).colorScheme.primary),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
-            ),
-            child: const Text('إلغاء'),
-          ),
-          ElevatedButton.icon(
-            onPressed: () {
-              _hideNotificationsOnBack();
-              Navigator.of(context).pop(); // إغلاق الحوار
-              // الانتقال إلى شاشة شحن الرصيد
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => const WalletScreen(),
+            title: Row(
+              children: [
+                Icon(
+                  Icons.account_balance_wallet_outlined,
+                  color: Colors.red,
+                  size: 28,
                 ),
-              );
-            },
-            icon: const Icon(Icons.add_circle_outline, size: 18),
-            label: const Text('شحن المحفظة'),
-            style: ElevatedButton.styleFrom(
-              backgroundColor: Theme.of(context).colorScheme.primary,
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(8),
-              ),
+                const SizedBox(width: 10),
+                const Text('رصيد غير كافي'),
+              ],
             ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'رصيد محفظتك لا يكفي لإتمام عملية الحجز',
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                const SizedBox(height: 16),
+                Container(
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: Colors.grey.shade300),
+                  ),
+                  child: Column(
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'رصيدك الحالي:',
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
+                          Text(
+                            '$formattedCurrentBalance جنيه',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 8),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text(
+                            'المبلغ المطلوب:',
+                            style: TextStyle(color: Colors.grey.shade700),
+                          ),
+                          Text(
+                            '$formattedRequiredAmount جنيه',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 8),
+                        child: Divider(),
+                      ),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          const Text(
+                            'المبلغ الناقص:',
+                            style: TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          Text(
+                            '$formattedMissingAmount جنيه',
+                            style: const TextStyle(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.red,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 16),
+                const Text(
+                  'يرجى شحن محفظتك بمبلغ كافٍ لإتمام عملية الحجز.',
+                  style: TextStyle(
+                    fontStyle: FontStyle.italic,
+                    color: Colors.grey,
+                  ),
+                ),
+              ],
+            ),
+            actions: [
+              OutlinedButton(
+                onPressed: () {
+                  _hideNotificationsOnBack();
+                  Navigator.of(context).pop(); // إغلاق الحوار
+                },
+                style: OutlinedButton.styleFrom(
+                  side: BorderSide(
+                    color: Theme.of(context).colorScheme.primary,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+                child: const Text('إلغاء'),
+              ),
+              ElevatedButton.icon(
+                onPressed: () {
+                  _hideNotificationsOnBack();
+                  Navigator.of(context).pop(); // إغلاق الحوار
+                  // الانتقال إلى شاشة شحن الرصيد
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const WalletScreen(),
+                    ),
+                  );
+                },
+                icon: const Icon(Icons.add_circle_outline, size: 18),
+                label: const Text('شحن المحفظة'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Theme.of(context).colorScheme.primary,
+                  foregroundColor: Colors.white,
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ],
+            actionsPadding: const EdgeInsets.symmetric(
+              horizontal: 16,
+              vertical: 12,
+            ),
+            actionsAlignment: MainAxisAlignment.spaceBetween,
           ),
-        ],
-        actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        actionsAlignment: MainAxisAlignment.spaceBetween,
-      ),
     );
   }
 
@@ -565,19 +609,20 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
   void _showErrorDialog(String message) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('خطأ'),
-        content: Text(message),
-        actions: [
-          TextButton(
-            onPressed: () {
-              _hideNotificationsOnBack();
-              Navigator.pop(context);
-            },
-            child: const Text('حسناً'),
+      builder:
+          (context) => AlertDialog(
+            title: const Text('خطأ'),
+            content: Text(message),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  _hideNotificationsOnBack();
+                  Navigator.pop(context);
+                },
+                child: const Text('حسناً'),
+              ),
+            ],
           ),
-        ],
-      ),
     );
   }
 
@@ -585,80 +630,89 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
   Future<bool> _showConfirmationDialog(double totalAmount) async {
     // المبلغ المطلوب بتنسيق مناسب
     final String formattedAmount = formatCurrency(totalAmount);
-    
+
     return await showDialog<bool>(
-      context: context,
-      barrierDismissible: false, // يجب على المستخدم الاختيار
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
-          ),
-          title: Row(
-            children: [
-              Icon(
-                Icons.warning_amber_rounded,
-                color: Colors.amber,
-                size: 28,
+          context: context,
+          barrierDismissible: false, // يجب على المستخدم الاختيار
+          builder: (BuildContext dialogContext) {
+            return AlertDialog(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
               ),
-              const SizedBox(width: 10),
-              const Text('تأكيد الحجز'),
-            ],
-          ),
-          content: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text(
-                'هل أنت متأكد من إتمام عملية الحجز؟',
-                style: TextStyle(fontWeight: FontWeight.bold),
+              title: Row(
+                children: [
+                  Icon(
+                    Icons.warning_amber_rounded,
+                    color: Colors.amber,
+                    size: 28,
+                  ),
+                  const SizedBox(width: 10),
+                  const Text('تأكيد الحجز'),
+                ],
               ),
-              const SizedBox(height: 12),
-              Text(
-                'سيتم خصم المبلغ الإجمالي ($formattedAmount جنيه) من رصيد محفظتك.',
-                style: TextStyle(
-                  color: Colors.grey.shade700,
-                  height: 1.5,
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    'هل أنت متأكد من إتمام عملية الحجز؟',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  const SizedBox(height: 12),
+                  Text(
+                    'سيتم خصم المبلغ الإجمالي ($formattedAmount جنيه) من رصيد محفظتك.',
+                    style: TextStyle(color: Colors.grey.shade700, height: 1.5),
+                  ),
+                ],
+              ),
+              actions: [
+                OutlinedButton(
+                  onPressed: () {
+                    _hideNotificationsOnBack();
+                    Navigator.of(dialogContext).pop(false); // إلغاء
+                  },
+                  style: OutlinedButton.styleFrom(
+                    side: BorderSide(
+                      color: Theme.of(context).colorScheme.primary,
+                    ),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                  ),
+                  child: const Text('إلغاء'),
                 ),
-              ),
-            ],
-          ),
-          actions: [
-            OutlinedButton(
-              onPressed: () {
-                _hideNotificationsOnBack();
-                Navigator.of(dialogContext).pop(false); // إلغاء
-              },
-              style: OutlinedButton.styleFrom(
-                side: BorderSide(color: Theme.of(context).colorScheme.primary),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                ElevatedButton(
+                  onPressed: () {
+                    _hideNotificationsOnBack();
+                    Navigator.of(dialogContext).pop(true); // تأكيد
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 20,
+                      vertical: 10,
+                    ),
+                  ),
+                  child: const Text('تأكيد الحجز'),
                 ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+              ],
+              actionsPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 12,
               ),
-              child: const Text('إلغاء'),
-            ),
-            ElevatedButton(
-              onPressed: () {
-                _hideNotificationsOnBack();
-                Navigator.of(dialogContext).pop(true); // تأكيد
-              },
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.primary,
-                foregroundColor: Colors.white,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
-              ),
-              child: const Text('تأكيد الحجز'),
-            ),
-          ],
-          actionsPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          actionsAlignment: MainAxisAlignment.spaceBetween,
-        );
-      },
-    ) ?? false; // إذا تم إغلاق مربع الحوار بدون اختيار، نعتبرها إلغاء
+              actionsAlignment: MainAxisAlignment.spaceBetween,
+            );
+          },
+        ) ??
+        false; // إذا تم إغلاق مربع الحوار بدون اختيار، نعتبرها إلغاء
   }
 
   // دالة مساعدة لتنسيق القيم النقدية - إزالة الأصفار بعد النقطة العشرية
@@ -676,25 +730,27 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
   Future<void> _updateUserBalance(double amountToDeduct) async {
     try {
       _logger.info('بدء تحديث رصيد المستخدم - خصم $amountToDeduct جنيه');
-      
+
       if (_userId == null) {
         _logger.severe('لا يمكن تحديث الرصيد: معرف المستخدم غير موجود');
         return;
       }
-      
+
       // الحصول على بيانات المستخدم الحالية
-      final docRef = FirebaseFirestore.instance.collection('users').doc(_userId);
+      final docRef = FirebaseFirestore.instance
+          .collection('users')
+          .doc(_userId);
       final docSnapshot = await docRef.get();
-      
+
       if (!docSnapshot.exists) {
         _logger.severe('لا يمكن تحديث الرصيد: بيانات المستخدم غير موجودة');
         return;
       }
-      
+
       // استخراج الرصيد الحالي
       final userData = docSnapshot.data() as Map<String, dynamic>;
       double currentBalance = 0.0;
-      
+
       if (userData.containsKey('balance')) {
         dynamic rawBalance = userData['balance'];
         if (rawBalance is num) {
@@ -703,17 +759,19 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
           currentBalance = double.tryParse(rawBalance) ?? 0.0;
         }
       }
-      
+
       // حساب الرصيد الجديد
       final newBalance = currentBalance - amountToDeduct;
-      
+
       // تحديث الرصيد في Firestore
       await docRef.update({
         'balance': newBalance,
         'updated_at': DateTime.now().toIso8601String(),
       });
-      
-      _logger.info('تم تحديث رصيد المستخدم بنجاح. الرصيد القديم: $currentBalance، الرصيد الجديد: $newBalance');
+
+      _logger.info(
+        'تم تحديث رصيد المستخدم بنجاح. الرصيد القديم: $currentBalance، الرصيد الجديد: $newBalance',
+      );
     } catch (e) {
       _logger.severe('خطأ في تحديث رصيد المستخدم: $e');
       throw Exception('فشل تحديث رصيد المستخدم: $e');
@@ -722,82 +780,41 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
 
   // عرض رسالة نجاح الحجز ثم العودة للشاشة الرئيسية
   void _showSuccessAndReturnHome() {
+    // استخراج معلومات الحجز
+    final String propertyName =
+        _propertyDetails != null && _propertyDetails!['name'] != null
+            ? _propertyDetails!['name']
+            : widget.propertyName;
+
+    final double totalAmount = _propertyDeposit + _propertyCommission;
+
+    // عرض الـ dialog الجديد المحسن
     showDialog(
       context: context,
       barrierDismissible: false,
-      builder: (BuildContext context) {
-        return Dialog(
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20.0)),
-          child: Container(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Container(
-                  height: 120,
-                  width: 120,
-                  decoration: BoxDecoration(
-                    color: Colors.green.shade50,
-                    shape: BoxShape.circle,
-                  ),
-                  child: Icon(
-                    Icons.check_circle,
-                    color: Colors.green,
-                    size: 80,
-                  ),
+      builder:
+          (context) => BookingSuccessDialog(
+            propertyName: propertyName,
+            bookingId: DateTime.now().millisecondsSinceEpoch
+                .toString()
+                .substring(7), // رقم حجز مؤقت
+            totalAmount: totalAmount,
+            onClose: () {
+              _hideNotificationsOnBack();
+              Navigator.of(context).pop();
+            },
+            onViewBookings: () {
+              _hideNotificationsOnBack();
+              Navigator.of(context).pop();
+              // انتقل إلى شاشة طلبات الحجز
+              Navigator.push(
+                context,
+                MaterialPageRoute(
+                  builder: (context) => const BookingRequestsScreen(),
                 ),
-                const SizedBox(height: 20),
-                const Text(
-                  "تم الحجز بنجاح",
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 10),
-                const Text(
-                  "يمكنك متابعة حالة الحجز من صفحة طلبات الحجز",
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 20),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    ElevatedButton(
-                      onPressed: () {
-                        _hideNotificationsOnBack();
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
-                      },
-                      child: const Text("حسناً"),
-                    ),
-                    const SizedBox(width: 10),
-                    ElevatedButton(
-                      onPressed: () {
-                        _hideNotificationsOnBack();
-                        Navigator.of(context).pop();
-                        Navigator.of(context).pop();
-                        // انتقل إلى شاشة طلبات الحجز
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => const BookingRequestsScreen(),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Theme.of(context).primaryColor,
-                        foregroundColor: Colors.white,
-                      ),
-                      child: const Text("متابعة الحجوزات"),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+              );
+            },
           ),
-        );
-      },
     );
   }
 
@@ -805,19 +822,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
   void _showTopErrorMessage(String message) {
     // Don't attempt to show a banner if the context is no longer mounted
     if (!context.mounted) return;
-    
+
     // إزالة أي رسائل خطأ سابقة
     ScaffoldMessenger.of(context).hideCurrentMaterialBanner();
-    
+
     ScaffoldMessenger.of(context).showMaterialBanner(
       MaterialBanner(
         content: Row(
           children: [
-            const Icon(
-              Icons.error_outline,
-              color: Colors.white,
-              size: 24,
-            ),
+            const Icon(Icons.error_outline, color: Colors.white, size: 24),
             const SizedBox(width: 12),
             Expanded(
               child: Text(
@@ -852,10 +865,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
         ],
       ),
     );
-    
+
     // Store the scaffold messenger before the async gap
     final scaffoldMessenger = ScaffoldMessenger.of(context);
-    
+
     // إخفاء الرسالة تلقائياً بعد 4 ثواني
     Future.delayed(const Duration(seconds: 4), () {
       // Use the stored scaffoldMessenger to avoid context issues
@@ -866,7 +879,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
   @override
   Widget build(BuildContext context) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    
+
     return WillPopScope(
       onWillPop: () async {
         // Hide any displayed banners when user presses back button
@@ -879,388 +892,448 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
           backgroundColor: appBarBlue,
           title: const Text(
             'استكمال الحجز',
-            style: TextStyle(
-              color: Colors.white,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
           ),
           centerTitle: true,
           elevation: 2,
           iconTheme: const IconThemeData(color: Colors.white),
         ),
-        body: _isLoading
-            ? const Center(child: CircularProgressIndicator())
-            : SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // عرض معلومات العقار
-                      _buildPropertyInfo(context),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // إضافة عرض رصيد المحفظة
-                      _buildWalletBalance(context),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // إضافة قسم رسالة توضيحية للحجز
-                      _buildBookingInfoMessage(context),
-                      
-                      const SizedBox(height: 24),
-                      
-                      // نموذج الحجز
-                      Card(
-                        elevation: 2,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Form(
-                            key: _formKey,
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  'بيانات الحجز',
-                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Theme.of(context).colorScheme.primary,
+        body:
+            _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16.0),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        // عرض معلومات العقار
+                        _buildPropertyInfo(context),
+
+                        const SizedBox(height: 24),
+
+                        // إضافة عرض رصيد المحفظة
+                        _buildWalletBalance(context),
+
+                        const SizedBox(height: 24),
+
+                        // إضافة قسم رسالة توضيحية للحجز
+                        _buildBookingInfoMessage(context),
+
+                        const SizedBox(height: 24),
+
+                        // نموذج الحجز
+                        Card(
+                          elevation: 2,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.all(16.0),
+                            child: Form(
+                              key: _formKey,
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'بيانات الحجز',
+                                    style: Theme.of(
+                                      context,
+                                    ).textTheme.titleLarge?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
                                   ),
-                                ),
-                                const SizedBox(height: 24),
-                                
-                                // حقل رقم الهاتف (تم نقله ليكون أول حقل)
-                                Container(
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                                        blurRadius: 4,
-                                        offset: const Offset(0, 2),
+                                  const SizedBox(height: 24),
+
+                                  // حقل رقم الهاتف (تم نقله ليكون أول حقل)
+                                  Container(
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(10),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Theme.of(context)
+                                              .colorScheme
+                                              .primary
+                                              .withOpacity(0.2),
+                                          blurRadius: 4,
+                                          offset: const Offset(0, 2),
+                                        ),
+                                      ],
+                                    ),
+                                    child: TextFormField(
+                                      controller: _phoneController,
+                                      decoration: InputDecoration(
+                                        labelText: 'رقم الهاتف',
+                                        prefixIcon: Icon(
+                                          Icons.phone_android,
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                          size: 26,
+                                        ),
+                                        border: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        enabledBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        focusedBorder: OutlineInputBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                          borderSide: BorderSide(
+                                            color:
+                                                Theme.of(
+                                                  context,
+                                                ).colorScheme.primary,
+                                            width: 2,
+                                          ),
+                                        ),
+                                        fillColor: Theme.of(
+                                          context,
+                                        ).colorScheme.primary.withOpacity(0.05),
+                                        filled: true,
+                                        labelStyle: TextStyle(
+                                          color:
+                                              Theme.of(
+                                                context,
+                                              ).colorScheme.primary,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
-                                    ],
+                                      keyboardType: TextInputType.phone,
+                                      inputFormatters: [
+                                        FilteringTextInputFormatter.digitsOnly,
+                                      ],
+                                      validator: (value) {
+                                        if (value == null || value.isEmpty) {
+                                          return 'الرجاء إدخال رقم الهاتف';
+                                        }
+                                        if (value.length < 10) {
+                                          return 'رقم الهاتف غير صحيح';
+                                        }
+                                        return null;
+                                      },
+                                    ),
                                   ),
-                                  child: TextFormField(
-                                    controller: _phoneController,
+                                  // ملاحظة تحت حقل رقم الهاتف
+                                  Padding(
+                                    padding: const EdgeInsets.only(
+                                      top: 4,
+                                      right: 8,
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        Icon(
+                                          Icons.message,
+                                          color: Colors.green,
+                                          size: 16,
+                                        ),
+                                        const SizedBox(width: 4),
+                                        Expanded(
+                                          child: Text(
+                                            'يرجى إدخال رقم هاتف للتواصل معك، ويفضل أن يكون الرقم متاح على واتساب',
+                                            style: TextStyle(
+                                              color:
+                                                  Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // حقل الاسم
+                                  TextFormField(
+                                    controller: _nameController,
                                     decoration: InputDecoration(
-                                      labelText: 'رقم الهاتف',
-                                      prefixIcon: Icon(
-                                        Icons.phone_android,
-                                        color: Theme.of(context).colorScheme.primary,
-                                        size: 26,
-                                      ),
+                                      labelText: 'الاسم',
+                                      prefixIcon: const Icon(Icons.person),
                                       border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(
-                                          color: Theme.of(context).colorScheme.primary,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      enabledBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(
-                                          color: Theme.of(context).colorScheme.primary,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      focusedBorder: OutlineInputBorder(
-                                        borderRadius: BorderRadius.circular(8),
-                                        borderSide: BorderSide(
-                                          color: Theme.of(context).colorScheme.primary,
-                                          width: 2,
-                                        ),
-                                      ),
-                                      fillColor: Theme.of(context).colorScheme.primary.withOpacity(0.05),
-                                      filled: true,
-                                      labelStyle: TextStyle(
-                                        color: Theme.of(context).colorScheme.primary,
-                                        fontWeight: FontWeight.bold,
                                       ),
                                     ),
-                                    keyboardType: TextInputType.phone,
-                                    inputFormatters: [
-                                      FilteringTextInputFormatter.digitsOnly,
-                                    ],
                                     validator: (value) {
                                       if (value == null || value.isEmpty) {
-                                        return 'الرجاء إدخال رقم الهاتف';
-                                      }
-                                      if (value.length < 10) {
-                                        return 'رقم الهاتف غير صحيح';
+                                        return 'الرجاء إدخال اسمك';
                                       }
                                       return null;
                                     },
                                   ),
-                                ),
-                                // ملاحظة تحت حقل رقم الهاتف
-                                Padding(
-                                  padding: const EdgeInsets.only(top: 4, right: 8),
-                                  child: Row(
-                                    children: [
-                                      Icon(
-                                        Icons.message,
-                                        color: Colors.green,
-                                        size: 16,
-                                      ),
-                                      const SizedBox(width: 4),
-                                      Expanded(
-                                        child: Text(
-                                          'يرجى إدخال رقم هاتف للتواصل معك، ويفضل أن يكون الرقم متاح على واتساب',
-                                          style: TextStyle(
-                                            color: Theme.of(context).colorScheme.primary,
-                                            fontSize: 12,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                
-                                // حقل الاسم
-                                TextFormField(
-                                  controller: _nameController,
-                                  decoration: InputDecoration(
-                                    labelText: 'الاسم',
-                                    prefixIcon: const Icon(Icons.person),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'الرجاء إدخال اسمك';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                
-                                // حقل الرقم الجامعي
-                                TextFormField(
-                                  controller: _universityIdController,
-                                  decoration: InputDecoration(
-                                    labelText: 'الرقم الجامعي',
-                                    prefixIcon: const Icon(Icons.school),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'الرجاء إدخال الرقم الجامعي';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                
-                                // حقل الكلية
-                                TextFormField(
-                                  controller: _collegeController,
-                                  decoration: InputDecoration(
-                                    labelText: 'الكلية',
-                                    prefixIcon: const Icon(Icons.account_balance),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  validator: (value) {
-                                    if (value == null || value.isEmpty) {
-                                      return 'الرجاء إدخال الكلية';
-                                    }
-                                    return null;
-                                  },
-                                ),
-                                const SizedBox(height: 16),
-                                
-                                // حقل العمولة
-                                TextFormField(
-                                  controller: _commissionController,
-                                  decoration: InputDecoration(
-                                    labelText: 'العمولة',
-                                    prefixIcon: const Icon(Icons.monetization_on),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  readOnly: true,
-                                  enabled: false,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade700,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 16),
-                                
-                                // حقل العربون
-                                TextFormField(
-                                  controller: _depositController,
-                                  decoration: InputDecoration(
-                                    labelText: 'العربون',
-                                    prefixIcon: const Icon(Icons.payment),
-                                    border: OutlineInputBorder(
-                                      borderRadius: BorderRadius.circular(8),
-                                    ),
-                                  ),
-                                  keyboardType: TextInputType.number,
-                                  readOnly: true,
-                                  enabled: false,
-                                  style: TextStyle(
-                                    color: Colors.grey.shade700,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                
-                                // إظهار إجمالي المبلغ المطلوب بطريقة احترافية
-                                Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: Colors.grey.shade200,
-                                    borderRadius: BorderRadius.circular(12),
-                                    border: Border.all(
-                                      color: Colors.grey.shade300,
-                                      width: 1,
-                                    ),
-                                  ),
-                                  child: Column(
-                                    children: [
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.center,
-                                        children: [
-                                          Icon(
-                                            Icons.receipt_long,
-                                            color: Theme.of(context).colorScheme.primary,
-                                            size: 24,
-                                          ),
-                                          const SizedBox(width: 8),
-                                          Text(
-                                            'ملخص الدفع',
-                                            style: TextStyle(
-                                              color: Theme.of(context).colorScheme.primary,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 16),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            'العربون:',
-                                            style: TextStyle(
-                                              color: Colors.black87,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${formatCurrency(_propertyDeposit)} جنيه',
-                                            style: TextStyle(
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      const SizedBox(height: 12),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            'العمولة:',
-                                            style: TextStyle(
-                                              color: Colors.black87,
-                                              fontSize: 16,
-                                              fontWeight: FontWeight.w500,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${formatCurrency(_propertyCommission)} جنيه',
-                                            style: TextStyle(
-                                              color: Colors.black,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 16,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                      Padding(
-                                        padding: const EdgeInsets.symmetric(vertical: 12),
-                                        child: Divider(
-                                          color: Colors.grey.shade400,
-                                          thickness: 1,
-                                        ),
-                                      ),
-                                      Row(
-                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                        children: [
-                                          Text(
-                                            'المجموع:',
-                                            style: TextStyle(
-                                              color: Theme.of(context).colorScheme.primary,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 18,
-                                            ),
-                                          ),
-                                          Text(
-                                            '${formatCurrency(_propertyDeposit + _propertyCommission)} جنيه',
-                                            style: TextStyle(
-                                              color: Theme.of(context).colorScheme.primary,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 20,
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(height: 24),
-                                
-                                // زر تأكيد الحجز
-                                SizedBox(
-                                  width: double.infinity,
-                                  height: 50,
-                                  child: ElevatedButton(
-                                    onPressed: _submitForm,
-                                    style: ElevatedButton.styleFrom(
-                                      backgroundColor: Theme.of(context).colorScheme.primary,
-                                      foregroundColor: Colors.white,
-                                      shape: RoundedRectangleBorder(
+                                  const SizedBox(height: 16),
+
+                                  // حقل الرقم الجامعي
+                                  TextFormField(
+                                    controller: _universityIdController,
+                                    decoration: InputDecoration(
+                                      labelText: 'الرقم الجامعي',
+                                      prefixIcon: const Icon(Icons.school),
+                                      border: OutlineInputBorder(
                                         borderRadius: BorderRadius.circular(8),
                                       ),
                                     ),
-                                    child: const Text(
-                                      'تأكيد الحجز',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.bold,
+                                    keyboardType: TextInputType.number,
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'الرجاء إدخال الرقم الجامعي';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // حقل الكلية
+                                  TextFormField(
+                                    controller: _collegeController,
+                                    decoration: InputDecoration(
+                                      labelText: 'الكلية',
+                                      prefixIcon: const Icon(
+                                        Icons.account_balance,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    validator: (value) {
+                                      if (value == null || value.isEmpty) {
+                                        return 'الرجاء إدخال الكلية';
+                                      }
+                                      return null;
+                                    },
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // حقل العمولة
+                                  TextFormField(
+                                    controller: _commissionController,
+                                    decoration: InputDecoration(
+                                      labelText: 'العمولة',
+                                      prefixIcon: const Icon(
+                                        Icons.monetization_on,
+                                      ),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    readOnly: true,
+                                    enabled: false,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+
+                                  // حقل العربون
+                                  TextFormField(
+                                    controller: _depositController,
+                                    decoration: InputDecoration(
+                                      labelText: 'العربون',
+                                      prefixIcon: const Icon(Icons.payment),
+                                      border: OutlineInputBorder(
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                    ),
+                                    keyboardType: TextInputType.number,
+                                    readOnly: true,
+                                    enabled: false,
+                                    style: TextStyle(
+                                      color: Colors.grey.shade700,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  // إظهار إجمالي المبلغ المطلوب بطريقة احترافية
+                                  Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: Colors.grey.shade200,
+                                      borderRadius: BorderRadius.circular(12),
+                                      border: Border.all(
+                                        color: Colors.grey.shade300,
+                                        width: 1,
+                                      ),
+                                    ),
+                                    child: Column(
+                                      children: [
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.center,
+                                          children: [
+                                            Icon(
+                                              Icons.receipt_long,
+                                              color:
+                                                  Theme.of(
+                                                    context,
+                                                  ).colorScheme.primary,
+                                              size: 24,
+                                            ),
+                                            const SizedBox(width: 8),
+                                            Text(
+                                              'ملخص الدفع',
+                                              style: TextStyle(
+                                                color:
+                                                    Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 16),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'العربون:',
+                                              style: TextStyle(
+                                                color: Colors.black87,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${formatCurrency(_propertyDeposit)} جنيه',
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        const SizedBox(height: 12),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'العمولة:',
+                                              style: TextStyle(
+                                                color: Colors.black87,
+                                                fontSize: 16,
+                                                fontWeight: FontWeight.w500,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${formatCurrency(_propertyCommission)} جنيه',
+                                              style: TextStyle(
+                                                color: Colors.black,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 16,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                        Padding(
+                                          padding: const EdgeInsets.symmetric(
+                                            vertical: 12,
+                                          ),
+                                          child: Divider(
+                                            color: Colors.grey.shade400,
+                                            thickness: 1,
+                                          ),
+                                        ),
+                                        Row(
+                                          mainAxisAlignment:
+                                              MainAxisAlignment.spaceBetween,
+                                          children: [
+                                            Text(
+                                              'المجموع:',
+                                              style: TextStyle(
+                                                color:
+                                                    Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 18,
+                                              ),
+                                            ),
+                                            Text(
+                                              '${formatCurrency(_propertyDeposit + _propertyCommission)} جنيه',
+                                              style: TextStyle(
+                                                color:
+                                                    Theme.of(
+                                                      context,
+                                                    ).colorScheme.primary,
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 20,
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 24),
+
+                                  // زر تأكيد الحجز
+                                  SizedBox(
+                                    width: double.infinity,
+                                    height: 50,
+                                    child: ElevatedButton(
+                                      onPressed: _submitForm,
+                                      style: ElevatedButton.styleFrom(
+                                        backgroundColor:
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                        foregroundColor: Colors.white,
+                                        shape: RoundedRectangleBorder(
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                      ),
+                                      child: const Text(
+                                        'تأكيد الحجز',
+                                        style: TextStyle(
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.bold,
+                                        ),
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
-              ),
       ),
     );
   }
@@ -1273,9 +1346,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
 
     return Card(
       elevation: 3,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(12),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
       child: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
@@ -1296,35 +1367,36 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                 // صورة العقار
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: widget.imageUrl != null
-                      ? Image.network(
-                          widget.imageUrl!,
-                          width: 100,
-                          height: 100,
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) {
-                            return Container(
-                              width: 100,
-                              height: 100,
-                              color: Colors.grey.shade200,
-                              child: const Icon(
-                                Icons.image_not_supported,
-                                size: 40,
-                                color: Colors.grey,
-                              ),
-                            );
-                          },
-                        )
-                      : Container(
-                          width: 100,
-                          height: 100,
-                          color: Colors.grey.shade200,
-                          child: const Icon(
-                            Icons.home,
-                            size: 40,
-                            color: Colors.grey,
+                  child:
+                      widget.imageUrl != null
+                          ? Image.network(
+                            widget.imageUrl!,
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) {
+                              return Container(
+                                width: 100,
+                                height: 100,
+                                color: Colors.grey.shade200,
+                                child: const Icon(
+                                  Icons.image_not_supported,
+                                  size: 40,
+                                  color: Colors.grey,
+                                ),
+                              );
+                            },
+                          )
+                          : Container(
+                            width: 100,
+                            height: 100,
+                            color: Colors.grey.shade200,
+                            child: const Icon(
+                              Icons.home,
+                              size: 40,
+                              color: Colors.grey,
+                            ),
                           ),
-                        ),
                 ),
                 const SizedBox(width: 16),
                 // تفاصيل العقار
@@ -1333,9 +1405,9 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        _propertyDetails != null 
-                          ? _propertyDetails!['name'] ?? widget.propertyName 
-                          : widget.propertyName,
+                        _propertyDetails != null
+                            ? _propertyDetails!['name'] ?? widget.propertyName
+                            : widget.propertyName,
                         style: textTheme.titleMedium?.copyWith(
                           fontWeight: FontWeight.bold,
                         ),
@@ -1353,8 +1425,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                           const SizedBox(width: 4),
                           Text(
                             _propertyDetails != null
-                              ? '${formatCurrency(_propertyDetails!['price'])} جنيه'
-                              : '${formatCurrency(widget.propertyPrice)} جنيه',
+                                ? '${formatCurrency(_propertyDetails!['price'])} جنيه'
+                                : '${formatCurrency(widget.propertyPrice)} جنيه',
                             style: textTheme.bodyMedium?.copyWith(
                               color: Colors.green.shade700,
                               fontWeight: FontWeight.bold,
@@ -1428,9 +1500,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
       _logger.info('الانتقال إلى صفحة شحن الرصيد');
       Navigator.push(
         context,
-        MaterialPageRoute(
-          builder: (context) => const WalletScreen(),
-        ),
+        MaterialPageRoute(builder: (context) => const WalletScreen()),
       ).then((_) {
         // عند العودة من صفحة الشحن، يمكن تحديث الرصيد تلقائياً
         setState(() {
@@ -1441,36 +1511,42 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
 
     // استخدام Firestore للتحقق من رصيد المحفظة
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseFirestore.instance.collection('users').doc(currentUserId).snapshots(),
+      stream:
+          FirebaseFirestore.instance
+              .collection('users')
+              .doc(currentUserId)
+              .snapshots(),
       builder: (context, snapshot) {
         String currentBalance = "...";
         bool isLoading = snapshot.connectionState == ConnectionState.waiting;
-        
+
         if (snapshot.hasError) {
           _logger.severe('خطأ في جلب رصيد المحفظة: ${snapshot.error}');
           currentBalance = "خطأ في جلب البيانات";
         }
-        
+
         if (snapshot.hasData && snapshot.data != null) {
           _logger.info('تم جلب بيانات المستخدم من Firestore');
           final userData = snapshot.data!.data() as Map<String, dynamic>?;
-          
+
           if (userData != null) {
             _logger.info('مفاتيح بيانات المستخدم: ${userData.keys.toList()}');
-            
+
             if (userData.containsKey('balance')) {
               dynamic rawBalance = userData['balance'];
-              _logger.info('رصيد المحفظة الخام: $rawBalance (النوع: ${rawBalance.runtimeType})');
-              
+              _logger.info(
+                'رصيد المحفظة الخام: $rawBalance (النوع: ${rawBalance.runtimeType})',
+              );
+
               // محاولة استخراج قيمة الرصيد
               double balance = 0.0;
-              
+
               if (rawBalance is num) {
                 balance = rawBalance.toDouble();
               } else if (rawBalance is String) {
                 balance = double.tryParse(rawBalance) ?? 0.0;
               }
-              
+
               currentBalance = formatCurrency(balance);
               _logger.info('تم تحويل الرصيد إلى: $currentBalance');
             } else {
@@ -1482,7 +1558,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
             currentBalance = "0";
           }
         }
-        
+
         return Card(
           elevation: 3,
           shape: RoundedRectangleBorder(
@@ -1492,7 +1568,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                 Theme.of(context).colorScheme.primary.r.toInt(),
                 Theme.of(context).colorScheme.primary.g.toInt(),
                 Theme.of(context).colorScheme.primary.b.toInt(),
-                0.3
+                0.3,
               ),
               width: 1,
             ),
@@ -1542,7 +1618,8 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                                 style: TextStyle(
                                   fontWeight: FontWeight.bold,
                                   fontSize: 24,
-                                  color: Theme.of(context).colorScheme.secondary,
+                                  color:
+                                      Theme.of(context).colorScheme.secondary,
                                 ),
                               ),
                             const SizedBox(width: 4),
@@ -1551,10 +1628,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                               style: TextStyle(
                                 fontSize: 14,
                                 color: Color.fromRGBO(
-                                  Theme.of(context).colorScheme.onSurface.r.toInt(),
-                                  Theme.of(context).colorScheme.onSurface.g.toInt(),
-                                  Theme.of(context).colorScheme.onSurface.b.toInt(),
-                                  0.7
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.r.toInt(),
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.g.toInt(),
+                                  Theme.of(
+                                    context,
+                                  ).colorScheme.onSurface.b.toInt(),
+                                  0.7,
                                 ),
                               ),
                             ),
@@ -1571,7 +1654,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                       style: ElevatedButton.styleFrom(
                         backgroundColor: Theme.of(context).colorScheme.primary,
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(8),
                         ),
@@ -1590,10 +1676,10 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
   // بناء قسم رسالة توضيحية للحجز
   Widget _buildBookingInfoMessage(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     // حساب إجمالي المبلغ المطلوب (العربون + العمولة)
     final double totalAmount = _propertyDeposit + _propertyCommission;
-    
+
     return Card(
       elevation: 3,
       shape: RoundedRectangleBorder(
@@ -1603,7 +1689,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
             Theme.of(context).colorScheme.primary.r.toInt(),
             Theme.of(context).colorScheme.primary.g.toInt(),
             Theme.of(context).colorScheme.primary.b.toInt(),
-            0.3
+            0.3,
           ),
           width: 1,
         ),
@@ -1617,11 +1703,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.info_outline,
-                  color: Colors.blue,
-                  size: 28,
-                ),
+                Icon(Icons.info_outline, color: Colors.blue, size: 28),
                 const SizedBox(width: 8),
                 Text(
                   'معلومات هامة',
@@ -1634,7 +1716,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
               ],
             ),
             const SizedBox(height: 16),
-            
+
             // رسالة الترحيب
             Align(
               alignment: Alignment.center,
@@ -1649,7 +1731,7 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
               ),
             ),
             const SizedBox(height: 16),
-            
+
             // معلومات الحجز - تفاصيل مهمة
             Container(
               decoration: BoxDecoration(
@@ -1673,15 +1755,15 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                     textAlign: TextAlign.right,
                   ),
                   const SizedBox(height: 16),
-                  
+
                   // شرح آلية الدفع
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
-                        Icons.payments_outlined, 
-                        color: colorScheme.primary, 
-                        size: 20
+                        Icons.payments_outlined,
+                        color: colorScheme.primary,
+                        size: 20,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -1698,16 +1780,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                       ),
                     ],
                   ),
-                  
+
                   const SizedBox(height: 8),
-                  
+
                   Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Icon(
-                        Icons.business_center_outlined, 
-                        color: colorScheme.primary, 
-                        size: 20
+                        Icons.business_center_outlined,
+                        color: colorScheme.primary,
+                        size: 20,
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -1727,18 +1809,16 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
                 ],
               ),
             ),
-            
+
             const SizedBox(height: 16),
-            
+
             // إظهار إجمالي المبلغ المطلوب
             Container(
               padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
               decoration: BoxDecoration(
                 color: colorScheme.primary.withOpacity(0.1),
                 borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: colorScheme.primary.withOpacity(0.3),
-                ),
+                border: Border.all(color: colorScheme.primary.withOpacity(0.3)),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1767,4 +1847,4 @@ class _CheckoutScreenState extends State<CheckoutScreen> with WidgetsBindingObse
       ),
     );
   }
-} 
+}
