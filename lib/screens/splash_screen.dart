@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:logging/logging.dart';
 import 'package:elsahm_app/screens/main_navigation_screen.dart';
+import 'package:elsahm_app/main.dart' show MainScreenExitConfirmationWrapper;
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -294,7 +295,12 @@ class _SplashScreenState extends State<SplashScreen>
     _stopAnimations();
 
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+      MaterialPageRoute(
+        builder:
+            (context) => const MainScreenExitConfirmationWrapper(
+              child: MainNavigationScreen(),
+            ),
+      ),
     );
   }
 
@@ -306,10 +312,7 @@ class _SplashScreenState extends State<SplashScreen>
           image: DecorationImage(
             image: AssetImage('assets/images/backgrond_app.webp'),
             fit: BoxFit.cover,
-            colorFilter: ColorFilter.mode(
-              Colors.black54,
-              BlendMode.darken,
-            ),
+            colorFilter: ColorFilter.mode(Colors.black54, BlendMode.darken),
           ),
         ),
         child: Stack(
@@ -376,9 +379,10 @@ class _SplashScreenState extends State<SplashScreen>
                       fontFamily: 'Cairo',
                       shadows: [
                         Shadow(
-                          color: _easterEggActivated
-                              ? _currentColor.withOpacity(0.7)
-                              : Colors.black.withOpacity(0.5),
+                          color:
+                              _easterEggActivated
+                                  ? _currentColor.withOpacity(0.7)
+                                  : Colors.black.withOpacity(0.5),
                           blurRadius: 8,
                           offset: const Offset(0, 2),
                         ),
@@ -418,29 +422,30 @@ class _SplashScreenState extends State<SplashScreen>
                     child: SizedBox(
                       width: 30,
                       height: 30,
-                      child: _easterEggActivated
-                          ? RotationTransition(
-                              turns: Tween(begin: 0.0, end: 1.0).animate(
-                                CurvedAnimation(
-                                  parent: AnimationController(
-                                    duration: const Duration(seconds: 1),
-                                    vsync: this,
-                                  )..repeat(),
-                                  curve: Curves.linear,
+                      child:
+                          _easterEggActivated
+                              ? RotationTransition(
+                                turns: Tween(begin: 0.0, end: 1.0).animate(
+                                  CurvedAnimation(
+                                    parent: AnimationController(
+                                      duration: const Duration(seconds: 1),
+                                      vsync: this,
+                                    )..repeat(),
+                                    curve: Curves.linear,
+                                  ),
+                                ),
+                                child: Icon(
+                                  Icons.star,
+                                  color: _currentColor,
+                                  size: 24,
+                                ),
+                              )
+                              : CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                  Colors.white,
                                 ),
                               ),
-                              child: Icon(
-                                Icons.star,
-                                color: _currentColor,
-                                size: 24,
-                              ),
-                            )
-                          : CircularProgressIndicator(
-                              strokeWidth: 2.5,
-                              valueColor: AlwaysStoppedAnimation<Color>(
-                                Colors.white,
-                              ),
-                            ),
                     ),
                   ),
                 ],
@@ -489,18 +494,20 @@ class _SplashScreenState extends State<SplashScreen>
                       children: [
                         Icon(
                           Icons.phone_android,
-                          color: _easterEggActivated
-                              ? _currentColor
-                              : Colors.white,
+                          color:
+                              _easterEggActivated
+                                  ? _currentColor
+                                  : Colors.white,
                           size: 18.0,
                         ),
                         const SizedBox(width: 10),
                         Text(
                           "01093130120",
                           style: TextStyle(
-                            color: _easterEggActivated
-                                ? _currentColor
-                                : Colors.white,
+                            color:
+                                _easterEggActivated
+                                    ? _currentColor
+                                    : Colors.white,
                             fontSize: 16.0,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'Cairo',

@@ -150,10 +150,63 @@ class ExitConfirmationWrapper extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-      onWillPop: () async {
-        // عرض تنبيه تأكيد الخروج
-        return await showExitConfirmationDialog(context);
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (!didPop) {
+          // عرض تنبيه تأكيد الخروج
+          final shouldExit = await showExitConfirmationDialog(context);
+          if (shouldExit && context.mounted) {
+            // إغلاق التطبيق تماماً
+            SystemNavigator.pop();
+          }
+        }
+      },
+      child: child,
+    );
+  }
+}
+
+// إضافة رابط للشاشة الرئيسية مع تنبيه الخروج عند جميع الصفحات الرئيسية
+class MainScreenExitConfirmationWrapper extends StatelessWidget {
+  final Widget child;
+
+  const MainScreenExitConfirmationWrapper({super.key, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (bool didPop, dynamic result) async {
+        if (!didPop) {
+          // التحقق من أن المستخدم في إحدى الصفحات الرئيسية
+          final navigationProvider = Provider.of<NavigationProvider>(
+            context,
+            listen: false,
+          );
+
+          // عرض تنبيه تأكيد الخروج في جميع الصفحات الرئيسية:
+          // 0: الصفحة الرئيسية
+          // 1: صفحة البحث
+          // 2: صفحة الأقسام
+          // 3: صفحة المفضلة
+          // 4: صفحة المزيد
+          final mainScreenIndexes = [0, 1, 2, 3, 4];
+
+          if (mainScreenIndexes.contains(navigationProvider.selectedIndex)) {
+            // عرض تنبيه تأكيد الخروج لجميع الصفحات الرئيسية
+            final shouldExit = await showExitConfirmationDialog(context);
+            if (shouldExit && context.mounted) {
+              // إغلاق التطبيق تماماً
+              SystemNavigator.pop();
+            }
+          } else {
+            // السماح بالعودة العادية للصفحات الأخرى (إن وجدت)
+            if (context.mounted) {
+              Navigator.of(context).pop();
+            }
+          }
+        }
       },
       child: child,
     );
@@ -631,7 +684,7 @@ class MyApp extends StatelessWidget {
             darkTheme: darkTheme, // Provide dark theme
             home: const ExitConfirmationWrapper(
               child: SplashScreen(),
-            ), // تطبيق ExitConfirmationWrapper فقط على الشاشة الرئيسية
+            ), // تطبيق ExitConfirmationWrapper على شاشة البداية
             // تعريف الطرق المسماة (Named Routes)
             routes: {'/login': (context) => const LoginScreen()},
             // Add theme animation duration

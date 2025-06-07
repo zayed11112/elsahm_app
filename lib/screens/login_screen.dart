@@ -5,6 +5,7 @@ import '../providers/auth_provider.dart';
 import 'signup_screen.dart';
 import '../providers/navigation_provider.dart';
 import 'main_navigation_screen.dart';
+import '../main.dart' show MainScreenExitConfirmationWrapper;
 
 // Custom page route transition
 class CustomPageRoute<T> extends PageRouteBuilder<T> {
@@ -83,11 +84,11 @@ class _LoginScreenState extends State<LoginScreen>
     ).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-    
+
     _scaleAnimation = Tween<double>(begin: 0.95, end: 1.0).animate(
       CurvedAnimation(parent: _animationController, curve: Curves.easeOut),
     );
-    
+
     // Start UI animations
     _animationController.forward();
   }
@@ -110,297 +111,364 @@ class _LoginScreenState extends State<LoginScreen>
 
     showDialog(
       context: context,
-      builder: (context) => StatefulBuilder(
-        builder: (context, setState) => Dialog(
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
-          ),
-          elevation: 5,
-          backgroundColor: Theme.of(context).brightness == Brightness.dark 
-              ? const Color(0xFF303030) 
-              : Colors.white,
-          child: Container(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Header image
-                CircleAvatar(
-                  radius: 40,
-                  backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-                  child: Icon(
-                    Icons.lock_reset_rounded,
-                    size: 40,
-                    color: Theme.of(context).colorScheme.primary,
+      builder:
+          (context) => StatefulBuilder(
+            builder:
+                (context, setState) => Dialog(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(20),
                   ),
-                ),
-                const SizedBox(height: 16),
-                
-                // Title with enhanced styling
-                Text(
-                  'إعادة تعيين كلمة المرور',
-                  style: TextStyle(
-                    fontSize: 22,
-                    fontWeight: FontWeight.bold,
-                    color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.white 
-                        : Colors.black87,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 12),
-                
-                // Instruction text with enhanced styling
-                Text(
-                  'أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور',
-                  style: TextStyle(
-                    fontSize: 14,
-                    color: Theme.of(context).brightness == Brightness.dark 
-                        ? Colors.white70 
-                        : Colors.black54,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 24),
-                
-                // Display remaining attempts info (if attempts already made)
-                FutureBuilder<int>(
-                  future: Future.value(
-                    Provider.of<AuthProvider>(context, listen: false)
-                        .remainingResetAttempts
-                  ),
-                  builder: (context, snapshot) {
-                    final remainingAttempts = snapshot.data ?? 3;
-                    final maxAttempts = Provider.of<AuthProvider>(context, listen: false)
-                        .maxResetAttempts;
-                    
-                    if (remainingAttempts < maxAttempts) {
-                      return Container(
-                        padding: const EdgeInsets.all(8),
-                        decoration: BoxDecoration(
-                          color: Theme.of(context).colorScheme.primary.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
+                  elevation: 5,
+                  backgroundColor:
+                      Theme.of(context).brightness == Brightness.dark
+                          ? const Color(0xFF303030)
+                          : Colors.white,
+                  child: Container(
+                    padding: const EdgeInsets.all(24),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        // Header image
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: Theme.of(
+                            context,
+                          ).colorScheme.primary.withOpacity(0.2),
+                          child: Icon(
+                            Icons.lock_reset_rounded,
+                            size: 40,
+                            color: Theme.of(context).colorScheme.primary,
+                          ),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.info_outline,
-                              size: 18,
-                              color: Theme.of(context).colorScheme.primary,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'المحاولات المتبقية: $remainingAttempts/$maxAttempts',
-                              style: TextStyle(
+                        const SizedBox(height: 16),
+
+                        // Title with enhanced styling
+                        Text(
+                          'إعادة تعيين كلمة المرور',
+                          style: TextStyle(
+                            fontSize: 22,
+                            fontWeight: FontWeight.bold,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white
+                                    : Colors.black87,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 12),
+
+                        // Instruction text with enhanced styling
+                        Text(
+                          'أدخل بريدك الإلكتروني وسنرسل لك رابطًا لإعادة تعيين كلمة المرور',
+                          style: TextStyle(
+                            fontSize: 14,
+                            color:
+                                Theme.of(context).brightness == Brightness.dark
+                                    ? Colors.white70
+                                    : Colors.black54,
+                          ),
+                          textAlign: TextAlign.center,
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Display remaining attempts info (if attempts already made)
+                        FutureBuilder<int>(
+                          future: Future.value(
+                            Provider.of<AuthProvider>(
+                              context,
+                              listen: false,
+                            ).remainingResetAttempts,
+                          ),
+                          builder: (context, snapshot) {
+                            final remainingAttempts = snapshot.data ?? 3;
+                            final maxAttempts =
+                                Provider.of<AuthProvider>(
+                                  context,
+                                  listen: false,
+                                ).maxResetAttempts;
+
+                            if (remainingAttempts < maxAttempts) {
+                              return Container(
+                                padding: const EdgeInsets.all(8),
+                                decoration: BoxDecoration(
+                                  color: Theme.of(
+                                    context,
+                                  ).colorScheme.primary.withOpacity(0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    Icon(
+                                      Icons.info_outline,
+                                      size: 18,
+                                      color:
+                                          Theme.of(context).colorScheme.primary,
+                                    ),
+                                    const SizedBox(width: 8),
+                                    Text(
+                                      'المحاولات المتبقية: $remainingAttempts/$maxAttempts',
+                                      style: TextStyle(
+                                        color:
+                                            Theme.of(
+                                              context,
+                                            ).colorScheme.primary,
+                                        fontWeight: FontWeight.w500,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }
+                            return const SizedBox();
+                          },
+                        ),
+                        const SizedBox(height: 16),
+
+                        // Email input field with enhanced styling
+                        Form(
+                          key: resetFormKey,
+                          child: TextFormField(
+                            controller: resetEmailController,
+                            decoration: InputDecoration(
+                              labelText: 'البريد الإلكتروني',
+                              hintText: 'أدخل بريدك الإلكتروني',
+                              prefixIcon: Icon(
+                                Icons.email_outlined,
                                 color: Theme.of(context).colorScheme.primary,
-                                fontWeight: FontWeight.w500,
+                              ),
+                              filled: true,
+                              fillColor:
+                                  Theme.of(context).brightness ==
+                                          Brightness.dark
+                                      ? Colors.grey.shade800.withOpacity(0.5)
+                                      : Colors.grey.shade100,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide.none,
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).colorScheme.primary,
+                                  width: 2,
+                                ),
+                              ),
+                              errorBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(12),
+                                borderSide: BorderSide(
+                                  color: Theme.of(context).colorScheme.error,
+                                  width: 1,
+                                ),
+                              ),
+                              contentPadding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 16,
+                              ),
+                            ),
+                            keyboardType: TextInputType.emailAddress,
+                            validator: (value) {
+                              if (value == null || value.isEmpty) {
+                                return 'الرجاء إدخال البريد الإلكتروني';
+                              }
+                              if (!RegExp(
+                                r'^[^@]+@[^@]+\.[^@]+',
+                              ).hasMatch(value)) {
+                                return 'الرجاء إدخال بريد إلكتروني صالح';
+                              }
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+
+                        // Action buttons with improved layout and styling
+                        Row(
+                          children: [
+                            // Cancel button
+                            Expanded(
+                              child: TextButton(
+                                onPressed: () {
+                                  Navigator.of(context).pop();
+                                },
+                                style: TextButton.styleFrom(
+                                  foregroundColor:
+                                      Theme.of(context).brightness ==
+                                              Brightness.dark
+                                          ? Colors.grey.shade300
+                                          : Colors.grey.shade700,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child: const Text(
+                                  'إلغاء',
+                                  style: TextStyle(fontWeight: FontWeight.w500),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(width: 16),
+
+                            // Submit button
+                            Expanded(
+                              child: ElevatedButton(
+                                onPressed:
+                                    isLoading
+                                        ? null
+                                        : () async {
+                                          if (resetFormKey.currentState
+                                                  ?.validate() ??
+                                              false) {
+                                            setState(() {
+                                              isLoading = true;
+                                            });
+
+                                            try {
+                                              final authProvider =
+                                                  Provider.of<AuthProvider>(
+                                                    context,
+                                                    listen: false,
+                                                  );
+
+                                              await authProvider.resetPassword(
+                                                resetEmailController.text
+                                                    .trim(),
+                                              );
+
+                                              if (!context.mounted) return;
+
+                                              Navigator.of(context).pop();
+
+                                              // First notification - password reset success
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).hideCurrentSnackBar();
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: const Text(
+                                                    'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني',
+                                                    textAlign: TextAlign.center,
+                                                    style: TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  backgroundColor: Colors.green,
+                                                  behavior:
+                                                      SnackBarBehavior.fixed,
+                                                  shape: const RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.vertical(
+                                                          top: Radius.circular(
+                                                            10,
+                                                          ),
+                                                        ),
+                                                  ),
+                                                  duration: const Duration(
+                                                    seconds: 2,
+                                                  ),
+                                                ),
+                                              );
+                                            } catch (e) {
+                                              if (!context.mounted) return;
+
+                                              Navigator.of(context).pop();
+
+                                              String errorMessage =
+                                                  e.toString();
+                                              bool isAttemptsError =
+                                                  errorMessage.contains(
+                                                    'تجاوزت الحد',
+                                                  );
+
+                                              // Second notification - password reset error
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).hideCurrentSnackBar();
+                                              ScaffoldMessenger.of(
+                                                context,
+                                              ).showSnackBar(
+                                                SnackBar(
+                                                  content: Text(
+                                                    errorMessage,
+                                                    textAlign: TextAlign.center,
+                                                    style: const TextStyle(
+                                                      fontWeight:
+                                                          FontWeight.bold,
+                                                    ),
+                                                  ),
+                                                  backgroundColor:
+                                                      isAttemptsError
+                                                          ? Colors.orange
+                                                          : Colors.red,
+                                                  behavior:
+                                                      SnackBarBehavior.fixed,
+                                                  shape: const RoundedRectangleBorder(
+                                                    borderRadius:
+                                                        BorderRadius.vertical(
+                                                          top: Radius.circular(
+                                                            10,
+                                                          ),
+                                                        ),
+                                                  ),
+                                                  duration: const Duration(
+                                                    seconds: 2,
+                                                  ),
+                                                ),
+                                              );
+                                            }
+                                          }
+                                        },
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor:
+                                      Theme.of(context).colorScheme.primary,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(
+                                    vertical: 12,
+                                  ),
+                                  elevation: 0,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                ),
+                                child:
+                                    isLoading
+                                        ? SizedBox(
+                                          height: 20,
+                                          width: 20,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2.0,
+                                            valueColor:
+                                                const AlwaysStoppedAnimation<
+                                                  Color
+                                                >(Colors.white),
+                                          ),
+                                        )
+                                        : const Text(
+                                          'إرسال',
+                                          style: TextStyle(
+                                            fontSize: 16,
+                                            fontWeight: FontWeight.bold,
+                                          ),
+                                        ),
                               ),
                             ),
                           ],
                         ),
-                      );
-                    }
-                    return const SizedBox();
-                  },
-                ),
-                const SizedBox(height: 16),
-                
-                // Email input field with enhanced styling
-                Form(
-                  key: resetFormKey,
-                  child: TextFormField(
-                    controller: resetEmailController,
-                    decoration: InputDecoration(
-                      labelText: 'البريد الإلكتروني',
-                      hintText: 'أدخل بريدك الإلكتروني',
-                      prefixIcon: Icon(
-                        Icons.email_outlined,
-                        color: Theme.of(context).colorScheme.primary,
-                      ),
-                      filled: true,
-                      fillColor: Theme.of(context).brightness == Brightness.dark 
-                          ? Colors.grey.shade800.withOpacity(0.5) 
-                          : Colors.grey.shade100,
-                      border: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      enabledBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide.none,
-                      ),
-                      focusedBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.primary,
-                          width: 2,
-                        ),
-                      ),
-                      errorBorder: OutlineInputBorder(
-                        borderRadius: BorderRadius.circular(12),
-                        borderSide: BorderSide(
-                          color: Theme.of(context).colorScheme.error,
-                          width: 1,
-                        ),
-                      ),
-                      contentPadding: const EdgeInsets.symmetric(
-                        horizontal: 16, 
-                        vertical: 16,
-                      ),
+                      ],
                     ),
-                    keyboardType: TextInputType.emailAddress,
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return 'الرجاء إدخال البريد الإلكتروني';
-                      }
-                      if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
-                        return 'الرجاء إدخال بريد إلكتروني صالح';
-                      }
-                      return null;
-                    },
                   ),
                 ),
-                const SizedBox(height: 24),
-                
-                // Action buttons with improved layout and styling
-                Row(
-                  children: [
-                    // Cancel button
-                    Expanded(
-                      child: TextButton(
-                        onPressed: () {
-                          Navigator.of(context).pop();
-                        },
-                        style: TextButton.styleFrom(
-                          foregroundColor: Theme.of(context).brightness == Brightness.dark
-                              ? Colors.grey.shade300
-                              : Colors.grey.shade700,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: const Text(
-                          'إلغاء',
-                          style: TextStyle(fontWeight: FontWeight.w500),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 16),
-                    
-                    // Submit button
-                    Expanded(
-                      child: ElevatedButton(
-                        onPressed: isLoading
-                          ? null
-                          : () async {
-                              if (resetFormKey.currentState?.validate() ?? false) {
-                                setState(() {
-                                  isLoading = true;
-                                });
-
-                                try {
-                                  final authProvider = Provider.of<AuthProvider>(
-                                    context,
-                                    listen: false,
-                                  );
-
-                                  await authProvider.resetPassword(
-                                    resetEmailController.text.trim(),
-                                  );
-
-                                  if (!context.mounted) return;
-
-                                  Navigator.of(context).pop();
-
-                                  // First notification - password reset success
-                                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: const Text(
-                                        'تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك الإلكتروني',
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      backgroundColor: Colors.green,
-                                      behavior: SnackBarBehavior.fixed,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                                      ),
-                                      duration: const Duration(seconds: 2),
-                                    ),
-                                  );
-                                } catch (e) {
-                                  if (!context.mounted) return;
-
-                                  Navigator.of(context).pop();
-                                  
-                                  String errorMessage = e.toString();
-                                  bool isAttemptsError = errorMessage.contains('تجاوزت الحد');
-                                  
-                                  // Second notification - password reset error
-                                  ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(
-                                      content: Text(
-                                        errorMessage,
-                                        textAlign: TextAlign.center,
-                                        style: const TextStyle(
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      backgroundColor: isAttemptsError 
-                                          ? Colors.orange 
-                                          : Colors.red,
-                                      behavior: SnackBarBehavior.fixed,
-                                      shape: const RoundedRectangleBorder(
-                                        borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                                      ),
-                                      duration: const Duration(seconds: 2),
-                                    ),
-                                  );
-                                }
-                              }
-                            },
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: Theme.of(context).colorScheme.primary,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(vertical: 12),
-                          elevation: 0,
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(10),
-                          ),
-                        ),
-                        child: isLoading
-                          ? SizedBox(
-                              height: 20,
-                              width: 20,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.0,
-                                valueColor: const AlwaysStoppedAnimation<Color>(
-                                  Colors.white,
-                                ),
-                              ),
-                            )
-                          : const Text(
-                              'إرسال',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
           ),
-        ),
-      ),
     );
   }
 
@@ -409,7 +477,7 @@ class _LoginScreenState extends State<LoginScreen>
     if (!_formKey.currentState!.validate()) {
       return;
     }
-    
+
     setState(() {
       _isLoading = true;
     });
@@ -432,7 +500,12 @@ class _LoginScreenState extends State<LoginScreen>
 
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const MainNavigationScreen()),
+          MaterialPageRoute(
+            builder:
+                (context) => const MainScreenExitConfirmationWrapper(
+                  child: MainNavigationScreen(),
+                ),
+          ),
         );
 
         // Third notification - Google sign in success
@@ -442,9 +515,7 @@ class _LoginScreenState extends State<LoginScreen>
             content: const Text(
               'تم تسجيل الدخول بنجاح',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: Theme.of(context).colorScheme.secondary,
             behavior: SnackBarBehavior.fixed,
@@ -462,9 +533,7 @@ class _LoginScreenState extends State<LoginScreen>
             content: const Text(
               'فشل تسجيل الدخول. تحقق من بريدك الإلكتروني وكلمة المرور.',
               textAlign: TextAlign.center,
-              style: TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.fixed,
@@ -484,9 +553,7 @@ class _LoginScreenState extends State<LoginScreen>
             content: Text(
               'حدث خطأ: ${e.toString()}',
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.bold),
             ),
             backgroundColor: Theme.of(context).colorScheme.error,
             behavior: SnackBarBehavior.fixed,
@@ -516,7 +583,7 @@ class _LoginScreenState extends State<LoginScreen>
   }) {
     final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     final colorScheme = Theme.of(context).colorScheme;
-    
+
     return InputDecoration(
       labelText: labelText,
       hintText: hintText,
@@ -535,24 +602,15 @@ class _LoginScreenState extends State<LoginScreen>
       ),
       focusedBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: colorScheme.primary,
-          width: 2,
-        ),
+        borderSide: BorderSide(color: colorScheme.primary, width: 2),
       ),
       errorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: colorScheme.error,
-          width: 2,
-        ),
+        borderSide: BorderSide(color: colorScheme.error, width: 2),
       ),
       focusedErrorBorder: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(
-          color: colorScheme.error,
-          width: 2,
-        ),
+        borderSide: BorderSide(color: colorScheme.error, width: 2),
       ),
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
     );
@@ -572,7 +630,8 @@ class _LoginScreenState extends State<LoginScreen>
         elevation: 0,
         systemOverlayStyle: SystemUiOverlayStyle(
           statusBarColor: Colors.transparent,
-          statusBarIconBrightness: isDarkMode ? Brightness.light : Brightness.dark,
+          statusBarIconBrightness:
+              isDarkMode ? Brightness.light : Brightness.dark,
         ),
         leading: IconButton(
           icon: Icon(
@@ -651,13 +710,17 @@ class _LoginScreenState extends State<LoginScreen>
                             if (value == null || value.isEmpty) {
                               return 'الرجاء إدخال البريد الإلكتروني';
                             }
-                            if (!RegExp(r'^[^@]+@[^@]+\.[^@]+').hasMatch(value)) {
+                            if (!RegExp(
+                              r'^[^@]+@[^@]+\.[^@]+',
+                            ).hasMatch(value)) {
                               return 'الرجاء إدخال بريد إلكتروني صالح';
                             }
                             return null;
                           },
                           onFieldSubmitted: (_) {
-                            FocusScope.of(context).requestFocus(_passwordFocusNode);
+                            FocusScope.of(
+                              context,
+                            ).requestFocus(_passwordFocusNode);
                           },
                         ),
                         const SizedBox(height: 16.0),
@@ -673,8 +736,11 @@ class _LoginScreenState extends State<LoginScreen>
                             prefixIcon: Icons.lock_outline,
                             suffixIcon: IconButton(
                               icon: Icon(
-                                _isPasswordVisible ? Icons.visibility_off : Icons.visibility,
-                                color: isDarkMode ? Colors.white70 : Colors.grey,
+                                _isPasswordVisible
+                                    ? Icons.visibility_off
+                                    : Icons.visibility,
+                                color:
+                                    isDarkMode ? Colors.white70 : Colors.grey,
                               ),
                               onPressed: () {
                                 setState(() {
@@ -699,9 +765,10 @@ class _LoginScreenState extends State<LoginScreen>
                         // Remember Me Checkbox and Forgot Password
                         Container(
                           decoration: BoxDecoration(
-                            color: isDarkMode 
-                                ? Colors.grey[800]!.withOpacity(0.5)
-                                : Colors.grey[100]!.withOpacity(0.5),
+                            color:
+                                isDarkMode
+                                    ? Colors.grey[800]!.withOpacity(0.5)
+                                    : Colors.grey[100]!.withOpacity(0.5),
                             borderRadius: BorderRadius.circular(12),
                           ),
                           padding: const EdgeInsets.symmetric(horizontal: 8.0),
@@ -726,7 +793,10 @@ class _LoginScreenState extends State<LoginScreen>
                               Text(
                                 'تذكرني',
                                 style: TextStyle(
-                                  color: isDarkMode ? Colors.white70 : Colors.black87,
+                                  color:
+                                      isDarkMode
+                                          ? Colors.white70
+                                          : Colors.black87,
                                 ),
                               ),
                               const Spacer(),
@@ -737,7 +807,9 @@ class _LoginScreenState extends State<LoginScreen>
                                 },
                                 style: TextButton.styleFrom(
                                   foregroundColor: colorScheme.secondary,
-                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                  ),
                                 ),
                                 child: Text(
                                   'نسيت كلمة المرور؟',
@@ -755,7 +827,10 @@ class _LoginScreenState extends State<LoginScreen>
                         // Login Button with improved animation
                         TweenAnimationBuilder<double>(
                           duration: const Duration(milliseconds: 300),
-                          tween: Tween<double>(begin: 1.0, end: _isLoading ? 0.95 : 1.0),
+                          tween: Tween<double>(
+                            begin: 1.0,
+                            end: _isLoading ? 0.95 : 1.0,
+                          ),
                           builder: (context, value, child) {
                             return Transform.scale(
                               scale: value,
@@ -763,55 +838,66 @@ class _LoginScreenState extends State<LoginScreen>
                                 height: 56,
                                 decoration: BoxDecoration(
                                   borderRadius: BorderRadius.circular(16),
-                                  boxShadow: !_isLoading
-                                      ? [
-                                          BoxShadow(
-                                            color: colorScheme.primary.withOpacity(0.3),
-                                            blurRadius: 8,
-                                            offset: const Offset(0, 4),
-                                          ),
-                                        ]
-                                      : [],
+                                  boxShadow:
+                                      !_isLoading
+                                          ? [
+                                            BoxShadow(
+                                              color: colorScheme.primary
+                                                  .withOpacity(0.3),
+                                              blurRadius: 8,
+                                              offset: const Offset(0, 4),
+                                            ),
+                                          ]
+                                          : [],
                                 ),
                                 child: ElevatedButton(
-                                  onPressed: _isLoading
-                                      ? null
-                                      : () {
-                                          HapticFeedback.mediumImpact();
-                                          _passwordFocusNode.unfocus();
-                                          _performLogin();
-                                        },
+                                  onPressed:
+                                      _isLoading
+                                          ? null
+                                          : () {
+                                            HapticFeedback.mediumImpact();
+                                            _passwordFocusNode.unfocus();
+                                            _performLogin();
+                                          },
                                   style: ElevatedButton.styleFrom(
                                     backgroundColor: colorScheme.primary,
                                     foregroundColor: Colors.white,
                                     disabledBackgroundColor:
-                                        isDarkMode ? Colors.grey[700] : Colors.grey[300],
+                                        isDarkMode
+                                            ? Colors.grey[700]
+                                            : Colors.grey[300],
                                     disabledForegroundColor:
-                                        isDarkMode ? Colors.grey[500] : Colors.grey[500],
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                        isDarkMode
+                                            ? Colors.grey[500]
+                                            : Colors.grey[500],
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                     ),
                                     elevation: 0,
                                   ),
-                                  child: _isLoading
-                                      ? SizedBox(
-                                          height: 24,
-                                          width: 24,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: isDarkMode
-                                                ? colorScheme.primary
-                                                : Colors.white,
+                                  child:
+                                      _isLoading
+                                          ? SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color:
+                                                  isDarkMode
+                                                      ? colorScheme.primary
+                                                      : Colors.white,
+                                            ),
+                                          )
+                                          : const Text(
+                                            'تسجيل الدخول',
+                                            style: TextStyle(
+                                              fontSize: 18,
+                                              fontWeight: FontWeight.bold,
+                                            ),
                                           ),
-                                        )
-                                      : const Text(
-                                          'تسجيل الدخول',
-                                          style: TextStyle(
-                                            fontSize: 18,
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
                                 ),
                               ),
                             );
@@ -824,13 +910,21 @@ class _LoginScreenState extends State<LoginScreen>
                           children: [
                             Expanded(
                               child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                ),
                                 height: 1.0,
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      isDarkMode ? Colors.grey.shade800.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
-                                      isDarkMode ? Colors.grey.shade700 : Colors.grey.withOpacity(0.7),
+                                      isDarkMode
+                                          ? Colors.grey.shade800.withOpacity(
+                                            0.1,
+                                          )
+                                          : Colors.grey.withOpacity(0.1),
+                                      isDarkMode
+                                          ? Colors.grey.shade700
+                                          : Colors.grey.withOpacity(0.7),
                                     ],
                                   ),
                                 ),
@@ -839,19 +933,30 @@ class _LoginScreenState extends State<LoginScreen>
                             Text(
                               'أو',
                               style: TextStyle(
-                                color: isDarkMode ? Colors.grey.shade400 : Colors.grey.shade600,
+                                color:
+                                    isDarkMode
+                                        ? Colors.grey.shade400
+                                        : Colors.grey.shade600,
                                 fontWeight: FontWeight.w500,
                               ),
                             ),
                             Expanded(
                               child: Container(
-                                margin: const EdgeInsets.symmetric(horizontal: 12.0),
+                                margin: const EdgeInsets.symmetric(
+                                  horizontal: 12.0,
+                                ),
                                 height: 1.0,
                                 decoration: BoxDecoration(
                                   gradient: LinearGradient(
                                     colors: [
-                                      isDarkMode ? Colors.grey.shade700 : Colors.grey.withOpacity(0.7),
-                                      isDarkMode ? Colors.grey.shade800.withOpacity(0.1) : Colors.grey.withOpacity(0.1),
+                                      isDarkMode
+                                          ? Colors.grey.shade700
+                                          : Colors.grey.withOpacity(0.7),
+                                      isDarkMode
+                                          ? Colors.grey.shade800.withOpacity(
+                                            0.1,
+                                          )
+                                          : Colors.grey.withOpacity(0.1),
                                     ],
                                   ),
                                 ),
@@ -864,7 +969,10 @@ class _LoginScreenState extends State<LoginScreen>
                         // Google Login Button with improved design
                         TweenAnimationBuilder<double>(
                           duration: const Duration(milliseconds: 300),
-                          tween: Tween<double>(begin: 1.0, end: _isLoading ? 0.95 : 1.0),
+                          tween: Tween<double>(
+                            begin: 1.0,
+                            end: _isLoading ? 0.95 : 1.0,
+                          ),
                           builder: (context, value, child) {
                             return Transform.scale(
                               scale: value,
@@ -874,185 +982,267 @@ class _LoginScreenState extends State<LoginScreen>
                                   borderRadius: BorderRadius.circular(16),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: isDarkMode
-                                          ? Colors.black.withOpacity(0.2)
-                                          : Colors.grey.withOpacity(0.2),
+                                      color:
+                                          isDarkMode
+                                              ? Colors.black.withOpacity(0.2)
+                                              : Colors.grey.withOpacity(0.2),
                                       blurRadius: 8,
                                       offset: const Offset(0, 2),
                                     ),
                                   ],
                                 ),
                                 child: ElevatedButton(
-                                  onPressed: _isLoading
-                                      ? null
-                                      : () async {
-                                          HapticFeedback.mediumImpact();
-                                          setState(() {
-                                            _isLoading = true;
-                                          });
+                                  onPressed:
+                                      _isLoading
+                                          ? null
+                                          : () async {
+                                            HapticFeedback.mediumImpact();
+                                            setState(() {
+                                              _isLoading = true;
+                                            });
 
-                                          try {
-                                            final authProvider = Provider.of<AuthProvider>(
-                                              context,
-                                              listen: false,
-                                            );
-
-                                            final success = await authProvider.signInWithGoogle();
-
-                                            if (!mounted) return;
-
-                                            if (success) {
-                                              final navProvider =
-                                                  Provider.of<NavigationProvider>(
+                                            try {
+                                              final authProvider =
+                                                  Provider.of<AuthProvider>(
                                                     context,
                                                     listen: false,
                                                   );
-                                              navProvider.setIndex(4);
 
-                                              Navigator.pushReplacement(
-                                                context,
-                                                MaterialPageRoute(
-                                                  builder: (context) => const MainNavigationScreen(),
-                                                ),
-                                              );
+                                              final success =
+                                                  await authProvider
+                                                      .signInWithGoogle();
 
-                                              // Third notification - Google sign in success
-                                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: const Text(
-                                                    'تم تسجيل الدخول بنجاح عبر جوجل',
-                                                    textAlign: TextAlign.center,
-                                                    style: TextStyle(
-                                                      fontWeight: FontWeight.bold,
-                                                    ),
-                                                  ),
-                                                  backgroundColor: colorScheme.secondary,
-                                                  behavior: SnackBarBehavior.fixed,
-                                                  shape: const RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                                                  ),
-                                                  duration: const Duration(seconds: 2),
-                                                ),
-                                              );
-                                            } else {
                                               if (!mounted) return;
 
-                                              // Fourth notification - Google sign in error
-                                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: const Text(
-                                                    'فشل تسجيل الدخول عبر جوجل',
-                                                    textAlign: TextAlign.center,
-                                                    style: TextStyle(
-                                                      fontWeight: FontWeight.bold,
+                                              if (success) {
+                                                final navProvider = Provider.of<
+                                                  NavigationProvider
+                                                >(context, listen: false);
+                                                navProvider.setIndex(4);
+
+                                                Navigator.pushReplacement(
+                                                  context,
+                                                  MaterialPageRoute(
+                                                    builder:
+                                                        (
+                                                          context,
+                                                        ) => const MainScreenExitConfirmationWrapper(
+                                                          child:
+                                                              MainNavigationScreen(),
+                                                        ),
+                                                  ),
+                                                );
+
+                                                // Third notification - Google sign in success
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).hideCurrentSnackBar();
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: const Text(
+                                                      'تم تسجيل الدخول بنجاح عبر جوجل',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    backgroundColor:
+                                                        colorScheme.secondary,
+                                                    behavior:
+                                                        SnackBarBehavior.fixed,
+                                                    shape: const RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.vertical(
+                                                            top:
+                                                                Radius.circular(
+                                                                  10,
+                                                                ),
+                                                          ),
+                                                    ),
+                                                    duration: const Duration(
+                                                      seconds: 2,
                                                     ),
                                                   ),
-                                                  backgroundColor: colorScheme.error,
-                                                  behavior: SnackBarBehavior.fixed,
-                                                  shape: const RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
-                                                  ),
-                                                  duration: const Duration(seconds: 2),
-                                                ),
-                                              );
-                                            }
-                                          } catch (e) {
-                                            if (mounted) {
-                                              // Fourth notification - Google sign in error
-                                              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-                                              ScaffoldMessenger.of(context).showSnackBar(
-                                                SnackBar(
-                                                  content: Text(
-                                                    'حدث خطأ: ${e.toString()}',
-                                                    textAlign: TextAlign.center,
-                                                    style: const TextStyle(
-                                                      fontWeight: FontWeight.bold,
+                                                );
+                                              } else {
+                                                if (!mounted) return;
+
+                                                // Fourth notification - Google sign in error
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).hideCurrentSnackBar();
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: const Text(
+                                                      'فشل تسجيل الدخول عبر جوجل',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    backgroundColor:
+                                                        colorScheme.error,
+                                                    behavior:
+                                                        SnackBarBehavior.fixed,
+                                                    shape: const RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.vertical(
+                                                            top:
+                                                                Radius.circular(
+                                                                  10,
+                                                                ),
+                                                          ),
+                                                    ),
+                                                    duration: const Duration(
+                                                      seconds: 2,
                                                     ),
                                                   ),
-                                                  backgroundColor: colorScheme.error,
-                                                  behavior: SnackBarBehavior.fixed,
-                                                  shape: const RoundedRectangleBorder(
-                                                    borderRadius: BorderRadius.vertical(top: Radius.circular(10)),
+                                                );
+                                              }
+                                            } catch (e) {
+                                              if (mounted) {
+                                                // Fourth notification - Google sign in error
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).hideCurrentSnackBar();
+                                                ScaffoldMessenger.of(
+                                                  context,
+                                                ).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                      'حدث خطأ: ${e.toString()}',
+                                                      textAlign:
+                                                          TextAlign.center,
+                                                      style: const TextStyle(
+                                                        fontWeight:
+                                                            FontWeight.bold,
+                                                      ),
+                                                    ),
+                                                    backgroundColor:
+                                                        colorScheme.error,
+                                                    behavior:
+                                                        SnackBarBehavior.fixed,
+                                                    shape: const RoundedRectangleBorder(
+                                                      borderRadius:
+                                                          BorderRadius.vertical(
+                                                            top:
+                                                                Radius.circular(
+                                                                  10,
+                                                                ),
+                                                          ),
+                                                    ),
+                                                    duration: const Duration(
+                                                      seconds: 2,
+                                                    ),
                                                   ),
-                                                  duration: const Duration(seconds: 2),
-                                                ),
-                                              );
+                                                );
+                                              }
+                                            } finally {
+                                              if (mounted) {
+                                                setState(() {
+                                                  _isLoading = false;
+                                                });
+                                              }
                                             }
-                                          } finally {
-                                            if (mounted) {
-                                              setState(() {
-                                                _isLoading = false;
-                                              });
-                                            }
-                                          }
-                                        },
+                                          },
                                   style: ElevatedButton.styleFrom(
-                                    backgroundColor: isDarkMode
-                                        ? const Color(0xFF303030)
-                                        : Colors.white,
-                                    foregroundColor: isDarkMode ? Colors.white : Colors.black87,
+                                    backgroundColor:
+                                        isDarkMode
+                                            ? const Color(0xFF303030)
+                                            : Colors.white,
+                                    foregroundColor:
+                                        isDarkMode
+                                            ? Colors.white
+                                            : Colors.black87,
                                     elevation: 0,
-                                    padding: const EdgeInsets.symmetric(vertical: 16),
+                                    padding: const EdgeInsets.symmetric(
+                                      vertical: 16,
+                                    ),
                                     shape: RoundedRectangleBorder(
                                       borderRadius: BorderRadius.circular(16),
                                       side: BorderSide(
-                                        color: isDarkMode
-                                            ? Colors.grey.shade700
-                                            : Colors.grey.shade300,
+                                        color:
+                                            isDarkMode
+                                                ? Colors.grey.shade700
+                                                : Colors.grey.shade300,
                                         width: 1,
                                       ),
                                     ),
                                   ),
-                                  child: _isLoading
-                                      ? SizedBox(
-                                          height: 24,
-                                          width: 24,
-                                          child: CircularProgressIndicator(
-                                            strokeWidth: 2,
-                                            color: isDarkMode
-                                                ? Colors.white70
-                                                : colorScheme.primary,
+                                  child:
+                                      _isLoading
+                                          ? SizedBox(
+                                            height: 24,
+                                            width: 24,
+                                            child: CircularProgressIndicator(
+                                              strokeWidth: 2,
+                                              color:
+                                                  isDarkMode
+                                                      ? Colors.white70
+                                                      : colorScheme.primary,
+                                            ),
+                                          )
+                                          : Row(
+                                            mainAxisAlignment:
+                                                MainAxisAlignment.center,
+                                            children: [
+                                              Container(
+                                                height: 24,
+                                                width: 24,
+                                                decoration: BoxDecoration(
+                                                  color: Colors.white,
+                                                  borderRadius:
+                                                      BorderRadius.circular(4),
+                                                  boxShadow:
+                                                      isDarkMode
+                                                          ? []
+                                                          : [
+                                                            BoxShadow(
+                                                              color: Colors
+                                                                  .black
+                                                                  .withOpacity(
+                                                                    0.05,
+                                                                  ),
+                                                              blurRadius: 3,
+                                                              offset:
+                                                                  const Offset(
+                                                                    0,
+                                                                    1,
+                                                                  ),
+                                                            ),
+                                                          ],
+                                                ),
+                                                padding: const EdgeInsets.all(
+                                                  2,
+                                                ),
+                                                child: Image.asset(
+                                                  'assets/icons/google.webp',
+                                                  height: 20,
+                                                  width: 20,
+                                                ),
+                                              ),
+                                              const SizedBox(width: 12),
+                                              Text(
+                                                'متابعة باستخدام حساب جوجل',
+                                                style: TextStyle(
+                                                  fontSize: 16,
+                                                  fontWeight: FontWeight.w500,
+                                                  color:
+                                                      isDarkMode
+                                                          ? Colors.white
+                                                          : Colors.black87,
+                                                ),
+                                              ),
+                                            ],
                                           ),
-                                        )
-                                      : Row(
-                                          mainAxisAlignment: MainAxisAlignment.center,
-                                          children: [
-                                            Container(
-                                              height: 24,
-                                              width: 24,
-                                              decoration: BoxDecoration(
-                                                color: Colors.white,
-                                                borderRadius: BorderRadius.circular(4),
-                                                boxShadow: isDarkMode
-                                                    ? []
-                                                    : [
-                                                        BoxShadow(
-                                                          color: Colors.black.withOpacity(0.05),
-                                                          blurRadius: 3,
-                                                          offset: const Offset(0, 1),
-                                                        ),
-                                                      ],
-                                              ),
-                                              padding: const EdgeInsets.all(2),
-                                              child: Image.asset(
-                                                'assets/icons/google.webp',
-                                                height: 20,
-                                                width: 20,
-                                              ),
-                                            ),
-                                            const SizedBox(width: 12),
-                                            Text(
-                                              'متابعة باستخدام حساب جوجل',
-                                              style: TextStyle(
-                                                fontSize: 16,
-                                                fontWeight: FontWeight.w500,
-                                                color: isDarkMode ? Colors.white : Colors.black87,
-                                              ),
-                                            ),
-                                          ],
-                                        ),
                                 ),
                               ),
                             );
@@ -1081,7 +1271,10 @@ class _LoginScreenState extends State<LoginScreen>
                           child: RichText(
                             text: TextSpan(
                               style: textTheme.bodyMedium?.copyWith(
-                                color: isDarkMode ? Colors.white70 : Colors.black87,
+                                color:
+                                    isDarkMode
+                                        ? Colors.white70
+                                        : Colors.black87,
                               ),
                               children: <TextSpan>[
                                 const TextSpan(text: 'ليس لديك حساب؟ '),
