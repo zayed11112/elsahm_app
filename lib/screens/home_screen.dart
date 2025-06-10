@@ -2221,15 +2221,37 @@ class _HomeScreenState extends State<HomeScreen>
                         try {
                           final url = social['url'] as String;
                           final Uri uri = Uri.parse(url);
+
+                          if (kDebugMode) {
+                            _logger.info('محاولة فتح الرابط: $url');
+                          }
+
                           if (await canLaunchUrl(uri)) {
-                            await launchUrl(
+                            final bool launched = await launchUrl(
                               uri,
                               mode: LaunchMode.externalApplication,
                             );
+
+                            if (!launched) {
+                              throw 'فشل في فتح الرابط';
+                            }
+
+                            if (kDebugMode) {
+                              _logger.info('تم فتح الرابط بنجاح: $url');
+                            }
+                          } else {
+                            throw 'لا يمكن فتح هذا النوع من الروابط';
                           }
                         } catch (e) {
                           if (kDebugMode) {
                             _logger.warning('خطأ في فتح رابط التواصل: $e');
+                          }
+
+                          if (mounted) {
+                            _showCenteredTextMessage(
+                              'لا يمكن فتح الرابط. تأكد من وجود التطبيق المناسب.',
+                              isError: true,
+                            );
                           }
                         }
                       },
@@ -2364,15 +2386,37 @@ class _HomeScreenState extends State<HomeScreen>
                         try {
                           final url = social['url'] as String;
                           final Uri uri = Uri.parse(url);
+
+                          if (kDebugMode) {
+                            _logger.info('محاولة فتح الرابط: $url');
+                          }
+
                           if (await canLaunchUrl(uri)) {
-                            await launchUrl(
+                            final bool launched = await launchUrl(
                               uri,
                               mode: LaunchMode.externalApplication,
                             );
+
+                            if (!launched) {
+                              throw 'فشل في فتح الرابط';
+                            }
+
+                            if (kDebugMode) {
+                              _logger.info('تم فتح الرابط بنجاح: $url');
+                            }
+                          } else {
+                            throw 'لا يمكن فتح هذا النوع من الروابط';
                           }
                         } catch (e) {
                           if (kDebugMode) {
                             _logger.warning('خطأ في فتح رابط التواصل: $e');
+                          }
+
+                          if (mounted) {
+                            _showCenteredTextMessage(
+                              'لا يمكن فتح الرابط. تأكد من وجود التطبيق المناسب.',
+                              isError: true,
+                            );
                           }
                         }
                       },
