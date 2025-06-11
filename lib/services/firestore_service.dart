@@ -530,4 +530,56 @@ class FirestoreService {
       return null;
     }
   }
+
+  // Add method to delete user data
+  Future<void> deleteUserData(String userId) async {
+    try {
+      // Get reference to user document
+      final userDoc = _db.collection('users').doc(userId);
+      
+      // Get reference to user's complaints
+      final complaintsQuery = _db.collection('complaints')
+          .where('userId', isEqualTo: userId);
+      
+      // Get reference to user's bookings
+      final bookingsQuery = _db.collection('bookings')
+          .where('userId', isEqualTo: userId);
+      
+      // Get reference to user's notifications
+      final notificationsQuery = _db.collection('notifications')
+          .where('userId', isEqualTo: userId);
+      
+      // Execute all deletions in batch or transaction
+      final batch = _db.batch();
+      
+      // Delete user's complaints
+      final complaintsSnapshot = await complaintsQuery.get();
+      for (var doc in complaintsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      
+      // Delete user's bookings
+      final bookingsSnapshot = await bookingsQuery.get();
+      for (var doc in bookingsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      
+      // Delete user's notifications
+      final notificationsSnapshot = await notificationsQuery.get();
+      for (var doc in notificationsSnapshot.docs) {
+        batch.delete(doc.reference);
+      }
+      
+      // Delete user profile document last
+      batch.delete(userDoc);
+      
+      // Commit all deletions
+      await batch.commit();
+      
+      _logger.info('Successfully deleted all data for user: $userId');
+    } catch (e) {
+      _logger.severe('Error deleting user data: $e');
+      throw Exception('Failed to delete user data: $e');
+    }
+  }
 }

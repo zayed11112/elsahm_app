@@ -1508,9 +1508,9 @@ $videoLinks
       physics: const NeverScrollableScrollPhysics(),
       children: [
         _buildSpecificationItem(
-          icon: Icons.category_outlined,
-          title: 'النوع',
-          value: propertyType,
+          icon: Icons.meeting_room_outlined,
+          title: 'الغرف',
+          value: rooms,
         ),
         _buildSpecificationItem(
           icon: Icons.king_bed_outlined,
@@ -1518,9 +1518,9 @@ $videoLinks
           value: beds,
         ),
         _buildSpecificationItem(
-          icon: Icons.meeting_room_outlined,
-          title: 'الغرف',
-          value: rooms,
+          icon: Icons.category_outlined,
+          title: 'النوع',
+          value: propertyType,
         ),
         _buildSpecificationItem(
           icon: Icons.stairs_outlined,

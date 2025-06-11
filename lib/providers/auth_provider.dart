@@ -604,4 +604,56 @@ class AuthProvider with ChangeNotifier {
       return null;
     }
   }
+
+  // Delete user account
+  Future<bool> deleteAccount(String password) async {
+    if (_user == null || _user!.email == null) {
+      _logger.severe('Cannot delete account: User not authenticated or email is null');
+      return false;
+    }
+
+    try {
+      _isLoading = true;
+      notifyListeners();
+
+      // Re-authenticate user with current password
+      AuthCredential credential = EmailAuthProvider.credential(
+        email: _user!.email!,
+        password: password,
+      );
+
+      await _user!.reauthenticateWithCredential(credential);
+      
+      // Get user ID before deletion
+      final String userId = _user!.uid;
+      
+      // Delete user data from Firestore first
+      await _firestoreService.deleteUserData(userId);
+      
+      // Delete OneSignal association
+      await main.removeOneSignalExternalUserId();
+      
+      // Delete FCM token
+      await _notificationService.deleteToken(userId);
+      
+      // Delete Firebase Auth user account
+      await _user!.delete();
+      
+      _logger.info('User account deleted successfully: $userId');
+      
+      // Auth state change will be handled by listener
+      _isLoading = false;
+      return true;
+    } on FirebaseAuthException catch (e) {
+      _logger.severe('Delete Account Error: ${e.message}');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    } catch (e) {
+      _logger.severe('Delete Account Error: $e');
+      _isLoading = false;
+      notifyListeners();
+      return false;
+    }
+  }
 }

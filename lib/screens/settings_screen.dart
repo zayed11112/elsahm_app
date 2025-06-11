@@ -6,6 +6,8 @@ import '../constants/theme.dart';
 import 'help_screen.dart';
 import 'privacy_policy_screen.dart';
 import 'notifications_settings_screen.dart';
+import 'complaints_screen.dart';
+import 'delete_account_screen.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
@@ -177,6 +179,19 @@ class SettingsScreen extends StatelessWidget {
 
           _buildSettingItem(
             context,
+            icon: Icons.comment_outlined,
+            title: 'الشكاوى والمقترحات',
+            subtitle: 'تقديم شكوى أو اقتراح للتحسين',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ComplaintsScreen()),
+              );
+            },
+          ),
+
+          _buildSettingItem(
+            context,
             icon: Icons.policy_outlined,
             title: 'سياسة الخصوصية والشروط',
             subtitle: 'قراءة سياسات وشروط الاستخدام',
@@ -184,6 +199,19 @@ class SettingsScreen extends StatelessWidget {
               Navigator.push(
                 context,
                 MaterialPageRoute(builder: (_) => const PrivacyPolicyScreen()),
+              );
+            },
+          ),
+
+          _buildSettingItem(
+            context,
+            icon: Icons.delete_forever_outlined,
+            title: 'حذف الحساب',
+            subtitle: 'حذف حسابك وبياناتك نهائياً',
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const DeleteAccountScreen()),
               );
             },
           ),

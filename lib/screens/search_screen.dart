@@ -3,15 +3,11 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'dart:math';
 
 import 'package:logging/logging.dart';
-import 'package:provider/provider.dart';
 import '../models/apartment.dart';
 
 import '../services/property_service_supabase.dart';
 import '../services/category_service.dart';
 import '../services/available_places_service.dart';
-import '../providers/favorites_provider.dart';
-import '../providers/auth_provider.dart';
-import '../utils/auth_utils.dart';
 import 'property_details_screen.dart';
 
 class SearchScreen extends StatefulWidget {
@@ -1030,106 +1026,7 @@ class _SearchScreenState extends State<SearchScreen> {
                       ),
                     ),
 
-                    // Favorite button
-                    Positioned(
-                      top: 8,
-                      right: 8,
-                      child: Consumer<FavoritesProvider>(
-                        builder: (context, favoritesProvider, _) {
-                          final bool isFavorite = favoritesProvider.isFavorite(
-                            apartment.id,
-                          );
-                          return Material(
-                            color: Colors.transparent,
-                            child: InkWell(
-                              onTap: () async {
-                                // التحقق من حالة تسجيل الدخول
-                                final authProvider = Provider.of<AuthProvider>(
-                                  context,
-                                  listen: false,
-                                );
-                                if (!authProvider.isAuthenticated) {
-                                  AuthUtils.showAuthRequiredDialog(context);
-                                  return;
-                                }
-
-                                try {
-                                  final scaffoldMessenger =
-                                      ScaffoldMessenger.of(context);
-                                  final isNowFavorite = await favoritesProvider
-                                      .toggleFavorite(apartment);
-                                  if (mounted) {
-                                    // إلغاء أي إشعارات سابقة
-                                    scaffoldMessenger.hideCurrentSnackBar();
-
-                                    // عرض الإشعار الجديد بنص مركزي
-                                    scaffoldMessenger.showSnackBar(
-                                      SnackBar(
-                                        content: Text(
-                                          isNowFavorite
-                                              ? 'تم إضافة ${apartment.name} إلى المفضلة'
-                                              : 'تم إزالة ${apartment.name} من المفضلة',
-                                          textAlign: TextAlign.center,
-                                          style: const TextStyle(
-                                            fontWeight: FontWeight.bold,
-                                          ),
-                                        ),
-                                        duration: const Duration(seconds: 2),
-                                        backgroundColor:
-                                            Theme.of(
-                                              context,
-                                            ).colorScheme.secondary,
-                                        behavior: SnackBarBehavior.fixed,
-                                        shape: const RoundedRectangleBorder(
-                                          borderRadius: BorderRadius.vertical(
-                                            top: Radius.circular(10),
-                                          ),
-                                        ),
-                                      ),
-                                    );
-                                  }
-                                } catch (e) {
-                                  _logger.severe(
-                                    'خطأ في تبديل حالة المفضلة: $e',
-                                  );
-                                }
-                              },
-                              borderRadius: BorderRadius.circular(20),
-                              child: Container(
-                                padding: const EdgeInsets.all(8),
-                                decoration: BoxDecoration(
-                                  color:
-                                      Theme.of(context).brightness ==
-                                              Brightness.dark
-                                          ? Colors.black38
-                                          : Colors.white.withAlpha(225),
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: Colors.black.withAlpha(50),
-                                      blurRadius: 3,
-                                      offset: const Offset(0, 1),
-                                    ),
-                                  ],
-                                ),
-                                child: Icon(
-                                  isFavorite
-                                      ? Icons.favorite
-                                      : Icons.favorite_border,
-                                  color:
-                                      isFavorite
-                                          ? Colors.red
-                                          : isDarkMode
-                                          ? Colors.white
-                                          : Colors.grey[700],
-                                  size: 22,
-                                ),
-                              ),
-                            ),
-                          );
-                        },
-                      ),
-                    ),
+// Favorite button has been removed
                   ],
                 ),
               ),

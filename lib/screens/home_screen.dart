@@ -26,11 +26,13 @@ import '../services/category_service.dart'; // Import CategoryService
 import '../services/banner_service.dart'; // Import BannerService
 import '../services/property_service_supabase.dart'; // Import PropertyServiceSupabase
 import '../services/update_service.dart'; // Import the UpdateService
+import '../services/available_places_service.dart'; // Import AvailablePlacesService
 import '../screens/categories_screen.dart'; // Import CategoriesScreen
 import '../widgets/typewriter_animated_text.dart'; // Import the TypewriterAnimatedText widget
 // Import the cropped network image widget
 import '../widgets/property_card_widget.dart'; // إضافة استيراد ويدجيت العقار الجديد
 import 'apartments_list_screen.dart'; // Import the apartments list screen
+import 'place_details_screen.dart'; // استيراد شاشة تفاصيل الأماكن
 // Import the property details screen
 import '../providers/auth_provider.dart'; // Importar AuthProvider
 // Importar AuthUtils
@@ -81,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen>
   final PropertyServiceSupabase _propertyService = PropertyServiceSupabase();
   final CategoryService _categoryService = CategoryService();
   final BannerService _bannerService = BannerService();
+  final AvailablePlacesService _placesService = AvailablePlacesService(); // إضافة خدمة الأماكن
   final UpdateService _updateService = UpdateService(); // إضافة خدمة التحديثات
   final Logger _logger = Logger('HomeScreen');
 
@@ -89,12 +92,14 @@ class _HomeScreenState extends State<HomeScreen>
   List<Map<String, dynamic>> _categories = [];
   List<Apartment> _latestApartments = [];
   List<Apartment> _featuredProperties = [];
+  List<dynamic> _availablePlaces = []; // إضافة متغير للأماكن المتاحة
   AppUpdate? _appUpdate; // متغير بيانات التحديث
 
   // متغيرات حالة التحميل
   bool _isLoading = true;
   bool _isCategoriesLoading = true;
   bool _isFeaturedLoading = true;
+  bool _isAvailablePlacesLoading = true; // حالة تحميل الأماكن المتاحة
   bool _isUpdateLoading = true; // حالة تحميل بيانات التحديث
   int _currentBannerIndex = 0;
 
@@ -145,6 +150,7 @@ class _HomeScreenState extends State<HomeScreen>
         await Future.wait([
           _fetchFeaturedProperties(),
           _fetchLatestApartments(),
+          _fetchAvailablePlaces(), // إضافة استدعاء دالة جلب الأماكن المتاحة
         ]);
 
         if (mounted) {
@@ -263,17 +269,22 @@ class _HomeScreenState extends State<HomeScreen>
 
             const SizedBox(height: 24.0),
 
-            // 8. قسم لماذا نحن الخيار الأفضل
+            // 8. قسم الأماكن المتاحة
+            _buildAvailablePlacesSection(),
+            
+            const SizedBox(height: 24.0),
+            
+            // 9. قسم لماذا نحن الخيار الأفضل
             _buildWhyChooseUsSection(),
 
             const SizedBox(height: 16.0),
 
-            // 9. قسم معلومات المصمم - معلومات المطور
+            // 10. قسم معلومات المصمم - معلومات المطور
             _buildDesignerInfoSection(),
 
             const SizedBox(height: 24.0),
 
-            // 10. قسم تواصل معنا - تصميم عصري ومتجاوب
+            // 11. قسم تواصل معنا - تصميم عصري ومتجاوب
             _buildContactUsSection(),
           ],
         ),
@@ -1398,6 +1409,47 @@ class _HomeScreenState extends State<HomeScreen>
     }
   }
 
+  // دالة جلب الأماكن المتاحة
+  Future<void> _fetchAvailablePlaces({bool silent = false}) async {
+    if (!mounted) return;
+
+    try {
+      if (!silent) {
+        setState(() {
+          _isAvailablePlacesLoading = true;
+        });
+      }
+
+      // جلب أول 4 أماكن متاحة فقط
+      final places = await _placesService.getAllPlaces(limit: 4);
+
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        _logger.info('تم جلب ${places.length} مكان متاح');
+      }
+
+      setState(() {
+        _availablePlaces = places;
+        if (!silent) {
+          _isAvailablePlacesLoading = false;
+        }
+      });
+    } catch (e) {
+      if (!mounted) return;
+
+      if (kDebugMode) {
+        _logger.warning('خطأ في جلب الأماكن المتاحة: $e');
+      }
+
+      setState(() {
+        if (!silent) {
+          _isAvailablePlacesLoading = false;
+        }
+      });
+    }
+  }
+
   // تعديل دالة تحديث البيانات لتشمل تحديث معلومات التحديث
   Future<void> _refreshAllData() async {
     if (!mounted) return;
@@ -1407,6 +1459,7 @@ class _HomeScreenState extends State<HomeScreen>
         _isLoading = true;
         _isCategoriesLoading = true;
         _isFeaturedLoading = true;
+        _isAvailablePlacesLoading = true;
         _isUpdateLoading = true;
       });
 
@@ -1416,6 +1469,7 @@ class _HomeScreenState extends State<HomeScreen>
         _fetchCategories(),
         _fetchLatestApartments(),
         _fetchFeaturedProperties(),
+        _fetchAvailablePlaces(),
         _fetchAppUpdate(),
       ]);
 
@@ -1439,6 +1493,7 @@ class _HomeScreenState extends State<HomeScreen>
           _isLoading = false;
           _isCategoriesLoading = false;
           _isFeaturedLoading = false;
+          _isAvailablePlacesLoading = false;
           _isUpdateLoading = false;
         });
       }
@@ -1993,6 +2048,320 @@ class _HomeScreenState extends State<HomeScreen>
           ),
         ),
       ],
+    );
+  }
+
+  // قسم الأماكن المتاحة
+  Widget _buildAvailablePlacesSection() {
+    if (_isAvailablePlacesLoading) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Padding(
+            padding: const EdgeInsets.symmetric(
+              horizontal: 16.0,
+              vertical: 14.0,
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                Row(
+                  children: [
+                    Text(
+                      'الأماكن المتاحة',
+                      style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(
+                        color: Theme.of(
+                          context,
+                        ).colorScheme.tertiary.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                      ),
+                      child: Icon(
+                        Icons.location_city,
+                        size: 18,
+                        color: Theme.of(context).colorScheme.tertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          SizedBox(
+            height: 120,
+            child: ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 12.0),
+              scrollDirection: Axis.horizontal,
+              itemCount: 3,
+              itemBuilder: (context, index) {
+                return Container(
+                  width: 100,
+                  margin: const EdgeInsets.only(
+                    left: 6.0,
+                    right: 6.0,
+                    bottom: 10.0,
+                  ),
+                  child: _buildPlaceShimmerCard(),
+                );
+              },
+            ),
+          ),
+        ],
+      );
+    }
+
+    if (_availablePlaces.isEmpty) {
+      return const SizedBox.shrink(); // لا نظهر القسم إذا لم توجد أماكن
+    }
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 14.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              TextButton.icon(
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => const CategoriesScreen(
+                        scrollToAvailablePlaces: true,
+                      ),
+                    ),
+                  );
+                },
+                icon: Icon(
+                  Icons.arrow_back_ios_rounded,
+                  size: 14,
+                  color: Theme.of(context).colorScheme.tertiary,
+                ),
+                label: Text(
+                  'عرض الكل',
+                  style: TextStyle(
+                    color: Theme.of(context).colorScheme.tertiary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+              Row(
+                children: [
+                  Text(
+                    'الأماكن المتاحة',
+                    style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(
+                      color: Theme.of(context).colorScheme.tertiary.withOpacity(0.1),
+                      shape: BoxShape.circle,
+                    ),
+                    child: Icon(
+                      Icons.location_city,
+                      size: 18,
+                      color: Theme.of(context).colorScheme.tertiary,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+        SizedBox(
+          height: 120,
+          child: ListView.builder(
+            padding: const EdgeInsets.symmetric(horizontal: 12.0),
+            scrollDirection: Axis.horizontal,
+            itemCount: _availablePlaces.length,
+            itemBuilder: (context, index) {
+              // احسب الفهرس المعكوس للعرض من اليمين إلى اليسار
+              final reverseIndex = _availablePlaces.length - 1 - index;
+              final place = _availablePlaces[reverseIndex];
+              return Container(
+                width: 100,
+                margin: const EdgeInsets.only(
+                  left: 6.0,
+                  right: 6.0,
+                  bottom: 10.0,
+                ),
+                child: _buildPlaceCard(place),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+
+  // بناء بطاقة المكان
+  Widget _buildPlaceCard(dynamic place) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDarkMode
+              ? [
+                  Colors.grey[850]!.withOpacity(0.95),
+                  Colors.grey[900]!.withOpacity(0.9),
+                ]
+              : [
+                  Colors.white,
+                  Colors.grey[50]!.withOpacity(0.8),
+                ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: isDarkMode
+              ? Colors.white.withOpacity(0.08)
+              : theme.colorScheme.tertiary.withOpacity(0.15),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: theme.colorScheme.tertiary.withOpacity(0.1),
+            blurRadius: 8,
+            spreadRadius: 0,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => PlaceDetailsScreen(place: place),
+              ),
+            );
+          },
+          child: Column(
+            children: [
+              // أيقونة المكان
+              Expanded(
+                child: Container(
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        theme.colorScheme.tertiary.withOpacity(0.15),
+                        theme.colorScheme.tertiary.withOpacity(0.08),
+                      ],
+                    ),
+                  ),
+                  child: Center(
+                    child: place.iconUrl != null && place.iconUrl.isNotEmpty
+                        ? CachedNetworkImage(
+                            imageUrl: place.iconUrl,
+                            width: 40,
+                            height: 40,
+                            fit: BoxFit.cover,
+                            placeholder: (context, url) => Container(
+                              padding: const EdgeInsets.all(10),
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: theme.colorScheme.tertiary,
+                              ),
+                            ),
+                            errorWidget: (context, url, error) => Icon(
+                              Icons.location_city,
+                              size: 40,
+                              color: theme.colorScheme.tertiary,
+                            ),
+                          )
+                        : Icon(
+                            Icons.location_city,
+                            size: 40,
+                            color: theme.colorScheme.tertiary,
+                          ),
+                  ),
+                ),
+              ),
+              
+              // اسم المكان
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: theme.colorScheme.tertiary.withOpacity(0.1),
+                ),
+                child: Text(
+                  place.name,
+                  textAlign: TextAlign.center,
+                  style: theme.textTheme.bodyMedium?.copyWith(
+                    fontWeight: FontWeight.bold,
+                    color: theme.colorScheme.tertiary,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  // بطاقة تحميل المكان
+  Widget _buildPlaceShimmerCard() {
+    return Shimmer.fromColors(
+      baseColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[800]!
+              : Colors.grey[300]!,
+      highlightColor:
+          Theme.of(context).brightness == Brightness.dark
+              ? Colors.grey[700]!
+              : Colors.grey[100]!,
+      child: Container(
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // منطقة الأيقونة
+            Expanded(
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(16)),
+                ),
+              ),
+            ),
+            
+            // شريط الاسم
+            Container(
+              width: double.infinity,
+              height: 30,
+              decoration: const BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.vertical(bottom: Radius.circular(16)),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 

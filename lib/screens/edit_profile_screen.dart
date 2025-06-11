@@ -42,9 +42,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   final List<String> _branchOptions = ['فرع العريش', 'فرع القنطرة'];
   final List<String> _statusOptions = [
     'طالب',
-    'وسيط',
     'امتياز',
-    'صاحب عقار',
+    'خريج',
     'أخرى',
   ];
 
